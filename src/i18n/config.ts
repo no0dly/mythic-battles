@@ -6,5 +6,3 @@ export const languages = {
 export type AppLanguage = keyof typeof languages;
 
 export const supportedLngs = Object.keys(languages) as AppLanguage[];
-
-
