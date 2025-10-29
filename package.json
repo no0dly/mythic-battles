@@ -23,5 +23,18 @@
     "tailwindcss": "^4",
     "eslint": "^9",
     "eslint-config-next": "16.0.0"
+  },
+  "pnpm": {
+    "supportedArchitectures": {
+      "os": [
+        "win32",
+        "darwin",
+        "current"
+      ],
+      "cpu": [
+        "x64",
+        "arm64"
+      ]
+    }
   }
 }
