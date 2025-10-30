@@ -2,6 +2,7 @@ import { AuthStatus } from "@/components/auth-status";
 import Link from "next/link";
 
 import LanguageSwitcher from "../components/LanguageSwitcher";
+import ExampleTrpc from "@/components/ExampleTrpc";
 
 export default function Home() {
   return (
@@ -26,6 +27,9 @@ export default function Home() {
             Welcome to Mythic Battles
           </h1>
           <LanguageSwitcher />
+          <div className="mt-6">
+            <ExampleTrpc />
+          </div>
         </div>
       </main>
     </div>
