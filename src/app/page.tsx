@@ -1,25 +1,14 @@
-import { AuthStatus } from "@/components/auth-status";
-import Link from "next/link";
-
 import LanguageSwitcher from "../components/LanguageSwitcher";
+<<<<<<< HEAD
 import ExampleTrpc from "@/components/ExampleTrpc";
+=======
+import Header from "@/components/Header/Header";
+>>>>>>> 9bd7ef6 (feat: added header)
 
-export default function Home() {
+export default async function Home() {
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-black">
-      <nav className="border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Link
-              href="/"
-              className="text-xl font-bold text-gray-900 dark:text-white"
-            >
-              Mythic Battles
-            </Link>
-            <AuthStatus />
-          </div>
-        </div>
-      </nav>
+    <>
+      <Header />
 
       <main className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
         <div className="text-center">
