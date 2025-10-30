@@ -6,7 +6,7 @@ function Logo() {
   return (
     <Link href="/" className="flex items-center gap-2">
       <Image src="/logo2.svg" alt="Mythic Battles" width={100} height={100} />
-      <span className="text-xl font-bold text-gray-900 dark:text-white">
+      <span className="text-xl font-bold text-gray-900 dark:text-white hidden sm:block">
         Mythic Battles
       </span>
     </Link>

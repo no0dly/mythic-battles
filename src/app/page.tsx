@@ -1,11 +1,8 @@
 import LanguageSwitcher from "../components/LanguageSwitcher";
-<<<<<<< HEAD
 import ExampleTrpc from "@/components/ExampleTrpc";
-=======
-import Header from "@/components/Header/Header";
->>>>>>> 9bd7ef6 (feat: added header)
+import Header from "@/components/Header";
 
-export default async function Home() {
+export default function Home() {
   return (
     <>
       <Header />
@@ -21,6 +18,6 @@ export default async function Home() {
           </div>
         </div>
       </main>
-    </div>
+    </>
   );
 }
