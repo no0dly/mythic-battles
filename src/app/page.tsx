@@ -1,5 +1,7 @@
-import { AuthStatus } from '@/components/auth-status'
-import Link from 'next/link'
+import { AuthStatus } from "@/components/auth-status";
+import Link from "next/link";
+
+import LanguageSwitcher from "../components/LanguageSwitcher";
 
 export default function Home() {
   return (
@@ -7,7 +9,10 @@ export default function Home() {
       <nav className="border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <Link href="/" className="text-xl font-bold text-gray-900 dark:text-white">
+            <Link
+              href="/"
+              className="text-xl font-bold text-gray-900 dark:text-white"
+            >
               Mythic Battles
             </Link>
             <AuthStatus />
@@ -20,8 +25,9 @@ export default function Home() {
           <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
             Welcome to Mythic Battles
           </h1>
+          <LanguageSwitcher />
         </div>
       </main>
     </div>
-  )
+  );
 }
