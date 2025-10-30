@@ -1,4 +1,3 @@
-"use client";
 import { AuthStatus } from "@/components/auth-status";
 import Link from "next/link";
 
