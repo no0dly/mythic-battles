@@ -1,0 +1,171 @@
+<!-- rolling-dice.svg -->
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="360" height="360" viewBox="0 0 360 360"
+     aria-label="Animated rolling dice">
+  <defs>
+    <!-- drop shadow -->
+    <filter id="softShadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="6" result="blur"/>
+      <feOffset in="blur" dx="0" dy="10" result="offset"/>
+      <feMerge>
+        <feMergeNode in="offset"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- rounded square path for die -->
+    <rect id="die-shape" x="0" y="0" rx="18" ry="18" width="160" height="160"/>
+  </defs>
+
+  <!-- background -->
+  <rect width="100%" height="100%" fill="#0b1220"/>
+
+  <!-- center group for die (positioned to center of viewBox) -->
+  <g transform="translate(100,100)">
+    <!-- shadow -->
+    <ellipse cx="80" cy="200" rx="70" ry="18" fill="#000" opacity="0.18">
+      <animate attributeName="cx" values="80;95;110;80" dur="2.0s" repeatCount="indefinite" />
+      <animate attributeName="opacity" values="0.18;0.06;0.14;0.18" dur="2.0s" repeatCount="indefinite" />
+    </ellipse>
+
+    <!-- container for die with transforms -->
+    <g id="die-container" filter="url(#softShadow)">
+      <!-- base square (will get transformed) -->
+      <g id="die" transform-origin="80 80">
+        <use href="#die-shape" fill="#ffffff" stroke="#e6e6e6" stroke-width="3"/>
+        <!-- subtle face shading -->
+        <rect x="0" y="0" width="160" height="160" rx="18" ry="18" fill="url(#fade)" opacity="0.02"/>
+      </g>
+    </g>
+
+    <!-- pips groups for faces (we'll fade them in/out to simulate face changes) -->
+    <!-- Face 1 (center) -->
+    <g id="face-1" transform="translate(0,0)" opacity="0">
+      <!-- center pip -->
+      <circle cx="80" cy="80" r="10" fill="#222" />
+    </g>
+
+    <!-- Face 2 (top-left, bottom-right) -->
+    <g id="face-2" transform="translate(0,0)" opacity="0">
+      <circle cx="44" cy="44" r="9" fill="#222"/>
+      <circle cx="116" cy="116" r="9" fill="#222"/>
+    </g>
+
+    <!-- Face 3 (top-left, center, bottom-right) -->
+    <g id="face-3" transform="translate(0,0)" opacity="0">
+      <circle cx="44" cy="44" r="9" fill="#222"/>
+      <circle cx="80" cy="80" r="9" fill="#222"/>
+      <circle cx="116" cy="116" r="9" fill="#222"/>
+    </g>
+
+    <!-- Face 4 (four corners) -->
+    <g id="face-4" transform="translate(0,0)" opacity="0">
+      <circle cx="44" cy="44" r="8.5" fill="#222"/>
+      <circle cx="116" cy="44" r="8.5" fill="#222"/>
+      <circle cx="44" cy="116" r="8.5" fill="#222"/>
+      <circle cx="116" cy="116" r="8.5" fill="#222"/>
+    </g>
+
+    <!-- Face 5 (four corners + center) -->
+    <g id="face-5" transform="translate(0,0)" opacity="0">
+      <circle cx="44" cy="44" r="8.5" fill="#222"/>
+      <circle cx="116" cy="44" r="8.5" fill="#222"/>
+      <circle cx="44" cy="116" r="8.5" fill="#222"/>
+      <circle cx="116" cy="116" r="8.5" fill="#222"/>
+      <circle cx="80" cy="80" r="8.5" fill="#222"/>
+    </g>
+
+    <!-- Face 6 (three left, three right) -->
+    <g id="face-6" transform="translate(0,0)" opacity="0">
+      <circle cx="44" cy="36" r="8.5" fill="#222"/>
+      <circle cx="44" cy="80" r="8.5" fill="#222"/>
+      <circle cx="44" cy="124" r="8.5" fill="#222"/>
+      <circle cx="116" cy="36" r="8.5" fill="#222"/>
+      <circle cx="116" cy="80" r="8.5" fill="#222"/>
+      <circle cx="116" cy="124" r="8.5" fill="#222"/>
+    </g>
+
+    <!-- Animation: simulate roll by rotating + translating the die group and toggling face opacities -->
+    <style>
+      /* we will use CSS animation to animate the container transforms (works in most modern browsers) */
+      @keyframes rollTransform {
+        0%   { transform: translate(0px,0px) rotate(0deg) scale(1); }
+        10%  { transform: translate(-18px,-10px) rotate(-40deg) scale(0.98); }
+        30%  { transform: translate(28px,-28px) rotate(90deg) scale(0.9); }
+        50%  { transform: translate(-20px,20px) rotate(200deg) scale(1.02); }
+        70%  { transform: translate(12px,-12px) rotate(290deg) scale(0.95); }
+        90%  { transform: translate(-6px,8px) rotate(360deg) scale(1.01); }
+        100% { transform: translate(0px,0px) rotate(420deg) scale(1); }
+      }
+
+      /* apply transform-origin in user-space coordinates to match the die's center (80,80) */
+      #die-container {
+        transform-origin: 180px 180px; /* this is ignored for SVG in some browsers for CSS transforms; we inline initial transform by attribute */
+        animation: rollTransform 2.0s cubic-bezier(.2,.9,.3,1) infinite;
+      }
+
+      /* subtle wobble of the whole die's fill highlight */
+      @keyframes wobbleHighlight {
+        0% { opacity: 0.03; transform: translate(0,0); }
+        50% { opacity: 0.06; transform: translate(2px,-2px); }
+        100% { opacity: 0.03; transform: translate(0,0); }
+      }
+      /* faces fade sequence using CSS animation delays (keeps SMIL simpler). Each face group cycles opacity on/off. */
+      #face-1 { animation: faceFade 2.0s steps(1,end) infinite; }
+      #face-2 { animation: faceFade 2.0s steps(1,end) infinite; animation-delay: -1.833s; }
+      #face-3 { animation: faceFade 2.0s steps(1,end) infinite; animation-delay: -1.5s; }
+      #face-4 { animation: faceFade 2.0s steps(1,end) infinite; animation-delay: -1.166s; }
+      #face-5 { animation: faceFade 2.0s steps(1,end) infinite; animation-delay: -0.833s; }
+      #face-6 { animation: faceFade 2.0s steps(1,end) infinite; animation-delay: -0.5s; }
+
+      @keyframes faceFade {
+        /* quick sequence: show different faces in rapid succession then hold final longer */
+        0%   { opacity: 0; }
+        6%   { opacity: 1; }   /* show briefly */
+        20%  { opacity: 0; }
+        60%  { opacity: 0; }
+        80%  { opacity: 0; }
+        100% { opacity: 0; }
+      }
+
+      /* mark final face timing: we'll keep face-5 visible at the end by adding a second animation */
+      #face-5 {
+        animation: faceFade 2.0s steps(1,end) infinite, faceFinal 2.0s linear infinite;
+      }
+      @keyframes faceFinal {
+        0%   { opacity: 0; }
+        60%  { opacity: 0; }
+        66%  { opacity: 1; }  /* final face appears around 66% of the loop */
+        100% { opacity: 1; }
+      }
+
+      /* small pop on end-of-roll */
+      @keyframes pop {
+        0%   { transform: scale(1); }
+        66%  { transform: scale(1.03); }
+        80%  { transform: scale(0.98); }
+        100% { transform: scale(1); }
+      }
+      #die { animation: pop 2.0s cubic-bezier(.2,.9,.3,1) infinite; transform-origin: 80px 80px; }
+    </style>
+
+    <!-- SMIL rotate to add additional rotation effect (keeps things compatible across browsers) -->
+    <animateTransform xlink:href="#die" attributeName="transform"
+                      type="rotate"
+                      from="0 80 80" to="420 80 80"
+                      dur="2s" repeatCount="indefinite" />
+
+    <!-- Also translate the die slightly using SMIL for vertical bounce -->
+    <animateTransform xlink:href="#die" attributeName="transform" additive="sum"
+                      type="translate"
+                      from="0 0" to="0 0"
+                      dur="2s" repeatCount="indefinite" />
+
+    <!-- A tiny highlight rectangle to read as sheen -->
+    <rect x="18" y="22" width="80" height="60" rx="14" ry="14" fill="#fff" opacity="0.03">
+      <animate attributeName="x" values="18;22;30;18" dur="2s" repeatCount="indefinite" />
+      <animate attributeName="opacity" values="0.03;0.08;0.02;0.03" dur="2s" repeatCount="indefinite"/>
+    </rect>
+
+  </g>
+</svg>
