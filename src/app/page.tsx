@@ -1,14 +1,12 @@
 import PageLayout from "@/components/PageLayout";
-import LanguageSwitcher from "../components/LanguageSwitcher";
-import ExampleTrpc from "@/components/ExampleTrpc";
+import { createClient } from "@/lib/supabase/server";
+import NotLoggedContent from "./components/NotLoggedContent";
 
-export default function Home() {
-  return (
-    <PageLayout title="wiki">
-      <LanguageSwitcher />
-      <div className="mt-6">
-        <ExampleTrpc />
-      </div>
-    </PageLayout>
-  );
+export default async function Home() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  return <PageLayout>{user ? <div /> : <NotLoggedContent />}</PageLayout>;
 }
