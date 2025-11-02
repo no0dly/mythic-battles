@@ -1,14 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { createCallerFactory } from "@trpc/server";
 import { createTRPCContext } from "../../trpc";
 import { cardsRouter } from "../cards";
-
-const createCaller = createCallerFactory(cardsRouter);
 
 describe("cards router", () => {
   it("returns list of cards", async () => {
     const ctx = await createTRPCContext({ headers: new Headers() });
-    const caller = createCaller(ctx);
+    const caller = cardsRouter.createCaller(ctx);
 
     const result = await caller.list();
 
@@ -19,7 +16,7 @@ describe("cards router", () => {
 
   it("returns cards with correct structure", async () => {
     const ctx = await createTRPCContext({ headers: new Headers() });
-    const caller = createCaller(ctx);
+    const caller = cardsRouter.createCaller(ctx);
 
     const result = await caller.list();
 
@@ -39,7 +36,7 @@ describe("cards router", () => {
 
   it("includes Zeus card in results", async () => {
     const ctx = await createTRPCContext({ headers: new Headers() });
-    const caller = createCaller(ctx);
+    const caller = cardsRouter.createCaller(ctx);
 
     const result = await caller.list();
 
@@ -50,7 +47,7 @@ describe("cards router", () => {
 
   it("includes Ares card in results", async () => {
     const ctx = await createTRPCContext({ headers: new Headers() });
-    const caller = createCaller(ctx);
+    const caller = cardsRouter.createCaller(ctx);
 
     const result = await caller.list();
 
@@ -61,7 +58,7 @@ describe("cards router", () => {
 
   it("includes Athena card in results", async () => {
     const ctx = await createTRPCContext({ headers: new Headers() });
-    const caller = createCaller(ctx);
+    const caller = cardsRouter.createCaller(ctx);
 
     const result = await caller.list();
 
