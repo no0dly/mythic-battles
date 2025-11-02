@@ -22,8 +22,14 @@ test.describe('Home Page', () => {
     await expect(page.getByRole('link', { name: 'Wiki' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Login' })).toBeVisible();
 
-    // Switch to Russian
-    await page.selectOption('#lang', 'ru');
+    // Open language switcher dropdown
+    const languageButton = page.getByRole('button', { name: 'Change language' });
+    await expect(languageButton).toBeVisible();
+    await languageButton.click();
+
+    // Select Russian from dropdown
+    await expect(page.getByRole('menuitem', { name: 'Русский' })).toBeVisible();
+    await page.getByRole('menuitem', { name: 'Русский' }).click();
 
     // Labels should change
     await expect(page.getByRole('link', { name: 'Вики' })).toBeVisible();

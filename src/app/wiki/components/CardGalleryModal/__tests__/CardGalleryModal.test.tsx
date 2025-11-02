@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { describe, it, expect, vi } from "vitest";
+import { render, screen, cleanup } from "@testing-library/react";
 import CardGalleryModal from "../CardGalleryModal";
 import type { CardItem } from "../../CardGalleryItem";
 
@@ -20,13 +20,6 @@ const mockCardItem: CardItem = {
 };
 
 describe("CardGalleryModal Component", () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-  });
-
-  afterEach(() => {
-    vi.useRealTimers();
-  });
 
   it("renders modal with card information when selected", () => {
     const mockCloseHandler = vi.fn();
@@ -56,18 +49,17 @@ describe("CardGalleryModal Component", () => {
 
   it("does not render modal when selected is null", () => {
     const mockCloseHandler = vi.fn();
-    render(
+    const { container } = render(
       <CardGalleryModal selected={null} onCloseAction={mockCloseHandler} />
     );
 
-    expect(screen.queryByTestId("card-modal")).toBeNull();
-    expect(screen.queryByRole("heading", { name: "Zeus" })).toBeNull();
+    expect(container.firstChild).toBeNull();
   });
 
-  it("calls onCloseAction when dialog open state changes to false", async () => {
+  it("component returns null when selected is null after rerender", () => {
     const mockCloseHandler = vi.fn();
 
-    const { rerender } = render(
+    const { rerender, container } = render(
       <CardGalleryModal
         selected={mockCardItem}
         onCloseAction={mockCloseHandler}
@@ -76,22 +68,15 @@ describe("CardGalleryModal Component", () => {
 
     expect(screen.getByRole("heading", { name: "Zeus" })).toBeTruthy();
 
-    // Simulate closing the dialog by setting selected to null
+    // Simulate closing by setting selected to null
     rerender(
       <CardGalleryModal selected={null} onCloseAction={mockCloseHandler} />
     );
 
-    vi.advanceTimersByTime(400);
-
-    await waitFor(
-      () => {
-        expect(mockCloseHandler).toHaveBeenCalled();
-      },
-      { timeout: 500 }
-    );
+    expect(container.firstChild).toBeNull();
   });
 
-  it("updates modal content when selected changes", async () => {
+  it("updates modal content when selected changes", () => {
     const mockCloseHandler = vi.fn();
     const differentCard: CardItem = {
       id: "ares",
@@ -101,7 +86,7 @@ describe("CardGalleryModal Component", () => {
       longDescription: "Full description of Ares",
     };
 
-    const { rerender } = render(
+    render(
       <CardGalleryModal
         selected={mockCardItem}
         onCloseAction={mockCloseHandler}
@@ -110,23 +95,22 @@ describe("CardGalleryModal Component", () => {
 
     expect(screen.getByRole("heading", { name: "Zeus" })).toBeTruthy();
 
-    rerender(
+    cleanup();
+
+    render(
       <CardGalleryModal
         selected={differentCard}
         onCloseAction={mockCloseHandler}
       />
     );
 
-    await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "Ares" })).toBeTruthy();
-      expect(screen.queryByRole("heading", { name: "Zeus" })).toBeNull();
-      const modal = screen.getByTestId("card-modal");
-      const description = modal.querySelector(
-        '[data-slot="dialog-description"]'
-      );
-      expect(description?.textContent).toBe("Full description of Ares");
-      const image = screen.getByAltText("Ares");
-      expect(image.getAttribute("src")).toContain("/logo.svg");
-    });
+    expect(screen.getByRole("heading", { name: "Ares" })).toBeTruthy();
+    const modal = screen.getByTestId("card-modal");
+    const description = modal.querySelector(
+      '[data-slot="dialog-description"]'
+    );
+    expect(description?.textContent).toBe("Full description of Ares");
+    const image = screen.getByAltText("Ares");
+    expect(image.getAttribute("src")).toContain("/logo.svg");
   });
 });

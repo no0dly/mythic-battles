@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { Button } from "../ui/button";
 import { useTranslation } from "react-i18next";
 import Link from "next/link";
+import LanguageSwitcher from "../LanguageSwitcher";
 
 type Props = {
   children: React.ReactNode;
@@ -16,6 +17,7 @@ function HeaderActions({ children }: Props) {
 
   return (
     <div className="flex items-center gap-4">
+      <LanguageSwitcher />
       {!isWikiPage && (
         <Button variant="link" asChild>
           <Link href="/wiki">{t("wiki")}</Link>
