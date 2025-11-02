@@ -1,6 +1,7 @@
 import PageLayout from "@/components/PageLayout";
 import { createClient } from "@/lib/supabase/server";
 import NotLoggedContent from "./components/NotLoggedContent";
+import LoggedContent from "./components/LoggedContent";
 
 export default async function Home() {
   const supabase = await createClient();
@@ -8,5 +9,7 @@ export default async function Home() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  return <PageLayout>{user ? <div /> : <NotLoggedContent />}</PageLayout>;
+  return (
+    <PageLayout>{user ? <LoggedContent /> : <NotLoggedContent />}</PageLayout>
+  );
 }
