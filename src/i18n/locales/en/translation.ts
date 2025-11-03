@@ -23,6 +23,17 @@ const translation = {
   draft: "Draft",
   inProgress: "In Progress",
   finished: "Finished",
+  goToDraft: "Go to draft",
+  goToGame: "Go to game",
+  continue: "Continue",
+  finish: "Finish",
+  sessionDetails: "Session Details",
+  game: "Game",
+  duration: "Duration",
+  rounds: "Rounds",
+  won: "Won",
+  lost: "Lost",
+  draw: "Draw",
 } as const;
 
 export default translation;

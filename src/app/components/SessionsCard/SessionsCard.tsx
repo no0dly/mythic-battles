@@ -1,6 +1,8 @@
 import { Badge } from "@/components/ui/badge";
 import { GAME_STATUS_CONFIG, type GameStatus } from "./constants";
 import { useTranslation } from "react-i18next";
+import { useState } from "react";
+import SessionModal from "../SessionModal";
 
 const sessions: Array<{
   id: number;
@@ -16,16 +18,30 @@ const sessions: Array<{
 
 function SessionsCard() {
   const { t } = useTranslation();
+  const [selectedSessionID, setSelectedSessionID] = useState<number | null>(
+    null
+  );
+
+  const onSelectSessionHandler = (id: number) => () => {
+    setSelectedSessionID(id);
+  };
+
+  const onClearSessionHandler = () => {
+    setSelectedSessionID(null);
+  };
+
   return (
     <div className="relative group w-fit min-w-[320px]">
       <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/20 to-blue-500/20 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
       <div className="relative border-2 border-foreground rounded-2xl p-3 md:p-4 bg-background transition-shadow duration-300">
-        <div className="space-y-2">
+        <ul className="space-y-2">
           {sessions.map(({ id, match, score, status }) => {
             return (
-              <div
+              <li
                 key={id}
-                className="group/session flex items-center justify-between p-2 rounded-lg hover:bg-gray-500/10 transition-colors duration-200 gap-4"
+                role="button"
+                onClick={onSelectSessionHandler(id)}
+                className="group/session flex items-center justify-between p-2 rounded-lg hover:bg-gray-500/10 transition-colors duration-200 gap-4 cursor-pointer"
               >
                 <div className="flex items-center gap-1">
                   <span className="text-xs font-semibold text-foreground group-hover/session:text-gray-600 transition-colors">
@@ -38,11 +54,15 @@ function SessionsCard() {
                 <Badge variant={GAME_STATUS_CONFIG[status].variant}>
                   {t(GAME_STATUS_CONFIG[status].label)}
                 </Badge>
-              </div>
+              </li>
             );
           })}
-        </div>
+        </ul>
       </div>
+      <SessionModal
+        sessionID={selectedSessionID}
+        clearSession={onClearSessionHandler}
+      />
     </div>
   );
 }

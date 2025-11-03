@@ -23,6 +23,17 @@ const translation = {
   draft: "Драфт",
   inProgress: "В процессе",
   finished: "Завершена",
+  goToDraft: "Перейти к черновику",
+  goToGame: "Перейти к игре",
+  continue: "Продолжить",
+  finish: "Завершить",
+  sessionDetails: "Детали сессии",
+  game: "Игра",
+  duration: "Длительность",
+  rounds: "Раунды",
+  won: "Выиграно",
+  lost: "Проиграно",
+  draw: "Ничья",
 } as const;
 
 export default translation;
