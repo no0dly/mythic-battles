@@ -3,21 +3,36 @@ import { render, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import CardGallery from "../CardGallery";
 
+import type { Card } from "@/types/database.types";
+import { CARD_TYPES } from "@/types/database.types";
+
 // Mock tRPC
-const mockCards = [
+const mockCards: Card[] = [
   {
-    id: "zeus",
-    title: "Zeus",
-    imageUrl: "/globe.svg",
-    shortDescription: "King of the gods",
-    longDescription: "Full description of Zeus",
+    id: "550e8400-e29b-41d4-a716-446655440001",
+    unit_name: "Zeus",
+    unit_type: CARD_TYPES.GOD,
+    cost: 5,
+    amount_of_card_activations: 1,
+    strategic_value: 10,
+    talents: [],
+    class: "god",
+    image_url: "/globe.svg",
+    created_at: "2024-01-01T00:00:00Z",
+    updated_at: "2024-01-01T00:00:00Z",
   },
   {
-    id: "ares",
-    title: "Ares",
-    imageUrl: "/logo.svg",
-    shortDescription: "God of war",
-    longDescription: "Full description of Ares",
+    id: "550e8400-e29b-41d4-a716-446655440002",
+    unit_name: "Ares",
+    unit_type: CARD_TYPES.GOD,
+    cost: 4,
+    amount_of_card_activations: 1,
+    strategic_value: 9,
+    talents: [],
+    class: "god",
+    image_url: "/logo.svg",
+    created_at: "2024-01-01T00:00:00Z",
+    updated_at: "2024-01-01T00:00:00Z",
   },
 ];
 
@@ -38,6 +53,11 @@ vi.mock("@/components/Loader", () => ({
   default: () => <div data-testid="loader">Loading...</div>,
 }));
 
+// Mock CardGalleryFilter
+vi.mock("../CardGalleryFilter", () => ({
+  default: () => <div data-testid="card-filter">Filter</div>,
+}));
+
 // Mock CardGalleryItem
 vi.mock("../CardGalleryItem", () => ({
   default: ({
@@ -48,7 +68,7 @@ vi.mock("../CardGalleryItem", () => ({
     onCardClickHandler: () => void;
   }) => (
     <button onClick={onCardClickHandler}>
-      <div data-testid="card-item">{item.title}</div>
+      <div data-testid="card-item">{item.unit_name}</div>
     </button>
   ),
 }));

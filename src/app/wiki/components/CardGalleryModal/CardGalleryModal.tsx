@@ -7,15 +7,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import Image from "next/image";
-// update this when you connect with be
-import type { CardItem } from "../CardGalleryItem";
+import type { Card as CardType } from "@/types/database.types";
 import { useState } from "react";
 
 export default function CardGalleryModal({
   selected,
   onCloseAction,
 }: {
-  selected: CardItem | null;
+  selected: CardType | null;
   onCloseAction: () => void;
 }) {
   const [isOpen, setIsOpen] = useState(!!selected);
@@ -29,23 +28,53 @@ export default function CardGalleryModal({
     }
   };
 
+  if (!selected) return null;
+
+  const {
+    unit_name: name,
+    unit_type: unitType,
+    cost,
+    image_url: imageUrl,
+    class: cardClass,
+    talents,
+    strategic_value: strategicValue,
+    amount_of_card_activations: activations,
+  } = selected;
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChangeHandler}>
       <DialogContent data-testid="card-modal">
         <DialogHeader>
-          <DialogTitle>{selected?.title}</DialogTitle>
+          <DialogTitle>{name}</DialogTitle>
         </DialogHeader>
         <div className="relative w-full aspect-[4/3] overflow-hidden rounded-md border bg-muted mt-2">
           <Image
-            src={selected?.imageUrl ?? ""}
-            alt={selected?.title ?? ""}
+            src={imageUrl}
+            alt={name}
             fill
+            loading="lazy"
             className="object-contain p-4"
             sizes="100vw"
           />
         </div>
         <DialogDescription className="mt-3">
-          {selected?.longDescription}
+          <div className="space-y-2">
+            <p><strong>Type:</strong> {unitType}</p>
+            <p><strong>Class:</strong> {cardClass}</p>
+            <p><strong>Cost:</strong> {cost}</p>
+            <p><strong>Strategic Value:</strong> {strategicValue}</p>
+            <p><strong>Activations:</strong> {activations}</p>
+            {talents && talents.length > 0 && (
+              <div>
+                <strong>Talents:</strong>
+                <ul className="list-disc list-inside">
+                  {talents.map((talent, index) => (
+                    <li key={index}>{talent}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
         </DialogDescription>
       </DialogContent>
     </Dialog>

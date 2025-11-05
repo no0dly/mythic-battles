@@ -107,8 +107,26 @@ const translation = {
   search: {
     placeholder: {
       emailOrName: "Введите email или имя...",
+      cardName: "Поиск по названию карты...",
     },
   },
+  searchByName: "Поиск по названию",
+  type: "Тип",
+  allTypes: "Все типы",
+  cost: "Стоимость",
+  allCosts: "Все стоимости",
+  clearFilters: "Очистить",
+  cardType: {
+    hero: "Герой",
+    monster: "Монстр",
+    god: "Бог",
+    titan: "Титан",
+    troop: "Войско",
+    jarl: "Ярл",
+    art_of_war: "Искусство войны",
+  },
+  showingCards: "Показано {{count}} из {{total}} карт",
+  noCardsFoundMatchingYourFilters: "Карты, соответствующие вашим фильтрам, не найдены",
 } as const;
 
 export default translation;

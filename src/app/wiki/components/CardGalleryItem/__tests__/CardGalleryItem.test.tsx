@@ -1,6 +1,8 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
-import CardGalleryItem, { type CardItem } from "../CardGalleryItem";
+import CardGalleryItem from "../CardGalleryItem";
+import type { Card } from "@/types/database.types";
+import { CARD_TYPES } from "@/types/database.types";
 
 // Mock next/image
 vi.mock("next/image", () => ({
@@ -10,12 +12,18 @@ vi.mock("next/image", () => ({
   ),
 }));
 
-const mockCardItem: CardItem = {
-  id: "zeus",
-  title: "Zeus",
-  imageUrl: "/globe.svg",
-  shortDescription: "King of the gods",
-  longDescription: "Full description of Zeus",
+const mockCardItem: Card = {
+  id: "550e8400-e29b-41d4-a716-446655440001",
+  unit_name: "Zeus",
+  unit_type: CARD_TYPES.GOD,
+  cost: 5,
+  amount_of_card_activations: 1,
+  strategic_value: 10,
+  talents: [],
+  class: "god",
+  image_url: "/globe.svg",
+  created_at: "2024-01-01T00:00:00Z",
+  updated_at: "2024-01-01T00:00:00Z",
 };
 
 describe("CardGalleryItem Component", () => {
@@ -25,8 +33,9 @@ describe("CardGalleryItem Component", () => {
       <CardGalleryItem item={mockCardItem} onCardClickHandler={mockHandler} />
     );
 
-    expect(screen.getByText("Zeus")).toBeTruthy();
-    expect(screen.getByText("King of the gods")).toBeTruthy();
+    expect(screen.getByText(/Zeus/)).toBeTruthy();
+    expect(screen.getByText(/5/)).toBeTruthy(); // Cost is shown
+    expect(screen.getByText(CARD_TYPES.GOD)).toBeTruthy(); // Unit type badge
     const image = screen.getByAltText("Zeus");
     expect(image).toBeTruthy();
     expect(image.getAttribute("src")).toContain("/globe.svg");

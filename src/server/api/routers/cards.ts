@@ -1,43 +1,49 @@
+import { z } from "zod";
 import { router, publicProcedure } from "../trpc";
-
-type CardItem = {
-  id: string;
-  title: string;
-  imageUrl: string;
-  shortDescription: string;
-  longDescription: string;
-};
-
-// Temporary in-memory data. Replace with DB/Supabase later if needed.
-const cards: CardItem[] = [
-  {
-    id: "zeus",
-    title: "Zeus",
-    imageUrl: "/globe.svg",
-    shortDescription: "King of the gods, wielder of thunder.",
-    longDescription:
-      "Zeus rules from Mount Olympus. In battle, he commands thunder and lightning, striking fear into the hearts of his enemies.",
-  },
-  {
-    id: "ares",
-    title: "Ares",
-    imageUrl: "/logo.svg",
-    shortDescription: "God of war, relentless and fierce.",
-    longDescription:
-      "Ares thrives in the chaos of combat. His presence emboldens allies and demoralizes foes with unmatched ferocity.",
-  },
-  {
-    id: "athena",
-    title: "Athena",
-    imageUrl: "/window.svg",
-    shortDescription: "Goddess of wisdom and strategy.",
-    longDescription:
-      "Athena balances intellect with martial skill, excelling at tactics, defense, and decisive strikes when opportunities arise.",
-  },
-];
+import { TRPCError } from "@trpc/server";
+import type { Card } from "@/types/database.types";
 
 export const cardsRouter = router({
-  list: publicProcedure.query(() => cards),
+  // Get all cards
+  list: publicProcedure.query(async ({ ctx }) => {
+    const { data, error } = await ctx.supabase
+      .from("cards")
+      .select("*")
+      .order("unit_name", { ascending: true });
+
+    if (error) {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to fetch cards",
+      });
+    }
+
+    return (data ?? []) as Card[];
+  }),
+
+  // Get card by ID
+  getById: publicProcedure
+    .input(
+      z.object({
+        id: z.string().uuid(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const { data, error } = await ctx.supabase
+        .from("cards")
+        .select("*")
+        .eq("id", input.id)
+        .single();
+
+      if (error || !data) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Card not found",
+        });
+      }
+
+      return data as Card;
+    }),
 });
 
 

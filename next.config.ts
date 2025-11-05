@@ -4,8 +4,16 @@ const nextConfig: NextConfig = {
   /* config options here */
   reactCompiler: true,
   images: {
-    domains: [
-      'i.imgur.com',
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'xlzywbaaazcbkghoywse.supabase.co',
+        pathname: '/storage/v1/object/public/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'i.imgur.com',
+      },
     ],
   }
 };
