@@ -6,7 +6,7 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-type Statistics = {
+export type Statistics = {
   wins: number
   losses: number
   total_games: number
@@ -22,8 +22,18 @@ export type UserProfile = {
   avatar_url: string
   created_at: string
   updated_at: string
-  friends: string[]
   statistics: Statistics
+}
+
+export type FriendshipStatus = 'pending' | 'accepted' | 'rejected' | 'blocked'
+
+export type Friendship = {
+  id: string
+  user_id: string
+  friend_id: string
+  status: FriendshipStatus
+  created_at: string
+  updated_at: string
 }
         
 export type Database = {
@@ -31,9 +41,27 @@ export type Database = {
     Tables: {
       users: {
         Row: UserProfile
-        Insert: Omit<UserProfile, 'id' | 'created_at' | 'updated_at'>
-        Update: Omit<UserProfile, 'id' | 'created_at' | 'updated_at'>
+        Insert: Omit<UserProfile, 'id' | 'created_at' | 'updated_at' | 'statistics'> & {
+          statistics?: Json
+        }
+        Update: Partial<Omit<UserProfile, 'id' | 'created_at' | 'updated_at' | 'statistics'>> & {
+          statistics?: Json
+        }
+      }
+      friendships: {
+        Row: Friendship
+        Insert: Omit<Friendship, 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Omit<Friendship, 'id' | 'created_at' | 'updated_at'>>
       }
     }
+    Views: Record<string, never>
+    Functions: Record<string, never>
+    Enums: Record<string, never>
   }
 }
+
+// Helper types for type-safe database operations
+export type UserInsert = Omit<UserProfile, 'id' | 'created_at' | 'updated_at'>
+export type UserUpdate = Partial<Omit<UserProfile, 'id' | 'created_at' | 'updated_at'>>
+export type FriendshipInsert = Omit<Friendship, 'id' | 'created_at' | 'updated_at'>
+export type FriendshipUpdate = Partial<Omit<Friendship, 'id' | 'created_at' | 'updated_at'>>

@@ -3,20 +3,39 @@ import SessionsCard from "../SessionsCard";
 import UserInfoCard from "../UserInfoCard";
 import { useTranslation } from "react-i18next";
 import { ShimmerButton } from "@/components/ui/shimmer-button";
+import { UserStatistics } from "@/components/UserStatistics";
+import { useUserProfile } from "@/hooks/useUserProfile";
 
 function LoggedContent() {
   const { t } = useTranslation();
+  const { user } = useUserProfile();
+
+  const displayName = user?.displayName ?? "Warrior";
+
   return (
     <div className="flex flex-col h-full overflow-hidden">
       <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-10">
-        {t("welcomeUser", { name: "Warrior" })}
+        {t("welcomeUser", { name: displayName })}
       </h2>
       <div className="w-full flex gap-4 justify-between flex-1 min-h-0 overflow-hidden">
-        <div className="lg:flex-shrink-0 lg:w-80 overflow-y-auto">
-          <h3 className="text-lg md:text-xl font-bold text-foreground mb-4 md:mb-6">
-            {t("userInfo")}
-          </h3>
-          <UserInfoCard />
+        <div className="lg:flex-shrink-0 lg:w-80 overflow-y-auto space-y-6">
+          <div>
+            <h3 className="text-lg md:text-xl font-bold text-foreground mb-4 md:mb-6">
+              {t("userInfo")}
+            </h3>
+            <UserInfoCard />
+          </div>
+
+          {user && (
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg md:text-xl font-bold text-foreground">
+                  {t("statistics")}
+                </h3>
+              </div>
+              <UserStatistics statistics={user.statistics} compact />
+            </div>
+          )}
         </div>
         <div className="flex flex-col gap-4 md:gap-6 items-end flex-1 min-h-0 overflow-hidden">
           <div className="flex flex-col gap-4 md:gap-6 items-end overflow-y-auto flex-1 min-h-0">

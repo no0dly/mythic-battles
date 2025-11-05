@@ -14,6 +14,7 @@ function HeaderActions({ children }: Props) {
   const { t } = useTranslation();
   const pathname = usePathname();
   const isWikiPage = pathname?.startsWith("/wiki");
+  const isLeaderboardPage = pathname?.startsWith("/leaderboard");
 
   return (
     <div className="flex items-center gap-4">
@@ -21,6 +22,11 @@ function HeaderActions({ children }: Props) {
       {!isWikiPage && (
         <Button variant="link" asChild>
           <Link href="/wiki">{t("wiki")}</Link>
+        </Button>
+      )}
+      {!isLeaderboardPage && (
+        <Button variant="link" asChild>
+          <Link href="/leaderboard">{t("leaderboard.leaders")}</Link>
         </Button>
       )}
       {children}

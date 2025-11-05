@@ -1,6 +1,37 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, waitFor, fireEvent, cleanup } from "@testing-library/react";
 import FriendsListForm from "../FriendsListForm";
+
+// Mock tRPC client
+const mockMutate = vi.fn();
+const mockInvalidate = vi.fn();
+
+vi.mock("@/trpc/client", () => ({
+  api: {
+    useUtils: () => ({
+      friendships: {
+        getSentRequests: {
+          invalidate: mockInvalidate,
+        },
+      },
+    }),
+    friendships: {
+      sendRequest: {
+        useMutation: (opts?: any) => ({
+          mutate: (data: any) => {
+            mockMutate(data);
+            opts?.onSuccess?.();
+          },
+          isPending: false,
+          isSuccess: false,
+          isError: false,
+          error: null,
+        }),
+      },
+    },
+  },
+}));
 
 // Mock react-i18next
 const mockT = vi.fn((key: string) => {
@@ -9,6 +40,8 @@ const mockT = vi.fn((key: string) => {
     addFriend: "Add Friend",
     emailRequired: "Email is required",
     emailInvalid: "Please enter a valid email address",
+    friendRequestSent: "Friend request sent",
+    errorSendingRequest: "Error sending request",
   };
   return translations[key] || key;
 });
@@ -25,7 +58,6 @@ vi.mock("react-i18next", () => ({
 describe("FriendsListForm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    console.log = vi.fn();
   });
 
   afterEach(() => {
@@ -43,7 +75,7 @@ describe("FriendsListForm", () => {
   });
 
   it("validates empty email submission", async () => {
-    const { container } = render(<FriendsListForm isOpen={true} />);
+    render(<FriendsListForm isOpen={true} />);
 
     const submitButton = screen.getAllByRole("button", { name: "Add Friend" })[0];
     fireEvent.click(submitButton);
@@ -79,8 +111,8 @@ describe("FriendsListForm", () => {
     fireEvent.click(submitButton);
 
     await waitFor(() => {
-      expect(console.log).toHaveBeenCalledWith({
-        email: "test@example.com",
+      expect(mockMutate).toHaveBeenCalledWith({
+        friendEmail: "test@example.com",
       });
     });
 
@@ -133,9 +165,13 @@ describe("FriendsListForm", () => {
     fireEvent.submit(form!);
 
     await waitFor(() => {
-      expect(console.log).toHaveBeenCalledWith({
-        email: "test@example.com",
+      expect(mockMutate).toHaveBeenCalledWith({
+        friendEmail: "test@example.com",
       });
+    });
+
+    await waitFor(() => {
+      expect(input.value).toBe("");
     });
   });
 });

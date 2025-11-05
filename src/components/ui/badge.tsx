@@ -23,6 +23,22 @@ const badgeVariants = cva(
           "bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-500/30",
         finished:
           "bg-gray-500/20 text-gray-600 dark:text-gray-400 border-gray-500/30",
+        pending:
+          "bg-orange-500/20 text-orange-600 dark:text-orange-400 border-orange-500/30",
+        notification:
+          "border-transparent bg-red-500 text-white flex items-center justify-center",
+        rankBeginner:
+          "bg-slate-500/20 text-slate-700 dark:text-slate-300 border-slate-500/30",
+        rankApprentice:
+          "bg-green-500/20 text-green-700 dark:text-green-300 border-green-500/30",
+        rankExperienced:
+          "bg-blue-500/20 text-blue-700 dark:text-blue-300 border-blue-500/30",
+        rankExpert:
+          "bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-500/30",
+        rankMaster:
+          "bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/30",
+        rankLegend:
+          "bg-gradient-to-r from-yellow-500/30 to-orange-500/30 text-orange-800 dark:text-orange-200 border-orange-500/40 font-bold",
       },
     },
     defaultVariants: {

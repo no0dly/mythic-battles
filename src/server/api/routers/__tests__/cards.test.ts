@@ -1,11 +1,29 @@
-import { describe, it, expect } from "vitest";
-import { createTRPCContext } from "../../trpc";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { describe, it, expect, vi } from "vitest";
 import { cardsRouter } from "../cards";
+import type { SupabaseClient } from "@supabase/supabase-js";
+
+// Mock Supabase client
+const createMockSupabase = () => ({
+  auth: {
+    getUser: vi.fn().mockResolvedValue({
+      data: { user: null },
+      error: null,
+    }),
+  },
+}) as unknown as SupabaseClient;
+
+// Mock context without requiring cookies
+const createMockContext = () => ({
+  headers: new Headers(),
+  supabase: createMockSupabase(),
+  session: null,
+});
 
 describe("cards router", () => {
   it("returns list of cards", async () => {
-    const ctx = await createTRPCContext({ headers: new Headers() });
-    const caller = cardsRouter.createCaller(ctx);
+    const ctx = createMockContext();
+    const caller = cardsRouter.createCaller(ctx as any);
 
     const result = await caller.list();
 
@@ -15,8 +33,8 @@ describe("cards router", () => {
   });
 
   it("returns cards with correct structure", async () => {
-    const ctx = await createTRPCContext({ headers: new Headers() });
-    const caller = cardsRouter.createCaller(ctx);
+    const ctx = createMockContext();
+    const caller = cardsRouter.createCaller(ctx as any);
 
     const result = await caller.list();
 
@@ -35,8 +53,8 @@ describe("cards router", () => {
   });
 
   it("includes Zeus card in results", async () => {
-    const ctx = await createTRPCContext({ headers: new Headers() });
-    const caller = cardsRouter.createCaller(ctx);
+    const ctx = createMockContext();
+    const caller = cardsRouter.createCaller(ctx as any);
 
     const result = await caller.list();
 
@@ -46,8 +64,8 @@ describe("cards router", () => {
   });
 
   it("includes Ares card in results", async () => {
-    const ctx = await createTRPCContext({ headers: new Headers() });
-    const caller = cardsRouter.createCaller(ctx);
+    const ctx = createMockContext();
+    const caller = cardsRouter.createCaller(ctx as any);
 
     const result = await caller.list();
 
@@ -57,8 +75,8 @@ describe("cards router", () => {
   });
 
   it("includes Athena card in results", async () => {
-    const ctx = await createTRPCContext({ headers: new Headers() });
-    const caller = cardsRouter.createCaller(ctx);
+    const ctx = createMockContext();
+    const caller = cardsRouter.createCaller(ctx as any);
 
     const result = await caller.list();
 

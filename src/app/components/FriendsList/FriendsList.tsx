@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -10,90 +11,91 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import FriendsListForm from "@/app/components/FriendsListForm/FriendsListForm";
+import { FriendsTab } from "./FriendsTab";
+import { IncomingTab } from "./IncomingTab";
+import { SentTab } from "./SentTab";
+import { TAB_VALUES } from "./constants";
+import { useFriends, usePendingRequests } from "@/hooks";
 
-interface Friend {
-  id: string;
-  email: string;
-  name?: string;
-}
-
-// Mocked friends list
-const MOCKED_FRIENDS: Friend[] = [
-  { id: "1", email: "alice@example.com", name: "Alice" },
-  { id: "2", email: "bob@example.com", name: "Bob" },
-  { id: "3", email: "charlie@example.com", name: "Charlie" },
-  { id: "4", email: "dave@example.com", name: "Dave" },
-  { id: "5", email: "eve@example.com", name: "Eve" },
-  { id: "6", email: "frank@example.com", name: "Frank" },
-  { id: "7", email: "george@example.com", name: "George" },
-  { id: "8", email: "hannah@example.com", name: "Hannah" },
-  { id: "9", email: "ian@example.com", name: "Ian" },
-  { id: "10", email: "jane@example.com", name: "Jane" },
-  { id: "11", email: "karen@example.com", name: "Karen" },
-  { id: "12", email: "larry@example.com", name: "Larry" },
-  { id: "13", email: "mary@example.com", name: "Mary" },
-  { id: "14", email: "nathan@example.com", name: "Nathan" },
-  { id: "15", email: "olivia@example.com", name: "Olivia" },
-  { id: "16", email: "patrick@example.com", name: "Patrick" },
-  { id: "17", email: "quinn@example.com", name: "Quinn" },
-];
-
-function FriendsList() {
+const FriendsList = () => {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
-  const friends = MOCKED_FRIENDS;
 
-  const onOpenModalHandler = () => {
+  const { friends, isLoading: friendsLoading } = useFriends();
+  const { pendingRequests, isLoading: pendingLoading } = usePendingRequests();
+
+  const handleOpenModal = () => {
     setIsOpen(true);
   };
+
+  const isLoading = friendsLoading || pendingLoading;
+  const hasIncoming = pendingRequests.length > 0;
 
   return (
     <>
       <Button
         variant="ghost"
         className="flex justify-between items-center group/item w-full h-auto p-0 hover:bg-transparent cursor-pointer"
-        onClick={onOpenModalHandler}
+        onClick={handleOpenModal}
       >
         <span className="text-foreground/70 font-medium underline decoration-foreground/70 underline-offset-4 transition-all duration-200 group-hover/item:no-underline">
           {t("friends")}
         </span>
-        <span className="font-semibold text-foreground">{friends.length}</span>
+        <div className="flex items-center gap-2">
+          {hasIncoming && (
+            <Badge variant="notification" className="h-6 w-6 p-0 text-[10px] font-bold">
+              {pendingRequests.length}
+            </Badge>
+          )}
+          <span className="font-semibold text-foreground">
+            {isLoading ? "..." : friends.length}
+          </span>
+        </div>
       </Button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="max-w-md flex flex-col max-h-[470px] !pb-4">
+        <DialogContent className="!max-w-xl flex flex-col max-h-[550px] !pb-4">
           <DialogHeader>
             <DialogTitle>{t("friends")}</DialogTitle>
             <DialogDescription />
           </DialogHeader>
 
           <div className="flex flex-col flex-1 min-h-0">
-            <div className="flex-1 overflow-y-auto min-h-0 mb-4">
-              <div className="space-y-1">
-                {friends.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    {t("noFriendsYet")}
-                  </p>
-                ) : (
-                  friends.map((friend) => (
-                    <div
-                      key={friend.id}
-                      className="flex items-center justify-between p-2 rounded-lg hover:bg-accent"
+            <Tabs defaultValue={TAB_VALUES.FRIENDS} className="flex flex-col flex-1 min-h-0">
+              <TabsList className="grid w-full grid-cols-3 mb-3">
+                <TabsTrigger value={TAB_VALUES.FRIENDS}>
+                  {t("friends")}
+                </TabsTrigger>
+                <TabsTrigger value={TAB_VALUES.INCOMING} className="relative">
+                  {t("friendRequests")}
+                  {hasIncoming && (
+                    <Badge
+                      variant="notification"
+                      className="ml-1 h-5 w-5 p-0 text-[10px] font-bold"
                     >
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium">
-                          {friend.name || friend.email.split("@")[0]}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          {friend.email}
-                        </span>
-                      </div>
-                    </div>
-                  ))
-                )}
+                      {pendingRequests.length}
+                    </Badge>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger value={TAB_VALUES.SENT}>
+                  {t("sentRequests")}
+                </TabsTrigger>
+              </TabsList>
+
+              <div className="flex-1 overflow-y-auto min-h-0 mb-4">
+                <TabsContent value={TAB_VALUES.FRIENDS} className="mt-0">
+                  <FriendsTab />
+                </TabsContent>
+                <TabsContent value={TAB_VALUES.INCOMING} className="mt-0">
+                  <IncomingTab />
+                </TabsContent>
+                <TabsContent value={TAB_VALUES.SENT} className="mt-0">
+                  <SentTab />
+                </TabsContent>
               </div>
-            </div>
+            </Tabs>
 
             <FriendsListForm isOpen={isOpen} />
           </div>
@@ -101,6 +103,6 @@ function FriendsList() {
       </Dialog>
     </>
   );
-}
+};
 
 export default FriendsList;
