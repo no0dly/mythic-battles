@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "react-i18next";
 import type { UserStatistics as UserStatsType } from "@/utils/users";
+import { useMemo } from "react";
 import {
   getUserRank,
   getRankTranslationKey,
@@ -20,9 +21,15 @@ export const UserStatistics = ({
   compact = false,
 }: UserStatisticsProps) => {
   const { t } = useTranslation();
-  const rank = getUserRank(statistics);
-  const rankKey = getRankTranslationKey(rank);
-  const rankVariant = getRankBadgeVariant(rank);
+  
+  const { rank, rankKey, rankVariant } = useMemo(() => {
+    const rank = getUserRank(statistics);
+    return {
+      rank,
+      rankKey: getRankTranslationKey(rank),
+      rankVariant: getRankBadgeVariant(rank),
+    };
+  }, [statistics]);
 
   if (compact) {
     return (

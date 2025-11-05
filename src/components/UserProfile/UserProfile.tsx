@@ -5,14 +5,6 @@ import Loader from "@/components/Loader";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "react-i18next";
-import {
-  formatDisplayName,
-  getUserInitials,
-  hasAvatar,
-  getUserRank,
-  getRankTranslationKey,
-  getRankBadgeVariant,
-} from "@/utils/users";
 import Image from "next/image";
 
 export const UserProfile = () => {
@@ -31,40 +23,33 @@ export const UserProfile = () => {
     );
   }
 
-  const displayName = formatDisplayName(user.display_name, user.email);
-  const initials = getUserInitials(user.display_name, user.email);
-  const rank = getUserRank(user.statistics);
-  const rankKey = getRankTranslationKey(rank);
-  const rankVariant = getRankBadgeVariant(rank);
-  const showAvatar = hasAvatar(user.avatar_url);
-
   return (
     <Card className="p-6">
       <div className="flex items-start gap-4">
         {/* Avatar */}
         <div className="flex-shrink-0">
-          {showAvatar ? (
+          {user.showAvatar ? (
             <Image
-              src={user.avatar_url}
-              alt={displayName}
+              src={user.avatarUrl}
+              alt={user.displayName}
               width={50}
               height={50}
               className="w-16 h-16 rounded-full object-cover"
             />
           ) : (
             <div className="w-16 h-16 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-xl">
-              {initials}
+              {user.initials}
             </div>
           )}
         </div>
 
         {/* User Info */}
         <div className="flex-grow">
-          <h2 className="text-2xl font-bold">{displayName}</h2>
+          <h2 className="text-2xl font-bold">{user.displayName}</h2>
           <p className="text-gray-600">{user.email}</p>
           <div className="mt-2">
-            <Badge variant={rankVariant}>
-              {t(rankKey)}
+            <Badge variant={user.rankVariant}>
+              {t(user.rankKey)}
             </Badge>
           </div>
         </div>

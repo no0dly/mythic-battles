@@ -1,16 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { UserProfile } from "@/components/UserProfile";
 import { UserProfileEdit } from "@/components/UserProfileEdit";
 import { Button } from "@/components/ui/button";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useTranslation } from "react-i18next";
-import type { User } from "@supabase/supabase-js";
 import PageLayout from "@/components/PageLayout";
 
 interface ProfilePageContentProps {
-  user: User;
   handleSignOut: () => Promise<void>;
 }
 
@@ -21,6 +19,13 @@ export const ProfilePageContent = ({
   const { user: userProfile, isLoading } = useUserProfile();
   const [isEditing, setIsEditing] = useState(false);
 
+  const handleSetIsEditing = useCallback(
+    (val: boolean) => () => {
+      setIsEditing(val)
+    },
+    [],
+  )
+  
   return (
     <PageLayout title="profile">
       <div>
@@ -29,14 +34,14 @@ export const ProfilePageContent = ({
             {isEditing && userProfile ? (
               <UserProfileEdit
                 user={userProfile}
-                onSuccess={() => setIsEditing(false)}
+                onSuccess={handleSetIsEditing(false)}
               />
             ) : (
               <>
                 <UserProfile />
                 <div className="flex items-center gap-2 mb-6">
-                  {!isLoading && userProfile && (
-                    <Button onClick={() => setIsEditing(true)}>
+                  {userProfile && (
+                    <Button loading={isLoading} onClick={handleSetIsEditing(true)}>
                       {t("updateProfile")}
                     </Button>
                   )}
@@ -55,7 +60,7 @@ export const ProfilePageContent = ({
 
             {isEditing && (
               <Button
-                onClick={() => setIsEditing(false)}
+                onClick={handleSetIsEditing(false)}
                 variant="outline"
                 className="w-full"
               >

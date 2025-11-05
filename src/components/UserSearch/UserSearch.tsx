@@ -6,11 +6,6 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useTranslation } from "react-i18next";
-import {
-  formatDisplayName,
-  getUserInitials,
-  hasAvatar,
-} from "@/utils/users";
 import { FormItem } from "../ui/form";
 import Image from "next/image";
 
@@ -58,42 +53,36 @@ export const UserSearch = ({ onSelectUser }: UserSearchProps) => {
 
       {!isLoading && !error && users.length > 0 && (
         <div className="space-y-2">
-          {users.map((user) => {
-            const displayName = formatDisplayName(user.display_name, user.email);
-            const initials = getUserInitials(user.display_name, user.email);
-            const showAvatar = hasAvatar(user.avatar_url);
-
-            return (
-              <div
-                key={user.id}
-                onClick={() => handleUserClick(user.id)}
-                className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
-              >
-                {/* Avatar */}
-                <div className="flex-shrink-0">
-                  {showAvatar ? (
-                    <Image
-                      src={user.avatar_url}
-                      alt={displayName}
-                      width={50}
-                      height={50}
-                      className="w-10 h-10 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-sm">
-                      {initials}
-                    </div>
-                  )}
-                </div>
-
-                {/* User Info */}
-                <div>
-                  <p className="font-semibold">{displayName}</p>
-                  <p className="text-sm text-gray-600">{user.email}</p>
-                </div>
+          {users.map((user) => (
+            <div
+              key={user.id}
+              onClick={() => handleUserClick(user.id)}
+              className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
+            >
+              {/* Avatar */}
+              <div className="flex-shrink-0">
+                {user.showAvatar ? (
+                  <Image
+                    src={user.avatarUrl}
+                    alt={user.displayName}
+                    width={50}
+                    height={50}
+                    className="w-10 h-10 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-sm">
+                    {user.initials}
+                  </div>
+                )}
               </div>
-            );
-          })}
+
+              {/* User Info */}
+              <div>
+                <p className="font-semibold">{user.displayName}</p>
+                <p className="text-sm text-gray-600">{user.email}</p>
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </Card>

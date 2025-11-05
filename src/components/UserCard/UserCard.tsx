@@ -1,32 +1,33 @@
 "use client";
 
 import { Card } from "@/components/ui/card";
-import {
-  formatDisplayName,
-  getUserInitials,
-  hasAvatar,
-} from "@/utils/users";
+import { formatDisplayName, getUserInitials, hasAvatar } from "@/utils/users";
 import Image from "next/image";
 
 interface UserCardProps {
-  user: {
-    id: string;
-    email: string;
-    display_name: string;
-    avatar_url: string;
-  };
+  email: string;
+  displayName: string;
+  avatarUrl: string;
   onClick?: () => void;
   children?: React.ReactNode;
 }
 
-export const UserCard = ({ user, onClick, children }: UserCardProps) => {
-  const displayName = formatDisplayName(user.display_name, user.email);
-  const initials = getUserInitials(user.display_name, user.email);
-  const showAvatar = hasAvatar(user.avatar_url);
+export const UserCard = ({
+  email,
+  displayName,
+  avatarUrl,
+  onClick,
+  children,
+}: UserCardProps) => {
+  const formattedDisplayName = formatDisplayName(displayName, email);
+  const initials = getUserInitials(displayName, email);
+  const showAvatar = hasAvatar(avatarUrl);
 
   return (
     <Card
-      className={`p-4 ${onClick ? "cursor-pointer hover:bg-gray-50 transition-colors" : ""}`}
+      className={`p-4 ${
+        onClick ? "cursor-pointer hover:bg-gray-50 transition-colors" : ""
+      }`}
       onClick={onClick}
     >
       <div className="flex items-center gap-3">
@@ -34,10 +35,10 @@ export const UserCard = ({ user, onClick, children }: UserCardProps) => {
         <div className="flex-shrink-0">
           {showAvatar ? (
             <Image
-              src={user.avatar_url}
+              src={avatarUrl}
               height={50}
               width={50}
-              alt={displayName}
+              alt={formattedDisplayName}
               className="w-12 h-12 rounded-full object-cover"
             />
           ) : (
@@ -49,8 +50,8 @@ export const UserCard = ({ user, onClick, children }: UserCardProps) => {
 
         {/* User Info */}
         <div className="flex-grow min-w-0">
-          <p className="font-semibold truncate">{displayName}</p>
-          <p className="text-sm text-gray-600 truncate">{user.email}</p>
+          <p className="font-semibold truncate">{formattedDisplayName}</p>
+          <p className="text-sm text-gray-600 truncate">{email}</p>
         </div>
 
         {/* Additional content */}
@@ -59,4 +60,3 @@ export const UserCard = ({ user, onClick, children }: UserCardProps) => {
     </Card>
   );
 };
-

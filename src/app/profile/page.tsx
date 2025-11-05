@@ -20,6 +20,6 @@ export default async function ProfilePage() {
     redirect('/auth/login')
   }
 
-  return <ProfilePageContent user={user} handleSignOut={handleSignOut} />
+  return <ProfilePageContent  handleSignOut={handleSignOut} />
 }
 

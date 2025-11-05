@@ -5,15 +5,12 @@ import { useTranslation } from "react-i18next";
 import { ShimmerButton } from "@/components/ui/shimmer-button";
 import { UserStatistics } from "@/components/UserStatistics";
 import { useUserProfile } from "@/hooks/useUserProfile";
-import { formatDisplayName } from "@/utils/users";
 
 function LoggedContent() {
   const { t } = useTranslation();
   const { user } = useUserProfile();
 
-  const displayName = user
-    ? formatDisplayName(user.display_name, user.email)
-    : "Warrior";
+  const displayName = user?.displayName ?? "Warrior";
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
