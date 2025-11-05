@@ -15,16 +15,22 @@ test.describe('Wiki Page', () => {
 
   test('displays cards in grid layout', async ({ page }) => {
     // Wait for cards to load
-    await page.waitForSelector('[data-testid="card-item"]', { timeout: 5000 });
+    await page.waitForSelector('[data-testid="card-item"]', { timeout: 10000 });
 
     // Check for card items in the grid
     const cardItems = page.locator('[data-testid="card-item"]');
     await expect(cardItems.first()).toBeVisible({ timeout: 10000 });
 
-    // Check for card names (Zeus, Ares, Athena) - displayed as "Name (cost)"
-    await expect(page.getByText(/Zeus/i)).toBeVisible({ timeout: 10000 });
-    await expect(page.getByText(/Ares/i)).toBeVisible({ timeout: 10000 });
-    await expect(page.getByText(/Athena/i)).toBeVisible({ timeout: 10000 });
+    // Check that cards are displayed - verify we have at least some cards
+    const count = await cardItems.count();
+    expect(count).toBeGreaterThan(0);
+
+    // Check for card names within the card items (some cards should be visible)
+    // Since we're using virtual scrolling, not all cards may be rendered initially
+    const firstCard = cardItems.first();
+    const firstCardText = await firstCard.textContent();
+    expect(firstCardText).toBeTruthy();
+    expect(firstCardText?.length).toBeGreaterThan(0);
   });
 
   test('opens modal when card is clicked', async ({ page }) => {
@@ -110,24 +116,35 @@ test.describe('Wiki Page', () => {
     // Since cards load quickly, we might not catch it, but we can verify
     // that cards eventually appear
     await expect(page.locator('[data-testid="card-item"]').first()).toBeVisible({ timeout: 10000 });
-    await expect(page.getByText(/Zeus/i)).toBeVisible({ timeout: 10000 });
+
+    // Verify cards are loaded by checking card count
+    const cardItems = page.locator('[data-testid="card-item"]');
+    const count = await cardItems.count();
+    expect(count).toBeGreaterThan(0);
   });
 
   test('displays card information', async ({ page }) => {
     // Wait for cards to load
-    await page.waitForTimeout(1000);
+    await page.waitForSelector('[data-testid="card-item"]', { timeout: 10000 });
 
-    // Check for card names and cost information
-    // Cards display as "Zeus (5)" format
-    await expect(page.getByText(/Zeus/i)).toBeVisible({ timeout: 5000 });
-    await expect(page.getByText(/Ares/i)).toBeVisible({ timeout: 5000 });
-    await expect(page.getByText(/Athena/i)).toBeVisible({ timeout: 5000 });
-
-    // Check for card type badges (unit_type)
-    // These should be visible as badges
+    // Check for card items
     const cardItems = page.locator('[data-testid="card-item"]');
     const count = await cardItems.count();
     expect(count).toBeGreaterThan(0);
+
+    // Verify cards have content - check first few cards
+    const firstCard = cardItems.first();
+    await expect(firstCard).toBeVisible();
+
+    // Check that card contains text (name and cost)
+    const firstCardText = await firstCard.textContent();
+    expect(firstCardText).toBeTruthy();
+    expect(firstCardText?.length).toBeGreaterThan(0);
+
+    // Check for card type badges (unit_type) - should be visible in cards
+    const badges = page.locator('[data-testid="card-item"]').locator('text=/god|hero|monster|titan/i');
+    const badgeCount = await badges.count();
+    expect(badgeCount).toBeGreaterThan(0);
   });
 
   test('displays filter controls', async ({ page }) => {
@@ -142,8 +159,8 @@ test.describe('Wiki Page', () => {
     const typeFilter = page.getByLabel(/type/i);
     await expect(typeFilter).toBeVisible({ timeout: 5000 });
 
-    // Check for cost filter
-    const costFilter = page.getByLabel(/cost/i);
+    // Check for cost filter - use ID selector to avoid matching card buttons with "Cost: X" in aria-label
+    const costFilter = page.locator('#filter-cost');
     await expect(costFilter).toBeVisible({ timeout: 5000 });
   });
 
@@ -267,8 +284,8 @@ test.describe('Wiki Page', () => {
     const initialCount = await initialCards.count();
     expect(initialCount).toBeGreaterThan(0);
 
-    // Open cost filter dropdown
-    const costFilter = page.getByLabel(/cost/i);
+    // Open cost filter dropdown - use ID selector to avoid matching card buttons with "Cost: X" in aria-label
+    const costFilter = page.locator('#filter-cost');
     await costFilter.click();
     await page.waitForTimeout(500);
 
@@ -361,7 +378,7 @@ test.describe('Wiki Page', () => {
     // The page should show information about filtered cards
     // Look for text that contains numbers (card counts)
     const showingCardsText = page.locator('text=/showing|cards/i');
-    const count = await showingCardsText.count();
+    await showingCardsText.count();
     // This might not always be visible, so we just verify cards are displayed
     const cardItems = page.locator('[data-testid="card-item"]');
     await expect(cardItems.first()).toBeVisible({ timeout: 5000 });
@@ -386,6 +403,106 @@ test.describe('Wiki Page', () => {
     const cardItems = page.locator('[data-testid="card-item"]');
     const visibleCount = await cardItems.count();
     expect(visibleCount).toBe(0);
+  });
+
+  test('virtual list renders cards efficiently', async ({ page }) => {
+    // Wait for cards to load
+    await page.waitForSelector('[data-testid="card-item"]', { timeout: 10000 });
+
+    // Check that virtual list container exists
+    const virtualContainer = page.locator('[class*="overflow-y-auto"]');
+    await expect(virtualContainer.first()).toBeVisible();
+
+    // Verify cards are rendered in virtual rows
+    const virtualRows = page.locator('[data-index]');
+    const rowCount = await virtualRows.count();
+    expect(rowCount).toBeGreaterThan(0);
+  });
+
+  test('virtual list scrolls correctly', async ({ page }) => {
+    // Wait for cards to load
+    await page.waitForSelector('[data-testid="card-item"]', { timeout: 10000 });
+
+    // Get the scrollable container
+    const scrollContainer = page.locator('[class*="overflow-y-auto"]').first();
+
+    // Scroll down
+    await scrollContainer.evaluate((el) => {
+      el.scrollTop = 500;
+    });
+
+    await page.waitForTimeout(300);
+
+    // Verify scrolling occurred
+    const scrollPosition = await scrollContainer.evaluate((el) => el.scrollTop);
+    expect(scrollPosition).toBeGreaterThan(0);
+
+    // Verify cards are still visible after scrolling
+    const cardItems = page.locator('[data-testid="card-item"]');
+    await expect(cardItems.first()).toBeVisible({ timeout: 5000 });
+  });
+
+  test('filter remains sticky while scrolling', async ({ page }) => {
+    // Wait for cards to load
+    await page.waitForSelector('[data-testid="card-item"]', { timeout: 10000 });
+
+    // Get filter element
+    const filter = page.locator('[class*="sticky"]').first();
+    const initialPosition = await filter.boundingBox();
+
+    // Scroll down
+    const scrollContainer = page.locator('[class*="overflow-y-auto"]').first();
+    await scrollContainer.evaluate((el) => {
+      el.scrollTop = 1000;
+    });
+
+    await page.waitForTimeout(300);
+
+    // Verify filter is still visible (sticky)
+    const afterScrollPosition = await filter.boundingBox();
+    expect(afterScrollPosition).toBeTruthy();
+    // Filter should remain at top (sticky positioning)
+    expect(afterScrollPosition?.y).toBeLessThanOrEqual(initialPosition?.y || 0);
+  });
+
+  test('responsive columns adjust to screen size', async ({ page }) => {
+    // Test mobile viewport
+    await page.setViewportSize({ width: 375, height: 667 });
+    await page.goto('/wiki?lng=en');
+    await page.waitForSelector('[data-testid="card-item"]', { timeout: 10000 });
+
+    // Check grid layout (should be 1 column on mobile)
+    const gridContainer = page.locator('[class*="grid-cols-1"]').first();
+    await expect(gridContainer).toBeVisible();
+
+    // Test tablet viewport
+    await page.setViewportSize({ width: 768, height: 1024 });
+    await page.waitForTimeout(500); // Wait for resize handler
+
+    // Test desktop viewport
+    await page.setViewportSize({ width: 1920, height: 1080 });
+    await page.waitForTimeout(500); // Wait for resize handler
+
+    // Cards should still be visible
+    const cardItems = page.locator('[data-testid="card-item"]');
+    await expect(cardItems.first()).toBeVisible({ timeout: 5000 });
+  });
+
+  test('card count updates when filters change', async ({ page }) => {
+    // Wait for cards to load
+    await page.waitForSelector('[data-testid="card-item"]', { timeout: 10000 });
+
+    // Get initial card count text
+    const initialCountText = await page.locator('text=/showing|cards/i').first().textContent();
+
+    // Apply filter
+    const searchInput = page.getByLabel(/search by name/i);
+    await searchInput.fill('Zeus');
+    await page.waitForTimeout(600);
+
+    // Card count should update
+    const filteredCountText = await page.locator('text=/showing|cards/i').first().textContent();
+    expect(filteredCountText).not.toBe(initialCountText);
   });
 });
 

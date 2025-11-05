@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect } from "vitest";
-import { getFilteredData, getUniqueCosts } from "../utils";
+import { getFilteredData, getUniqueCosts, chunk } from "../utils";
 import { DEFAULT_FILTER } from "@/stores/cardFilters";
 import type { Card } from "@/types/database.types";
 import { CARD_TYPES } from "@/types/database.types";
@@ -168,6 +169,32 @@ describe("getFilteredData", () => {
     );
     expect(result).toHaveLength(0);
   });
+
+  it("should handle null/undefined data", () => {
+    expect(getFilteredData(null as any, "", DEFAULT_FILTER, DEFAULT_FILTER)).toEqual([]);
+    expect(getFilteredData(undefined as any, "", DEFAULT_FILTER, DEFAULT_FILTER)).toEqual([]);
+  });
+
+  it("should trim and normalize search name", () => {
+    const result = getFilteredData(
+      mockCards,
+      "  ZEUS  ",
+      DEFAULT_FILTER,
+      DEFAULT_FILTER
+    );
+    expect(result).toHaveLength(1);
+    expect(result[0]?.unit_name).toBe("Zeus");
+  });
+
+  it("should handle empty search name string", () => {
+    const result = getFilteredData(
+      mockCards,
+      "",
+      DEFAULT_FILTER,
+      DEFAULT_FILTER
+    );
+    expect(result).toHaveLength(4);
+  });
 });
 
 describe("getUniqueCosts", () => {
@@ -242,6 +269,86 @@ describe("getUniqueCosts", () => {
     ];
     const result = getUniqueCosts(unsortedCards);
     expect(result).toEqual([1, 5, 10]);
+  });
+
+  it("should handle null/undefined data", () => {
+    expect(getUniqueCosts(null as any)).toEqual([]);
+    expect(getUniqueCosts(undefined as any)).toEqual([]);
+  });
+});
+
+describe("chunk", () => {
+  it("should split array into chunks of specified size", () => {
+    const array = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+    const result = chunk(array, 3);
+    expect(result).toEqual([[1, 2, 3], [4, 5, 6], [7, 8, 9]]);
+  });
+
+  it("should handle array that doesn't divide evenly", () => {
+    const array = [1, 2, 3, 4, 5];
+    const result = chunk(array, 2);
+    expect(result).toEqual([[1, 2], [3, 4], [5]]);
+  });
+
+  it("should handle empty array", () => {
+    const result = chunk([], 3);
+    expect(result).toEqual([]);
+  });
+
+  it("should handle array smaller than chunk size", () => {
+    const array = [1, 2];
+    const result = chunk(array, 5);
+    expect(result).toEqual([[1, 2]]);
+  });
+
+  it("should handle single element array", () => {
+    const array = [1];
+    const result = chunk(array, 2);
+    expect(result).toEqual([[1]]);
+  });
+
+  it("should handle chunk size of 1", () => {
+    const array = [1, 2, 3];
+    const result = chunk(array, 1);
+    expect(result).toEqual([[1], [2], [3]]);
+  });
+
+  it("should handle chunk size equal to array length", () => {
+    const array = [1, 2, 3];
+    const result = chunk(array, 3);
+    expect(result).toEqual([[1, 2, 3]]);
+  });
+
+  it("should handle chunk size larger than array length", () => {
+    const array = [1, 2, 3];
+    const result = chunk(array, 10);
+    expect(result).toEqual([[1, 2, 3]]);
+  });
+
+  it("should handle invalid chunk size (0 or negative)", () => {
+    const array = [1, 2, 3];
+    expect(chunk(array, 0)).toEqual([]);
+    expect(chunk(array, -1)).toEqual([]);
+  });
+
+  it("should handle null/undefined array", () => {
+    expect(chunk(null as any, 3)).toEqual([]);
+    expect(chunk(undefined as any, 3)).toEqual([]);
+  });
+
+  it("should work with string arrays", () => {
+    const array = ["a", "b", "c", "d", "e"];
+    const result = chunk(array, 2);
+    expect(result).toEqual([["a", "b"], ["c", "d"], ["e"]]);
+  });
+
+  it("should work with object arrays", () => {
+    const array = [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }];
+    const result = chunk(array, 2);
+    expect(result).toEqual([
+      [{ id: 1 }, { id: 2 }],
+      [{ id: 3 }, { id: 4 }],
+    ]);
   });
 });
 

@@ -1,3 +1,4 @@
+import { memo } from "react";
 import {
   Card,
   CardContent,
@@ -10,13 +11,12 @@ import Image from "next/image";
 import type { Card as CardType } from "@/types/database.types";
 import { BADGE_COLORS } from "./constants";
 
-export default function CardGalleryItem({
-  item,
-  onCardClickHandler,
-}: {
+interface CardGalleryItemProps {
   item: CardType;
   onCardClickHandler: () => void;
-}) {
+}
+
+function CardGalleryItem({ item, onCardClickHandler }: CardGalleryItemProps) {
   const {
     unit_name: name,
     unit_type: unitType,
@@ -25,7 +25,12 @@ export default function CardGalleryItem({
   } = item;
 
   return (
-    <button type="button" className="text-left" onClick={onCardClickHandler}>
+    <button
+      type="button"
+      className="text-left w-full"
+      onClick={onCardClickHandler}
+      aria-label={`${name} - ${unitType} - Cost: ${cost}`}
+    >
       <Card
         data-testid="card-item"
         className="h-full hover:shadow-sm transition-shadow py-2 gap-1"
@@ -44,12 +49,11 @@ export default function CardGalleryItem({
           </CardDescription>
         </CardHeader>
         <CardContent className="px-2 py-1">
-          <div className="flex items-center justify-center h-full w-full">
+          <div className="relative flex items-center justify-center h-full w-full min-h-[200px]">
             <Image
               src={imageUrl}
               alt={name}
-              width={271}
-              height={182}
+              fill
               loading="lazy"
               className="object-contain"
               sizes="(min-width: 1024px) 20vw, (min-width: 640px) 25vw, 50vw"
@@ -60,3 +64,5 @@ export default function CardGalleryItem({
     </button>
   );
 }
+
+export default memo(CardGalleryItem);

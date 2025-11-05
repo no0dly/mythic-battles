@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import CardGalleryFilter from "../CardGalleryFilter";
@@ -38,7 +39,7 @@ vi.mock("react-i18next", () => ({
 
 // Mock debounce
 vi.mock("debounce", () => ({
-  default: (fn: Function) => fn,
+  default: (fn: any) => fn,
 }));
 
 // Mock UI components
@@ -65,14 +66,20 @@ vi.mock("@/components/ui/card", () => ({
 }));
 
 vi.mock("@/components/ui/select", () => ({
-  Select: ({ children, value, onValueChange }: any) => (
+  Select: ({ children, value }: any) => (
     <div data-testid="select" data-value={value}>
       {children}
     </div>
   ),
-  SelectContent: ({ children }: any) => <div data-testid="select-content">{children}</div>,
+  SelectContent: ({ children }: any) => (
+    <div data-testid="select-content">{children}</div>
+  ),
   SelectItem: ({ children, value, onClick }: any) => (
-    <div data-testid="select-item" data-value={value} onClick={() => onClick?.({ target: { value } })}>
+    <div
+      data-testid="select-item"
+      data-value={value}
+      onClick={() => onClick?.({ target: { value } })}
+    >
       {children}
     </div>
   ),
@@ -110,14 +117,18 @@ describe("CardGalleryFilter", () => {
 
   it("renders search input with correct placeholder", () => {
     renderFilter();
-    const searchInput = screen.getByLabelText("searchByName") as HTMLInputElement;
+    const searchInput = screen.getByLabelText(
+      "searchByName"
+    ) as HTMLInputElement;
     expect(searchInput).toBeTruthy();
     expect(searchInput.type).toBe("text");
   });
 
   it("calls setSearchName when search input changes", async () => {
     renderFilter();
-    const searchInput = screen.getByLabelText("searchByName") as HTMLInputElement;
+    const searchInput = screen.getByLabelText(
+      "searchByName"
+    ) as HTMLInputElement;
 
     fireEvent.change(searchInput, { target: { value: "zeus" } });
 
@@ -175,7 +186,7 @@ describe("CardGalleryFilter", () => {
   it("calls clearFilters when clear button is clicked", () => {
     mockStoreState.searchName = "zeus";
     renderFilter();
-    
+
     const clearButtons = screen.getAllByText("clearFilters");
     expect(clearButtons.length).toBeGreaterThan(0);
     fireEvent.click(clearButtons[0]!);
@@ -203,4 +214,3 @@ describe("CardGalleryFilter", () => {
     expect(costSelects.length).toBeGreaterThan(0);
   });
 });
-

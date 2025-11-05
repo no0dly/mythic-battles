@@ -49,7 +49,7 @@ export default function CardGalleryFilter({
 
   return (
     <UICard className="p-4">
-      <div className="flex flex-col sm:flex-row gap-4 items-end">
+      <div className="flex flex-col sm:flex-row gap-4">
         <div className="flex-1 w-full sm:w-auto space-y-2 max-w-xs">
           <Label htmlFor="search-name">{t("searchByName")}</Label>
           <Input id="search-name" type="text" onChange={onInputChangeHandler} />

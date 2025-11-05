@@ -6,7 +6,7 @@ import Loader from "@/components/Loader";
 import CardGalleryModal from "../CardGalleryModal";
 import CardGalleryItem from "../CardGalleryItem";
 import CardGalleryFilter from "../CardGalleryFilter";
-import { useState, useMemo } from "react";
+import { useMemo, useRef, useState } from "react";
 import type { Card } from "@/types/database.types";
 import {
   useSearchName,
@@ -15,6 +15,12 @@ import {
 } from "@/stores/cardFilters";
 import { getUniqueCosts, getFilteredData } from "./utils";
 import { useTranslation } from "react-i18next";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import useResponsiveColumns from "./hooks/useResponsiveColumns";
+import { chunk } from "./utils";
+
+const ROW_HEIGHT_ESTIMATE = 350;
+const OVERSCAN = 5;
 
 export default function CardGallery() {
   const { t } = useTranslation();
@@ -23,6 +29,8 @@ export default function CardGallery() {
   const searchName = useSearchName();
   const selectedType = useSelectedType();
   const selectedCost = useSelectedCost();
+  const parentRef = useRef<HTMLDivElement>(null);
+  const columns = useResponsiveColumns();
 
   const uniqueCosts = useMemo(() => getUniqueCosts(data || []), [data]);
 
@@ -31,9 +39,28 @@ export default function CardGallery() {
     [data, searchName, selectedType, selectedCost]
   );
 
+  const rows = useMemo(
+    () => (filteredData ? chunk(filteredData, columns) : []),
+    [filteredData, columns]
+  );
+
+  // Note: React Compiler will show a warning here because TanStack Virtual returns functions
+  // that cannot be memoized. This is expected and safe - the compiler correctly skips
+  // memoization for this hook, which is the intended behavior for this library.
+  const virtualizer = useVirtualizer({
+    count: rows.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => ROW_HEIGHT_ESTIMATE,
+    overscan: OVERSCAN,
+  });
+
   if (error) {
     return (
-      <p className="text-red-600 dark:text-red-400">Failed to load cards.</p>
+      <div className="flex items-center justify-center h-full">
+        <p className="text-red-600 dark:text-red-400">
+          {t("errorLoadingCards")}
+        </p>
+      </div>
     );
   }
 
@@ -41,33 +68,71 @@ export default function CardGallery() {
   const onCloseHandler = () => setSelected(null);
 
   return (
-    <div className="h-full overflow-y-auto space-y-8">
-      <CardGalleryFilter uniqueCosts={uniqueCosts} />
+    <div className="h-full flex flex-col">
+      <div className="sticky top-0 z-10 bg-background flex flex-col gap-2 mb-1">
+        <CardGalleryFilter uniqueCosts={uniqueCosts} />
 
-      {filteredData && (
-        <p className="text-sm text-muted-foreground">
-          {t("showingCards", {
-            count: filteredData.length,
-            total: data?.length || 0,
-          })}
-        </p>
-      )}
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {filteredData?.map((item) => (
-          <CardGalleryItem
-            key={item.id}
-            item={item}
-            onCardClickHandler={onCardClickHandler(item)}
-          />
-        ))}
+        {filteredData && (
+          <p className="text-sm text-muted-foreground py-2">
+            {t("showingCards", {
+              count: filteredData.length,
+              total: data?.length || 0,
+            })}
+          </p>
+        )}
       </div>
 
-      {filteredData?.length === 0 && !isLoading && (
-        <p className="text-center text-muted-foreground py-8">
-          {t("noCardsFoundMatchingYourFilters")}
-        </p>
-      )}
+      <div
+        ref={parentRef}
+        className="flex-1 overflow-y-auto"
+        style={{ contain: "strict" }}
+      >
+        {filteredData?.length === 0 && !isLoading ? (
+          <div className="flex items-center justify-center h-full">
+            <p className="text-center text-muted-foreground py-8">
+              {t("noCardsFoundMatchingYourFilters")}
+            </p>
+          </div>
+        ) : (
+          <div
+            style={{
+              height: `${virtualizer.getTotalSize()}px`,
+              width: "100%",
+              position: "relative",
+            }}
+          >
+            {virtualizer.getVirtualItems().map((virtualRow) => {
+              const row = rows[virtualRow.index];
+              if (!row) return null;
+
+              return (
+                <div
+                  key={virtualRow.key}
+                  data-index={virtualRow.index}
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: `${virtualRow.size}px`,
+                    transform: `translateY(${virtualRow.start}px)`,
+                  }}
+                >
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {row.map((item) => (
+                      <CardGalleryItem
+                        key={item.id}
+                        item={item}
+                        onCardClickHandler={onCardClickHandler(item)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
 
       {!!selected && (
         <CardGalleryModal selected={selected} onCloseAction={onCloseHandler} />
