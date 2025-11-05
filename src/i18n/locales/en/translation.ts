@@ -107,8 +107,26 @@ const translation = {
   search: {
     placeholder: {
       emailOrName: "Enter email or name...",
+      cardName: "Search card name...",
     },
   },
+  searchByName: "Search by Name",
+  type: "Type",
+  allTypes: "All Types",
+  cost: "Cost",
+  allCosts: "All Costs",
+  clearFilters: "Clear",
+  cardType: {
+    hero: "Hero",
+    monster: "Monster",
+    god: "God",
+    titan: "Titan",
+    troop: "Troop",
+    jarl: "Jarl",
+    art_of_war: "Art of War",
+  },
+  showingCards: "Showing {{count}} of {{total}} cards",
+  noCardsFoundMatchingYourFilters: "No cards found matching your filters",
 } as const;
 
 export default translation;

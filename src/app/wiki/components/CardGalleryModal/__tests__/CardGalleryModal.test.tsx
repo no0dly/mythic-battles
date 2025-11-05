@@ -1,7 +1,8 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
 import CardGalleryModal from "../CardGalleryModal";
-import type { CardItem } from "../../CardGalleryItem";
+import type { Card } from "@/types/database.types";
+import { CARD_TYPES } from "@/types/database.types";
 
 // Mock next/image
 vi.mock("next/image", () => ({
@@ -11,12 +12,18 @@ vi.mock("next/image", () => ({
   ),
 }));
 
-const mockCardItem: CardItem = {
-  id: "zeus",
-  title: "Zeus",
-  imageUrl: "/globe.svg",
-  shortDescription: "King of the gods",
-  longDescription: "Full description of Zeus with all details",
+const mockCardItem: Card = {
+  id: "550e8400-e29b-41d4-a716-446655440001",
+  unit_name: "Zeus",
+  unit_type: CARD_TYPES.GOD,
+  cost: 5,
+  amount_of_card_activations: 1,
+  strategic_value: 10,
+  talents: [],
+  class: "god",
+  image_url: "/globe.svg",
+  created_at: "2024-01-01T00:00:00Z",
+  updated_at: "2024-01-01T00:00:00Z",
 };
 
 describe("CardGalleryModal Component", () => {
@@ -38,9 +45,10 @@ describe("CardGalleryModal Component", () => {
 
     const description = modal.querySelector('[data-slot="dialog-description"]');
     expect(description).toBeTruthy();
-    expect(description?.textContent).toBe(
-      "Full description of Zeus with all details"
-    );
+    expect(description?.textContent).toContain("Type:");
+    expect(description?.textContent).toContain("god");
+    expect(description?.textContent).toContain("Cost:");
+    expect(description?.textContent).toContain("5");
 
     const image = screen.getByAltText("Zeus");
     expect(image).toBeTruthy();
@@ -78,12 +86,18 @@ describe("CardGalleryModal Component", () => {
 
   it("updates modal content when selected changes", () => {
     const mockCloseHandler = vi.fn();
-    const differentCard: CardItem = {
-      id: "ares",
-      title: "Ares",
-      imageUrl: "/logo.svg",
-      shortDescription: "God of war",
-      longDescription: "Full description of Ares",
+    const differentCard: Card = {
+      id: "550e8400-e29b-41d4-a716-446655440002",
+      unit_name: "Ares",
+      unit_type: CARD_TYPES.GOD,
+      cost: 4,
+      amount_of_card_activations: 1,
+      strategic_value: 9,
+      talents: [],
+      class: "god",
+      image_url: "/logo.svg",
+      created_at: "2024-01-01T00:00:00Z",
+      updated_at: "2024-01-01T00:00:00Z",
     };
 
     render(
@@ -109,7 +123,10 @@ describe("CardGalleryModal Component", () => {
     const description = modal.querySelector(
       '[data-slot="dialog-description"]'
     );
-    expect(description?.textContent).toBe("Full description of Ares");
+    expect(description?.textContent).toContain("Cost:");
+    expect(description?.textContent).toContain("4");
+    expect(description?.textContent).toContain("Strategic Value:");
+    expect(description?.textContent).toContain("9");
     const image = screen.getByAltText("Ares");
     expect(image.getAttribute("src")).toContain("/logo.svg");
   });

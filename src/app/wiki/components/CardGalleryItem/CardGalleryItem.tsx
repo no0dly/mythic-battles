@@ -1,3 +1,4 @@
+import { memo } from "react";
 import {
   Card,
   CardContent,
@@ -5,47 +6,56 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
+import type { Card as CardType } from "@/types/database.types";
+import { BADGE_COLORS } from "./constants";
 
-export interface CardItem {
-  id: string;
-  title: string;
-  imageUrl: string;
-  shortDescription: string;
-  longDescription: string;
+interface CardGalleryItemProps {
+  item: CardType;
+  onCardClickHandler: () => void;
 }
 
-export default function CardGalleryItem({
-  item,
-  onCardClickHandler,
-}: {
-  item: CardItem;
-  onCardClickHandler: () => void;
-}) {
+function CardGalleryItem({ item, onCardClickHandler }: CardGalleryItemProps) {
+  const {
+    unit_name: name,
+    unit_type: unitType,
+    cost,
+    image_url: imageUrl,
+  } = item;
+
   return (
     <button
-      key={item.id}
       type="button"
-      className="text-left"
+      className="text-left w-full"
       onClick={onCardClickHandler}
+      aria-label={`${name} - ${unitType} - Cost: ${cost}`}
     >
       <Card
         data-testid="card-item"
-        className="h-full hover:shadow-sm transition-shadow py-4 gap-2"
+        className="h-full hover:shadow-sm transition-shadow py-2 gap-1"
       >
-        <CardHeader className="px-4 py-2">
-          <CardTitle className="text-base">{item.title}</CardTitle>
+        <CardHeader className="px-2 py-1">
+          <CardTitle className="text-base">
+            {name} ({cost})
+          </CardTitle>
           <CardDescription className="text-xs">
-            {item.shortDescription}
+            <Badge
+              style={{ backgroundColor: BADGE_COLORS[unitType] }}
+              className="text-white text-xs font-medium uppercase"
+            >
+              {unitType}
+            </Badge>
           </CardDescription>
         </CardHeader>
-        <CardContent className="px-4 py-2">
-          <div className="relative w-full aspect-square overflow-hidden rounded-md border bg-muted">
+        <CardContent className="px-2 py-1">
+          <div className="relative flex items-center justify-center h-full w-full min-h-[200px]">
             <Image
-              src={item.imageUrl}
-              alt={item.title}
+              src={imageUrl}
+              alt={name}
               fill
-              className="object-contain p-2"
+              loading="lazy"
+              className="object-contain"
               sizes="(min-width: 1024px) 20vw, (min-width: 640px) 25vw, 50vw"
             />
           </div>
@@ -54,3 +64,5 @@ export default function CardGalleryItem({
     </button>
   );
 }
+
+export default memo(CardGalleryItem);
