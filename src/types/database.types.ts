@@ -1,3 +1,6 @@
+import { CARD_TYPES, GAME_STATUS, SESSION_STATUS } from "./constants"
+import { ValueOf } from "./interfaces"
+
 export type Json =
   | string
   | number
@@ -22,6 +25,7 @@ export type UserProfile = {
   avatar_url: string
   created_at: string
   updated_at: string
+  sessions: string[]
   statistics: Statistics
 }
 
@@ -36,17 +40,9 @@ export type Friendship = {
   updated_at: string
 }
 
-export const CARD_TYPES = {
-  HERO: 'hero',
-  MONSTER: 'monster',
-  GOD: 'god',
-  TITAN: 'titan',
-  TROOP: 'troop',
-  JARL: 'jarl',
-  ART_OF_WAR: 'art_of_war',
-} as const;
 
-export type CardType = typeof CARD_TYPES[keyof typeof CARD_TYPES];
+
+export type CardType = ValueOf<typeof CARD_TYPES>;
 
 export type Card = {
   id: string
@@ -60,6 +56,37 @@ export type Card = {
   image_url: string
   created_at: string
   updated_at: string
+}
+
+export type SessionStatus = ValueOf<typeof SESSION_STATUS>;
+
+export type Session = {
+  id: string
+  player1_id: string
+  player2_id: string
+  player1_score: number
+  player2_score: number
+  status: SessionStatus
+  error_message: string | null
+  game_list: string[] | null
+  created_at: string
+  updated_at: string
+  finished_at: string | null
+}
+
+
+export type GameStatus = ValueOf<typeof GAME_STATUS>;
+
+export type Game = {
+  id: string
+  session_id: string
+  game_number: number
+  status: GameStatus
+  winner_id: string | null
+  draft_id: string | null
+  created_at: string
+  updated_at: string
+  finished_at: string | null
 }
 
 export type Database = {
@@ -84,6 +111,20 @@ export type Database = {
         Insert: Omit<Card, 'id' | 'created_at' | 'updated_at'>
         Update: Partial<Omit<Card, 'id' | 'created_at' | 'updated_at'>>
       }
+      sessions: {
+        Row: Session
+        Insert: Omit<Session, 'id' | 'created_at' | 'updated_at'> & {
+          game_list?: Json
+        }
+        Update: Partial<Omit<Session, 'id' | 'created_at' | 'updated_at'>> & {
+          game_list?: Json
+        }
+      }
+      games: {
+        Row: Game
+        Insert: Omit<Game, 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Omit<Game, 'id' | 'created_at' | 'updated_at'>>
+      }
     }
     Views: Record<string, never>
     Functions: Record<string, never>
@@ -98,3 +139,11 @@ export type FriendshipInsert = Omit<Friendship, 'id' | 'created_at' | 'updated_a
 export type FriendshipUpdate = Partial<Omit<Friendship, 'id' | 'created_at' | 'updated_at'>>
 export type CardInsert = Omit<Card, 'id' | 'created_at' | 'updated_at'>
 export type CardUpdate = Partial<Omit<Card, 'id' | 'created_at' | 'updated_at'>>
+export type SessionInsert = Omit<Session, 'id' | 'created_at' | 'updated_at'> & {
+  game_list?: Json
+}
+export type SessionUpdate = Partial<Omit<Session, 'id' | 'created_at' | 'updated_at'>> & {
+  game_list?: Json
+}
+export type GameInsert = Omit<Game, 'id' | 'created_at' | 'updated_at'>
+export type GameUpdate = Partial<Omit<Game, 'id' | 'created_at' | 'updated_at'>>

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { useCardFiltersStoreBase } from "../cardFilters";
 import { DEFAULT_FILTER } from "../cardFilters";
-import { CARD_TYPES } from "@/types/database.types";
+import { CARD_TYPES } from "@/types/constants";
 
 describe("cardFilters store", () => {
   beforeEach(() => {

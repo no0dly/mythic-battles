@@ -13,14 +13,14 @@ function LoggedContent() {
   const displayName = user?.displayName ?? "Warrior";
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
-      <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-10">
+    <div className="flex flex-col h-full">
+      <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white mb-6 sm:mb-8 md:mb-10 flex-shrink-0">
         {t("welcomeUser", { name: displayName })}
       </h2>
-      <div className="w-full flex gap-4 justify-between flex-1 min-h-0 overflow-hidden">
-        <div className="lg:flex-shrink-0 lg:w-80 overflow-y-auto space-y-6">
+      <div className="w-full flex h-full flex-col md:flex-row gap-4 md:gap-6 justify-between flex-1 min-h-0">
+        <div className="md:flex-shrink-0 md:w-80 space-y-4 md:space-y-6">
           <div>
-            <h3 className="text-lg md:text-xl font-bold text-foreground mb-4 md:mb-6">
+            <h3 className="text-base sm:text-lg md:text-xl font-bold text-foreground mb-3 sm:mb-4 md:mb-6">
               {t("userInfo")}
             </h3>
             <UserInfoCard />
@@ -28,8 +28,8 @@ function LoggedContent() {
 
           {user && (
             <div>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg md:text-xl font-bold text-foreground">
+              <div className="flex items-center justify-between mb-3 sm:mb-4">
+                <h3 className="text-base sm:text-lg md:text-xl font-bold text-foreground">
                   {t("statistics")}
                 </h3>
               </div>
@@ -37,14 +37,14 @@ function LoggedContent() {
             </div>
           )}
         </div>
-        <div className="flex flex-col gap-4 md:gap-6 items-end flex-1 min-h-0 overflow-hidden">
-          <div className="flex flex-col gap-4 md:gap-6 items-end overflow-y-auto flex-1 min-h-0">
-            <h3 className="text-lg md:text-xl font-bold text-foreground self-start">
+        <div className="flex flex-col gap-4 md:gap-6 items-stretch md:items-end flex-1 min-h-0">
+          <div className="flex flex-col gap-4 md:gap-6 items-stretch md:items-end flex-1 min-h-0">
+            <h3 className="text-base sm:text-lg md:text-xl font-bold text-foreground">
               {t("sessions")}
             </h3>
             <SessionsCard />
           </div>
-          <div className="flex-shrink-0">
+          <div className="flex-shrink-0 w-full lg:w-auto">
             <ShimmerButton className="px-8 py-4 text-lg font-semibold">
               {t("startNewGame")}
             </ShimmerButton>

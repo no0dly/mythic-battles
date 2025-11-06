@@ -2,6 +2,7 @@ import { z } from "zod";
 import { router, protectedProcedure } from "@/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 import type { Friendship, UserProfile, FriendshipInsert, FriendshipUpdate } from "@/types/database.types";
+import { zUuid } from "../schemas";
 import {
   FRIENDSHIP_ERROR_MESSAGES,
   getFriendIdFromFriendship,
@@ -258,7 +259,7 @@ export const friendshipsRouter = router({
   acceptRequest: protectedProcedure
     .input(
       z.object({
-        friendshipId: z.string().uuid(),
+        friendshipId: zUuid,
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -309,7 +310,7 @@ export const friendshipsRouter = router({
   rejectRequest: protectedProcedure
     .input(
       z.object({
-        friendshipId: z.string().uuid(),
+        friendshipId: zUuid,
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -360,7 +361,7 @@ export const friendshipsRouter = router({
   removeFriend: protectedProcedure
     .input(
       z.object({
-        friendId: z.string().uuid(),
+        friendId: zUuid,
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -388,7 +389,7 @@ export const friendshipsRouter = router({
   blockUser: protectedProcedure
     .input(
       z.object({
-        userId: z.string().uuid(),
+        userId: zUuid,
       })
     )
     .mutation(async ({ ctx, input }) => {

@@ -1,66 +1,110 @@
+"use client";
+
 import { Badge } from "@/components/ui/badge";
-import { GAME_STATUS_CONFIG, type GameStatus } from "./constants";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import SessionModal from "../SessionModal";
-
-const sessions: Array<{
-  id: number;
-  match: string;
-  score: string;
-  status: GameStatus;
-}> = [
-  { id: 1, match: "Igor vs Vlad", score: "5-0", status: "available" },
-  { id: 2, match: "Igor vs Bed", score: "0-5", status: "finished" },
-  { id: 3, match: "Alex vs Sam", score: "2-2", status: "draft" },
-  { id: 4, match: "Max vs John", score: "3-1", status: "inProgress" },
-];
+import { api } from "@/trpc/client";
+import Loader from "@/components/Loader/Loader";
+import type { SessionWithPlayers } from "@/server/api/routers/sessions/types";
+import { useUserProfile } from "@/hooks/useUserProfile";
 
 function SessionsCard() {
   const { t } = useTranslation();
-  const [selectedSessionID, setSelectedSessionID] = useState<number | null>(
-    null
+  const [selectedSession, setSelectedSession] =
+    useState<SessionWithPlayers | null>(null);
+
+  const { user, isLoading: userLoading } = useUserProfile();
+  const userSessions = user?.sessions ?? [];
+  const {
+    data: sessions,
+    isLoading,
+    error,
+  } = api.sessions.getByIds.useQuery(
+    { ids: userSessions },
+    { enabled: userSessions.length > 0 }
   );
 
-  const onSelectSessionHandler = (id: number) => () => {
-    setSelectedSessionID(id);
+  const onSelectSessionHandler = (session: SessionWithPlayers) => () => {
+    setSelectedSession(session);
   };
 
   const onClearSessionHandler = () => {
-    setSelectedSessionID(null);
+    setSelectedSession(null);
+  };
+
+  const renderContent = () => {
+    if (isLoading || userLoading) {
+      return (
+        <div className="text-sm text-muted-foreground text-center self-center self-justify-center height-full w-full">
+          <Loader local />
+        </div>
+      );
+    }
+
+    if (error) {
+      return (
+        <div className="text-sm text-destructive text-center self-center self-justify-center height-full w-full">
+          {t("errorLoadingSessions", { message: error.message })}
+        </div>
+      );
+    }
+
+    if (!sessions || sessions.length === 0) {
+      return (
+        <div className="text-sm text-muted-foreground text-center self-center self-justify-center height-full w-full">
+          {t("noSessionsFound")}
+        </div>
+      );
+    }
+
+    return (
+      <ul className="space-y-2 w-full max-h-[300px] overflow-auto">
+        {sessions.map((session) => {
+          const {
+            id,
+            player1_name,
+            player2_name,
+            player1_score,
+            player2_score,
+            status,
+          } = session;
+          return (
+            <li
+              key={id}
+              role="button"
+              onClick={onSelectSessionHandler(session)}
+              className="group/session flex items-center justify-between p-2 rounded-lg hover:bg-gray-500/10 transition-colors duration-200 gap-2 sm:gap-4 cursor-pointer w-full min-w-0"
+            >
+              <div className="flex items-center gap-1 min-w-0 flex-1">
+                <span className="text-xs font-semibold text-foreground group-hover/session:text-gray-600 transition-colors truncate">
+                  {t("playedVSPlayer", {
+                    player1: player1_name,
+                    player2: player2_name,
+                  })}
+                </span>
+                <span className="font-bold text-emerald-600 text-xs flex-shrink-0">
+                  {`(${player1_score}-${player2_score})`}
+                </span>
+              </div>
+              <Badge variant={status} className="flex-shrink-0">
+                {t(status)}
+              </Badge>
+            </li>
+          );
+        })}
+      </ul>
+    );
   };
 
   return (
-    <div className="relative group w-fit min-w-[320px]">
+    <div className="relative group w-full md:w-fit md:min-w-[320px]">
       <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/20 to-blue-500/20 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
       <div className="relative border-2 border-foreground rounded-2xl p-3 md:p-4 bg-background transition-shadow duration-300">
-        <ul className="space-y-2">
-          {sessions.map(({ id, match, score, status }) => {
-            return (
-              <li
-                key={id}
-                role="button"
-                onClick={onSelectSessionHandler(id)}
-                className="group/session flex items-center justify-between p-2 rounded-lg hover:bg-gray-500/10 transition-colors duration-200 gap-4 cursor-pointer"
-              >
-                <div className="flex items-center gap-1">
-                  <span className="text-xs font-semibold text-foreground group-hover/session:text-gray-600 transition-colors">
-                    {match}
-                  </span>
-                  <span className="font-bold text-emerald-600 text-xs">
-                    ({score})
-                  </span>
-                </div>
-                <Badge variant={GAME_STATUS_CONFIG[status].variant}>
-                  {t(GAME_STATUS_CONFIG[status].label)}
-                </Badge>
-              </li>
-            );
-          })}
-        </ul>
+        <div className="flex min-h-[200px]">{renderContent()}</div>
       </div>
       <SessionModal
-        sessionID={selectedSessionID}
+        session={selectedSession}
         clearSession={onClearSessionHandler}
       />
     </div>

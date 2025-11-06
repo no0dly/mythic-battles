@@ -3,7 +3,7 @@ import { describe, it, expect } from "vitest";
 import { getFilteredData, getUniqueCosts, chunk } from "../utils";
 import { DEFAULT_FILTER } from "@/stores/cardFilters";
 import type { Card } from "@/types/database.types";
-import { CARD_TYPES } from "@/types/database.types";
+import { CARD_TYPES } from "@/types/constants";
 
 const mockCards: Card[] = [
   {

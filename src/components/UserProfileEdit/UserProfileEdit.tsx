@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { useTranslation } from "react-i18next";
 import { validateProfileUpdate } from "@/utils/users";
 import type { UserProfile } from "@/types/database.types";
+import { api } from "@/trpc/client";
 
 interface UserProfileEditProps {
   user: UserProfile;
@@ -18,6 +19,7 @@ interface UserProfileEditProps {
 export const UserProfileEdit = ({ user, onSuccess }: UserProfileEditProps) => {
   const { t } = useTranslation();
   const { updateProfile, isLoading, error } = useUpdateProfile();
+  const utils = api.useUtils();
 
   const [displayName, setDisplayName] = useState(user.display_name);
   const [avatarUrl, setAvatarUrl] = useState(user.avatar_url);
@@ -42,6 +44,7 @@ export const UserProfileEdit = ({ user, onSuccess }: UserProfileEditProps) => {
 
     updateProfile(updateData, {
       onSuccess: () => {
+        void utils.users.getCurrentUser.invalidate();
         onSuccess?.();
       },
     });
@@ -105,4 +108,3 @@ export const UserProfileEdit = ({ user, onSuccess }: UserProfileEditProps) => {
     </Card>
   );
 };
-

@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
 import CardGalleryModal from "../CardGalleryModal";
 import type { Card } from "@/types/database.types";
-import { CARD_TYPES } from "@/types/database.types";
+import { CARD_TYPES } from "@/types/constants";
 
 // Mock next/image
 vi.mock("next/image", () => ({

@@ -4,20 +4,41 @@ interface Props {
   width?: number;
   height?: number;
   style?: React.CSSProperties;
+  local?: boolean;
 }
 
-function Loader({ width = 100, height = 100, style }: Props) {
-  return (
-    <div
-      style={{
+function Loader({ width = 100, height = 100, style, local }: Props) {
+  const containerStyle: React.CSSProperties = local
+    ? {
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        position: "relative",
+        ...style,
+      }
+    : {
         width,
         height,
         position: "fixed",
         bottom: "10px",
         right: "10px",
         ...style,
-      }}
-    >
+      };
+
+  const svgContainerStyle: React.CSSProperties = local
+    ? {
+        width,
+        height,
+      }
+    : {
+        width: "100%",
+        height: "100%",
+      };
+
+  return (
+    <div style={containerStyle}>
       <svg
         xmlSpace="preserve"
         viewBox="0 0 100 100"
@@ -28,8 +49,7 @@ function Loader({ width = 100, height = 100, style }: Props) {
         id="圖層_1"
         version="1.1"
         style={{
-          width: "100%",
-          height: "100%",
+          ...svgContainerStyle,
           margin: "initial",
           display: "block",
           shapeRendering: "auto",

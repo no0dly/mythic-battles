@@ -1,4 +1,4 @@
-import { CARD_TYPES } from "@/types/database.types";
+import { CARD_TYPES } from "@/types/constants";
 
 export const BADGE_COLORS = {
   [CARD_TYPES.HERO]: '#6a7282',

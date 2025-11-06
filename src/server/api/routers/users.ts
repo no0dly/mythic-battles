@@ -2,6 +2,7 @@ import { z } from "zod";
 import { router, protectedProcedure, publicProcedure } from "@/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 import type { UserProfile, Statistics, Json } from "@/types/database.types";
+import { zUuid } from "../schemas";
 
 export const usersRouter = router({
   // Get current user profile
@@ -28,7 +29,7 @@ export const usersRouter = router({
   getUserById: publicProcedure
     .input(
       z.object({
-        userId: z.string().uuid(),
+        userId: zUuid,
       })
     )
     .query(async ({ ctx, input }) => {
