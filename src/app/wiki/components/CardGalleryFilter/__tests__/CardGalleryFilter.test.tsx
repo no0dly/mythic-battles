@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import CardGalleryFilter from "../CardGalleryFilter";
 import { DEFAULT_FILTER } from "@/stores/cardFilters";
-import { CARD_TYPES } from "@/types/database.types";
+import { CARD_TYPES } from "@/types/constants";
 
 // Mock the cardFilters store
 const mockStoreState = {

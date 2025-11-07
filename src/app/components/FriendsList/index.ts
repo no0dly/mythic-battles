@@ -5,4 +5,4 @@ export { SentRequestItem } from "./SentRequestItem";
 export { FriendsTab } from "./FriendsTab";
 export { IncomingTab } from "./IncomingTab";
 export { SentTab } from "./SentTab";
-export { TAB_VALUES, type TabValuesType, type ValueOf } from "./constants";
+export { TAB_VALUES, type TabValuesType } from "./constants";

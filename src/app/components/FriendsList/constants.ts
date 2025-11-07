@@ -1,4 +1,5 @@
-export type ValueOf<T> = T[keyof T];
+import { ValueOf } from "@/types/interfaces";
+
 
 export const TAB_VALUES = {
   FRIENDS: "friends",

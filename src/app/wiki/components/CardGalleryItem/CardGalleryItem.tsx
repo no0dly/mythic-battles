@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
 import type { Card as CardType } from "@/types/database.types";
 import { BADGE_COLORS } from "./constants";
+import { useTranslation } from "react-i18next";
 
 interface CardGalleryItemProps {
   item: CardType;
@@ -17,13 +18,13 @@ interface CardGalleryItemProps {
 }
 
 function CardGalleryItem({ item, onCardClickHandler }: CardGalleryItemProps) {
+  const { t } = useTranslation();
   const {
     unit_name: name,
     unit_type: unitType,
     cost,
     image_url: imageUrl,
   } = item;
-
   return (
     <button
       type="button"
@@ -44,7 +45,7 @@ function CardGalleryItem({ item, onCardClickHandler }: CardGalleryItemProps) {
               style={{ backgroundColor: BADGE_COLORS[unitType] }}
               className="text-white text-xs font-medium uppercase"
             >
-              {unitType}
+              {t(`cardType.${unitType}`)}
             </Badge>
           </CardDescription>
         </CardHeader>

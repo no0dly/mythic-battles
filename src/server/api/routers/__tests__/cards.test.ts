@@ -2,7 +2,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { cardsRouter } from "../cards";
 import type { Card } from "@/types/database.types";
-import { CARD_TYPES } from "@/types/database.types";
+import { CARD_TYPES } from "@/types/constants";
 import { TRPCError } from "@trpc/server";
 
 const TEST_CARD_UUID = "550e8400-e29b-41d4-a716-446655440001";

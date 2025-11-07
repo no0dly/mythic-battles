@@ -6,7 +6,7 @@ import {
   useFilterActions,
   DEFAULT_FILTER,
 } from "@/stores/cardFilters";
-import { CARD_TYPES } from "@/types/database.types";
+import { CARD_TYPES } from "@/types/constants";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,7 @@ export default function CardGalleryFilter({
   const searchName = useSearchName();
   const selectedType = useSelectedType();
   const selectedCost = useSelectedCost();
+
   const { setSearchName, setSelectedType, setSelectedCost, clearFilters } =
     useFilterActions();
 
@@ -81,7 +82,7 @@ export default function CardGalleryFilter({
             <SelectContent>
               <SelectItem value={DEFAULT_FILTER}>{t("allCosts")}</SelectItem>
               {uniqueCosts.map((cost) => (
-                <SelectItem key={cost} value={cost?.toString() ?? ""}>
+                <SelectItem key={cost} value={String(cost)}>
                   {cost}
                 </SelectItem>
               ))}
@@ -90,7 +91,12 @@ export default function CardGalleryFilter({
         </div>
 
         {hasActiveFilters && (
-          <Button onClick={clearFilters} variant="outline" size="default">
+          <Button
+            onClick={clearFilters}
+            variant="outline"
+            size="default"
+            className="self-end"
+          >
             {t("clearFilters")}
           </Button>
         )}

@@ -40,7 +40,7 @@ export default function CardGallery() {
   );
 
   const rows = useMemo(
-    () => (filteredData ? chunk(filteredData, columns) : []),
+    () => (filteredData ? chunk(filteredData, Math.max(columns, 1)) : []),
     [filteredData, columns]
   );
 
@@ -53,6 +53,21 @@ export default function CardGallery() {
     estimateSize: () => ROW_HEIGHT_ESTIMATE,
     overscan: OVERSCAN,
   });
+
+  // Get virtual items, with fallback to render first few rows if virtualizer hasn't initialized yet
+  // This ensures cards are visible even when the container doesn't have a height yet
+  const virtualItems = virtualizer.getVirtualItems();
+  const itemsToRender =
+    virtualItems.length > 0
+      ? virtualItems
+      : rows.length > 0
+      ? rows.slice(0, Math.min(3, rows.length)).map((_, index) => ({
+          key: String(index),
+          index,
+          start: index * ROW_HEIGHT_ESTIMATE,
+          size: ROW_HEIGHT_ESTIMATE,
+        }))
+      : [];
 
   if (error) {
     return (
@@ -96,12 +111,17 @@ export default function CardGallery() {
         ) : (
           <div
             style={{
-              height: `${virtualizer.getTotalSize()}px`,
+              height: `${Math.max(
+                virtualizer.getTotalSize(),
+                itemsToRender.length > 0
+                  ? itemsToRender.length * ROW_HEIGHT_ESTIMATE
+                  : ROW_HEIGHT_ESTIMATE
+              )}px`,
               width: "100%",
               position: "relative",
             }}
           >
-            {virtualizer.getVirtualItems().map((virtualRow) => {
+            {itemsToRender.map((virtualRow) => {
               const row = rows[virtualRow.index];
               if (!row) return null;
 

@@ -2,6 +2,7 @@ import { z } from "zod";
 import { router, publicProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
 import type { Card } from "@/types/database.types";
+import { zUuid } from "../schemas";
 
 export const cardsRouter = router({
   // Get all cards
@@ -25,7 +26,7 @@ export const cardsRouter = router({
   getById: publicProcedure
     .input(
       z.object({
-        id: z.string().uuid(),
+        id: zUuid,
       })
     )
     .query(async ({ ctx, input }) => {

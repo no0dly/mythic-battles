@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import CardGallery from "../CardGallery";
 
 import type { Card } from "@/types/database.types";
-import { CARD_TYPES } from "@/types/database.types";
+import { CARD_TYPES } from "@/types/constants";
 
 // Mock tRPC
 const mockCards: Card[] = [
