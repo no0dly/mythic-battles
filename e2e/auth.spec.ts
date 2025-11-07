@@ -17,6 +17,18 @@ test.describe('Auth flows (public navigation only)', () => {
     await expect(page).toHaveURL(/\/auth\/login(\?[^#]*)?$/);
     await expect(page.getByRole('heading', { name: 'Login to Mythic Battles' })).toBeVisible();
   });
+
+  test('Unauthenticated visit to /draft-settings redirects to /auth/login', async ({ page }) => {
+    await page.goto('/draft-settings?lng=en');
+    await expect(page).toHaveURL(/\/auth\/login(\?[^#]*)?$/);
+    await expect(page.getByRole('heading', { name: 'Login to Mythic Battles' })).toBeVisible();
+  });
+
+  test('Unauthenticated visit to /draft/:id redirects to /auth/login', async ({ page }) => {
+    await page.goto('/draft/dummy-draft-id?lng=en');
+    await expect(page).toHaveURL(/\/auth\/login(\?[^#]*)?$/);
+    await expect(page.getByRole('heading', { name: 'Login to Mythic Battles' })).toBeVisible();
+  });
 });
 
 

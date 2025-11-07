@@ -33,6 +33,7 @@ export type GameListEntry = {
 export type ParsedGame = {
   number: number;
   result: "Won" | "Lost" | "Draw";
+  createdBy?: string;
   details?: {
     player1Score: number;
     player2Score: number;

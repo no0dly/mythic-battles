@@ -19,7 +19,16 @@ export const SESSION_STATUS = {
 } as const;
 
 export const GAME_STATUS = {
+  INVITE_TO_DRAFT: 'inviteToDraft',
   DRAFT: 'draft',
+  DRAFT_RESET_REQUEST: 'draftResetRequest',
   IN_PROGRESS: 'inProgress',
+  FINISHED: 'finished',
+} as const;
+
+export const DRAFT_STATUS = {
+  ROLL_FOR_TURN: 'rollForTurn',
+  DRAFT: 'draft',
+  RESET_REQUESTED: 'resetRequested',
   FINISHED: 'finished',
 } as const;

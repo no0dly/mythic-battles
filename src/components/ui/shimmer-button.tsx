@@ -1,15 +1,17 @@
-import React, { ComponentPropsWithoutRef, CSSProperties } from "react"
+import React, { ComponentPropsWithoutRef, CSSProperties } from "react";
+import { LoaderCircle } from "lucide-react";
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 
 export interface ShimmerButtonProps extends ComponentPropsWithoutRef<"button"> {
-  shimmerColor?: string
-  shimmerSize?: string
-  borderRadius?: string
-  shimmerDuration?: string
-  background?: string
-  className?: string
-  children?: React.ReactNode
+  shimmerColor?: string;
+  shimmerSize?: string;
+  borderRadius?: string;
+  shimmerDuration?: string;
+  background?: string;
+  className?: string;
+  children?: React.ReactNode;
+  loading?: boolean;
 }
 
 export const ShimmerButton = React.forwardRef<
@@ -25,6 +27,8 @@ export const ShimmerButton = React.forwardRef<
       background = "rgba(0, 0, 0, 1)",
       className,
       children,
+      loading = false,
+      disabled,
       ...props
     },
     ref
@@ -42,11 +46,13 @@ export const ShimmerButton = React.forwardRef<
           } as CSSProperties
         }
         className={cn(
-          "group relative z-0 flex cursor-pointer items-center justify-center overflow-hidden [border-radius:var(--radius)] border border-white/10 px-6 py-3 whitespace-nowrap text-white [background:var(--bg)]",
+          "group relative z-0 flex cursor-pointer items-center justify-center gap-2 overflow-hidden [border-radius:var(--radius)] border border-white/10 px-6 py-3 whitespace-nowrap text-white [background:var(--bg)]",
           "transform-gpu transition-transform duration-300 ease-in-out active:translate-y-px",
+          (disabled || loading) && "cursor-not-allowed opacity-50",
           className
         )}
         ref={ref}
+        disabled={disabled || loading}
         {...props}
       >
         {/* spark container */}
@@ -62,6 +68,7 @@ export const ShimmerButton = React.forwardRef<
             <div className="animate-spin-around absolute -inset-full w-auto [translate:0_0] rotate-0 [background:conic-gradient(from_calc(270deg-(var(--spread)*0.5)),transparent_0,var(--shimmer-color)_var(--spread),transparent_var(--spread))]" />
           </div>
         </div>
+        {loading && <LoaderCircle className="h-4 w-4 animate-spin shrink-0" />}
         {children}
 
         {/* Highlight */}
@@ -89,8 +96,8 @@ export const ShimmerButton = React.forwardRef<
           )}
         />
       </button>
-    )
+    );
   }
-)
+);
 
-ShimmerButton.displayName = "ShimmerButton"
+ShimmerButton.displayName = "ShimmerButton";

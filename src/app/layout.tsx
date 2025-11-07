@@ -4,6 +4,7 @@ import "./globals.css";
 import I18nInit from "../i18n/i18n-init";
 import { TRPCReactProvider } from "@/trpc/Provider";
 import Header from "@/components/Header";
+import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -38,6 +39,7 @@ export default function RootLayout({
                 {children}
               </main>
             </div>
+            <Toaster position="top-center" />
           </I18nInit>
         </TRPCReactProvider>
       </body>
