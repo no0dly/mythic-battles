@@ -54,6 +54,7 @@ export default function SessionModal({ session, clearSession }: Props) {
         return {
           number: game.game_number,
           result,
+          createdBy: game.created_by,
           details: {
             // Note: player scores, duration, and rounds are not available in the Game table
             player1Score: 0,
@@ -128,6 +129,12 @@ export default function SessionModal({ session, clearSession }: Props) {
                                 </span>
                                 <span>{game.details.player2Score}</span>
                               </div>
+                              {game.createdBy && (
+                                <div className="flex justify-between text-xs text-muted-foreground">
+                                  <span>{t("createdBy")}:</span>
+                                  <span>{game.createdBy}</span>
+                                </div>
+                              )}
                               <div className="pt-2 border-t space-y-1">
                                 {game.details.duration && (
                                   <div className="flex justify-between text-xs text-muted-foreground">

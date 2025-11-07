@@ -5,12 +5,18 @@ import { useTranslation } from "react-i18next";
 import { ShimmerButton } from "@/components/ui/shimmer-button";
 import { UserStatistics } from "@/components/UserStatistics";
 import { useUserProfile } from "@/hooks/useUserProfile";
+import { useRouter } from "next/navigation";
 
 function LoggedContent() {
   const { t } = useTranslation();
   const { user } = useUserProfile();
+  const router = useRouter();
 
   const displayName = user?.displayName ?? "Warrior";
+
+  const onStartNewGameHandler = () => {
+    router.push("/draft-settings");
+  };
 
   return (
     <div className="flex flex-col h-full">
@@ -45,7 +51,10 @@ function LoggedContent() {
             <SessionsCard />
           </div>
           <div className="flex-shrink-0 w-full lg:w-auto">
-            <ShimmerButton className="px-8 py-4 text-lg font-semibold">
+            <ShimmerButton
+              className="px-8 py-4 text-lg font-semibold"
+              onClick={onStartNewGameHandler}
+            >
               {t("startNewGame")}
             </ShimmerButton>
           </div>

@@ -4,6 +4,7 @@ import { friendshipsRouter } from "./routers/friendships";
 import { usersRouter } from "./routers/users";
 import { sessionsRouter } from "./routers/sessions";
 import { gamesRouter } from "./routers/games";
+import { draftsRouter } from "./routers/drafts";
 
 export const appRouter = router({
   cards: cardsRouter,
@@ -11,6 +12,7 @@ export const appRouter = router({
   users: usersRouter,
   sessions: sessionsRouter,
   games: gamesRouter,
+  drafts: draftsRouter,
 });
 
 export type AppRouter = typeof appRouter;

@@ -1,4 +1,4 @@
-import { CARD_TYPES, GAME_STATUS, SESSION_STATUS } from "./constants"
+import { CARD_TYPES, GAME_STATUS, SESSION_STATUS, DRAFT_STATUS } from "./constants"
 import { ValueOf } from "./interfaces"
 
 export type Json =
@@ -84,9 +84,28 @@ export type Game = {
   status: GameStatus
   winner_id: string | null
   draft_id: string | null
+  created_by: string
   created_at: string
   updated_at: string
   finished_at: string | null
+}
+
+export type DraftStatus = ValueOf<typeof DRAFT_STATUS>;
+
+export type Draft = {
+  id: string
+  game_id: string
+  player1_id: string
+  player2_id: string
+  draft_total_cost: number
+  player_allowed_points: number
+  initial_roll: Json | null
+  first_turn_user_id: string
+  draft_status: DraftStatus
+  draft_history: Json | null
+  current_turn_user_id: string
+  created_at: string
+  updated_at: string
 }
 
 export type Database = {
@@ -125,6 +144,17 @@ export type Database = {
         Insert: Omit<Game, 'id' | 'created_at' | 'updated_at'>
         Update: Partial<Omit<Game, 'id' | 'created_at' | 'updated_at'>>
       }
+      drafts: {
+        Row: Draft
+        Insert: Omit<Draft, 'id' | 'created_at' | 'updated_at'> & {
+          initial_roll?: Json
+          draft_history?: Json
+        }
+        Update: Partial<Omit<Draft, 'id' | 'created_at' | 'updated_at'>> & {
+          initial_roll?: Json
+          draft_history?: Json
+        }
+      }
     }
     Views: Record<string, never>
     Functions: Record<string, never>
@@ -147,3 +177,11 @@ export type SessionUpdate = Partial<Omit<Session, 'id' | 'created_at' | 'updated
 }
 export type GameInsert = Omit<Game, 'id' | 'created_at' | 'updated_at'>
 export type GameUpdate = Partial<Omit<Game, 'id' | 'created_at' | 'updated_at'>>
+export type DraftInsert = Omit<Draft, 'id' | 'created_at' | 'updated_at'> & {
+  initial_roll?: Json
+  draft_history?: Json
+}
+export type DraftUpdate = Partial<Omit<Draft, 'id' | 'created_at' | 'updated_at'>> & {
+  initial_roll?: Json
+  draft_history?: Json
+}
