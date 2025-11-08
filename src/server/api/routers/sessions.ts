@@ -95,17 +95,12 @@ export const sessionsRouter = router({
     }),
 
   // Get sessions by list of IDs with player names
-  getByIds: publicProcedure
-    .input(
-      z.object({
-        ids: z.array(zUuid).min(1),
-      })
-    )
-    .query(async ({ ctx, input }) => {
+  getUserSessions: protectedProcedure
+    .query(async ({ ctx }) => {
       const { data: sessions, error } = await ctx.supabase
         .from("sessions")
         .select("*")
-        .in("id", input.ids);
+        .or(`player1_id.eq.${ctx.session.user.id},player2_id.eq.${ctx.session.user.id}`);
 
       if (error) {
         throw new TRPCError({

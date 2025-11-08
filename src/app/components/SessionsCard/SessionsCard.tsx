@@ -7,23 +7,17 @@ import SessionModal from "../SessionModal";
 import { api } from "@/trpc/client";
 import Loader from "@/components/Loader/Loader";
 import type { SessionWithPlayers } from "@/server/api/routers/sessions/types";
-import { useUserProfile } from "@/hooks/useUserProfile";
 
 function SessionsCard() {
   const { t } = useTranslation();
   const [selectedSession, setSelectedSession] =
     useState<SessionWithPlayers | null>(null);
 
-  const { user, isLoading: userLoading } = useUserProfile();
-  const userSessions = user?.sessions ?? [];
   const {
     data: sessions,
     isLoading,
     error,
-  } = api.sessions.getByIds.useQuery(
-    { ids: userSessions },
-    { enabled: userSessions.length > 0 }
-  );
+  } = api.sessions.getUserSessions.useQuery();
 
   const onSelectSessionHandler = (session: SessionWithPlayers) => () => {
     setSelectedSession(session);
@@ -34,7 +28,7 @@ function SessionsCard() {
   };
 
   const renderContent = () => {
-    if (isLoading || userLoading) {
+    if (isLoading) {
       return (
         <div className="text-sm text-muted-foreground text-center self-center self-justify-center height-full w-full">
           <Loader local />
