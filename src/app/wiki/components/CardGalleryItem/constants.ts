@@ -1,11 +1,11 @@
 import { CARD_TYPES } from "@/types/constants";
 
 export const BADGE_COLORS = {
-  [CARD_TYPES.HERO]: '#6a7282',
-  [CARD_TYPES.MONSTER]: '#2b884f',
-  [CARD_TYPES.GOD]: '#edb200',
-  [CARD_TYPES.TITAN]: '#0ac5b2',
-  [CARD_TYPES.TROOP]: '#f1a10d',
-  [CARD_TYPES.JARL]: '#fe6e00',
-  [CARD_TYPES.ART_OF_WAR]: '#fb2c36',
+  [CARD_TYPES.HERO]: '#475569',
+  [CARD_TYPES.MONSTER]: '#059669',
+  [CARD_TYPES.GOD]: '#f59e0b',
+  [CARD_TYPES.TITAN]: '#06b6d4',
+  [CARD_TYPES.TROOP]: '#ea580c',
+  [CARD_TYPES.JARL]: '#9333ea',
+  [CARD_TYPES.ART_OF_WAR]: '#dc2626',
 } as const;

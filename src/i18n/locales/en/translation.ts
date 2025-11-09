@@ -42,6 +42,7 @@ const translation = {
   won: "Won",
   lost: "Lost",
   draw: "Draw",
+  created: "Created when",
   createdBy: "Created by",
   // Session related
   playedVSPlayer: "{{player1}} vs {{player2}}",
@@ -147,6 +148,28 @@ const translation = {
   requiredField: "This field is required",
   sessionCreatedSuccessfully: "Session created successfully",
   errorCreatingSession: "Error creating session",
+  // Games related
+  gameNumber: "Game #{{number}}",
+  gameScore: "Game Score",
+  draftInformation: "Draft Information",
+  noDraftAvailable: "No draft was held",
+  draftHistory: "Draft History",
+  draftHistoryEmpty: "Draft history is not available",
+  pick: "Pick",
+  picks: "picks",
+  pickNumber: "Pick #{{number}}",
+  showingGames: "Showing {{count}} games",
+  errorLoadingGames: "Error loading games",
+  gamesWillAppearHere: "Games will appear here",
+  // Draft history modal
+  draftHistoryDetails: "Detailed Draft History",
+  draftHistoryDescription: "View picks, cards, and final decks for both players",
+  pickHistory: "Pick History",
+  viewDetailedHistory: "View Detailed History",
+  totalCost: "Total Cost",
+  cardsSelected: "cards selected",
+  unknownCard: "Unknown Card",
+  cardPreview: "Card Preview",
 } as const;
 
 export default translation;

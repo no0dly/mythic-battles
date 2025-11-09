@@ -21,8 +21,6 @@ export type SessionWithPlayers = Session & {
 // Game list entry structure from JSON
 export type GameListEntry = {
   number?: number;
-  player1_score?: number;
-  player2_score?: number;
   duration?: string;
   rounds?: number;
   winner?: "player1" | "player2" | "draw";
@@ -35,8 +33,8 @@ export type ParsedGame = {
   result: "Won" | "Lost" | "Draw";
   createdBy?: string;
   details?: {
-    player1Score: number;
-    player2Score: number;
+    player1GameScore: number;
+    player2GameScore: number;
     duration?: string;
     rounds?: number;
   };

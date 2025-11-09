@@ -45,6 +45,29 @@ export const cardsRouter = router({
 
       return data as Card;
     }),
+
+  // Get multiple cards by IDs
+  getByIds: publicProcedure
+    .input(
+      z.object({
+        ids: z.array(zUuid).min(1),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const { data, error } = await ctx.supabase
+        .from("cards")
+        .select("*")
+        .in("id", input.ids);
+
+      if (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch cards",
+        });
+      }
+
+      return (data ?? []) as Card[];
+    }),
 });
 
 
