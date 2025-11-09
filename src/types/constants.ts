@@ -1,3 +1,5 @@
+import { DraftSettings } from "./database.types";
+
 export const CARD_TYPES = {
   HERO: 'hero',
   MONSTER: 'monster',
@@ -27,8 +29,15 @@ export const GAME_STATUS = {
 } as const;
 
 export const DRAFT_STATUS = {
-  ROLL_FOR_TURN: 'rollForTurn',
   DRAFT: 'draft',
   RESET_REQUESTED: 'resetRequested',
   FINISHED: 'finished',
+} as const;
+
+
+export const DEFAULT_DRAFT_SETTINGS: DraftSettings = {
+  user_allowed_points: 18,
+  draft_size: 40,
+  gods_amount: 4,
+  titans_amount: 2,
 } as const;

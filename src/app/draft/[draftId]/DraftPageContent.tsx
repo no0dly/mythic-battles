@@ -54,18 +54,6 @@ export default function DraftPageContent() {
           </div>
           <div>
             <p className="text-sm text-muted-foreground mb-1">
-              {t("draftTotalCost")}
-            </p>
-            <p className="font-medium">{draft.draft_total_cost}</p>
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground mb-1">
-              {t("playerAllowedPoints")}
-            </p>
-            <p className="font-medium">{draft.player_allowed_points}</p>
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground mb-1">
               {t("currentTurn")}
             </p>
             <p className="font-medium">

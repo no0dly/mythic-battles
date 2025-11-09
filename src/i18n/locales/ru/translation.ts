@@ -121,6 +121,8 @@ const translation = {
   chooseOneFromTheList: "Выберите из списка",
   battleDetails: "Детали битвы (пока не определено)",
   draftCount: "Количество карт в драфте",
+  godsAmount: "Количество богов",
+  titansAmount: "Количество титанов",
   generateDraft: "Создать драфт",
   cardType: {
     hero: "Герой",

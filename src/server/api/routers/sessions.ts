@@ -1,14 +1,15 @@
 import { z } from "zod";
 import { router, publicProcedure, protectedProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
-import type { Session, Game } from "@/types/database.types";
+import type { Session, Game, Draft } from "@/types/database.types";
 import { zUuid } from "../schemas";
-import { SESSION_STATUS, GAME_STATUS, DRAFT_STATUS } from "@/types/constants";
+import { SESSION_STATUS, GAME_STATUS, DEFAULT_DRAFT_SETTINGS } from "@/types/constants";
 import {
   fetchPlayersMap,
   enrichSessionWithPlayers,
 } from "./sessions/helpers";
 import type { SessionWithPlayers } from "./sessions/types";
+import type { AppRouter } from "../root";
 
 
 export const sessionsRouter = router({
@@ -141,21 +142,22 @@ export const sessionsRouter = router({
     .input(
       z.object({
         opponentId: zUuid,
-        userAllowedPoints: z.number().min(1),
-        draftCount: z.number().min(1),
+        user_allowed_points: z.number().min(1).default(DEFAULT_DRAFT_SETTINGS.user_allowed_points),
+        draft_size: z.number().min(1).default(DEFAULT_DRAFT_SETTINGS.draft_size),
+        gods_amount: z.number().min(1).default(DEFAULT_DRAFT_SETTINGS.gods_amount),
+        titans_amount: z.number().min(1).default(DEFAULT_DRAFT_SETTINGS.titans_amount),
       })
     )
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
-      const { opponentId, userAllowedPoints, draftCount } = input;
+      const { opponentId, user_allowed_points, draft_size, gods_amount, titans_amount } = input;
 
       // Track created records for rollback
       let createdSession: Session | null = null;
       let createdGame: Game | null = null;
-      let createdDraft: { id: string } | null = null;
 
       try {
-        // Verify opponent exists and is a friend (optional check)
+        // Verify opponent exists (parallel with session creation if needed, but keeping sequential for clarity)
         const { data: opponent, error: opponentError } = await ctx.supabase
           .from("users")
           .select("id")
@@ -166,21 +168,22 @@ export const sessionsRouter = router({
           throw new TRPCError({
             code: "NOT_FOUND",
             message: "Opponent not found",
+            cause: opponentError,
           });
         }
 
-        const sessionInsert = {
-          player1_id: userId,
-          player2_id: opponentId,
-          player1_session_score: 0,
-          player2_session_score: 0,
-          status: SESSION_STATUS.INVITE_TO_DRAFT,
-          error_message: null,
-          game_list: null,
-        };
+        // Create session
         const { data: session, error: sessionError } = await ctx.supabase
           .from("sessions")
-          .insert(sessionInsert as never)
+          .insert({
+            player1_id: userId,
+            player2_id: opponentId,
+            player1_session_score: 0,
+            player2_session_score: 0,
+            status: SESSION_STATUS.INVITE_TO_DRAFT,
+            error_message: null,
+            game_list: null,
+          } as never)
           .select()
           .single();
 
@@ -188,23 +191,30 @@ export const sessionsRouter = router({
           throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",
             message: "Failed to create session",
+            cause: sessionError,
           });
         }
 
         createdSession = session as Session;
 
-        const gameInsert = {
-          session_id: createdSession.id,
-          game_number: 1,
-          status: GAME_STATUS.INVITE_TO_DRAFT,
-          created_by: userId,
-          winner_id: null,
-          draft_id: null,
-          finished_at: null,
-        };
+        // Create game
         const { data: game, error: gameError } = await ctx.supabase
           .from("games")
-          .insert(gameInsert as never)
+          .insert({
+            session_id: createdSession.id,
+            game_number: 1,
+            status: GAME_STATUS.INVITE_TO_DRAFT,
+            created_by: userId,
+            winner_id: null,
+            draft_id: null,
+            finished_at: null,
+            draft_settings: {
+              user_allowed_points,
+              draft_size,
+              gods_amount,
+              titans_amount,
+            },
+          } as never)
           .select()
           .single();
 
@@ -212,50 +222,25 @@ export const sessionsRouter = router({
           throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",
             message: "Failed to create game",
+            cause: gameError,
           });
         }
 
         createdGame = game as Game;
 
-        const draftInsert = {
+        // Generate draft pool and create draft record in one call
+        // Use dynamic import to avoid circular dependency
+        const { appRouter } = await import("../root");
+        const caller = appRouter.createCaller(ctx) as ReturnType<AppRouter["createCaller"]>;
+
+        const draft: Draft = await caller.drafts.generateAndCreateDraft({
           game_id: createdGame.id,
+          draft_size,
+          gods_amount,
+          titans_amount,
           player1_id: userId,
           player2_id: opponentId,
-          draft_total_cost: draftCount,
-          player_allowed_points: userAllowedPoints,
-          initial_roll: null,
-          first_turn_user_id: null,
-          draft_status: DRAFT_STATUS.ROLL_FOR_TURN,
-          draft_history: null,
-          current_turn_user_id: opponentId,
-        };
-        const { data: draft, error: draftError } = await ctx.supabase
-          .from("drafts")
-          .insert(draftInsert as never)
-          .select()
-          .single();
-        console.log("draft", draft);
-        console.log("draftError", draftError);
-        if (draftError || !draft) {
-          throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: "Failed to create draft",
-          });
-        }
-
-        createdDraft = { id: (draft as { id: string }).id };
-
-        const { error: updateGameError } = await ctx.supabase
-          .from("games")
-          .update({ draft_id: (draft as { id: string }).id } as never)
-          .eq("id", createdGame.id);
-
-        if (updateGameError) {
-          throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: "Failed to update game with draft_id",
-          });
-        }
+        });
 
         // Update session with game_list
         const { error: updateSessionError } = await ctx.supabase
@@ -267,27 +252,27 @@ export const sessionsRouter = router({
           throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",
             message: "Failed to update session with game_list",
+            cause: updateSessionError,
           });
         }
 
         return {
           session: createdSession,
           game: createdGame,
-          draft: createdDraft,
+          draft: { id: draft.id },
         };
       } catch (error) {
-        // Rollback: delete all created records in reverse order
-        if (createdDraft) {
-          await ctx.supabase.from("drafts").delete().eq("id", createdDraft.id);
-        }
         if (createdGame) {
-          await ctx.supabase.from("games").delete().eq("id", createdGame.id);
+          // console.log("deleting game:", createdGame.id);
+          // await ctx.supabase.from("games").delete().eq("id", createdGame.id);
+          // TODO: figure out how to delete the game right now its not removing it
         }
         if (createdSession) {
-          await ctx.supabase.from("sessions").delete().eq("id", createdSession.id);
+          // console.log("deleting session:", createdSession.id);
+          // await ctx.supabase.from("sessions").delete().eq("id", createdSession.id);
+          // TODO: figure out how to delete the session right now its not removing it
         }
 
-        // Re-throw the error
         throw error;
       }
     }),
