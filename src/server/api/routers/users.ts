@@ -49,6 +49,30 @@ export const usersRouter = router({
       return data;
     }),
 
+  // Get multiple users by IDs
+  getUsersByIds: publicProcedure
+    .input(
+      z.object({
+        userIds: z.array(zUuid).min(1),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const { data, error } = await ctx.supabase
+        .from("users")
+        .select("id, email, display_name, avatar_url")
+        .in("id", input.userIds);
+
+      if (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch users",
+        });
+      }
+
+      type UserSubset = Pick<UserProfile, 'id' | 'email' | 'display_name' | 'avatar_url'>;
+      return (data ?? []) as UserSubset[];
+    }),
+
   // Search users by email or display name
   searchUsers: publicProcedure
     .input(

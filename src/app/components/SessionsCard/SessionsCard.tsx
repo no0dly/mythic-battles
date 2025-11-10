@@ -59,8 +59,8 @@ function SessionsCard() {
             id,
             player1_name,
             player2_name,
-            player1_score,
-            player2_score,
+            player1_session_score,
+            player2_session_score,
             status,
           } = session;
           return (
@@ -78,7 +78,7 @@ function SessionsCard() {
                   })}
                 </span>
                 <span className="font-bold text-emerald-600 text-xs flex-shrink-0">
-                  {`(${player1_score}-${player2_score})`}
+                  {`(${player1_session_score}-${player2_session_score})`}
                 </span>
               </div>
               <Badge variant={status} className="flex-shrink-0">

@@ -8,7 +8,7 @@ const mockUseQuery = vi.fn();
 vi.mock("@/trpc/client", () => ({
   api: {
     games: {
-      getList: {
+      getBySessionId: {
         useQuery: (...args: unknown[]) => mockUseQuery(...args),
       },
     },
@@ -17,7 +17,7 @@ vi.mock("@/trpc/client", () => ({
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
-    t: (key: string, params?: Record<string, string>) => {
+    t: (key: string, params?: Record<string, string | number>) => {
       const translations: Record<string, string> = {
         game: "Game",
         won: "Won",
@@ -25,10 +25,17 @@ vi.mock("react-i18next", () => ({
         sessionDetails: "Session Details",
         duration: "Duration",
         rounds: "Rounds",
+        created: "created",
+        noDraftAvailable: "noDraftAvailable",
+        goToDraft: "goToDraft",
       };
 
       if (key === "playedVSPlayer" && params) {
         return `${params.player1} vs ${params.player2}`;
+      }
+
+      if (key === "showingGames" && params) {
+        return "showingGames";
       }
 
       return translations[key] ?? key;
@@ -72,8 +79,8 @@ const baseSession: SessionWithPlayers = {
   id: "session-1",
   player1_id: "player-1",
   player2_id: "player-2",
-  player1_score: 2,
-  player2_score: 1,
+  player1_session_score: 2,
+  player2_session_score: 1,
   status: "draft",
   error_message: null,
   game_list: ["game-1"],
@@ -102,11 +109,15 @@ describe("SessionModal", () => {
         {
           id: "game-1",
           game_number: 1,
-          created_by: "user-creator",
+          created_by: "user-creator-id",
+          created_by_name: "user-creator",
           winner_id: "player-1",
           session_id: "session-1",
           status: "draft",
           draft_id: null,
+          draft: null,
+          player1_game_score: 15,
+          player2_game_score: 12,
           created_at: "2024-01-01T00:00:00Z",
           updated_at: "2024-01-01T00:00:00Z",
           finished_at: null,
@@ -117,10 +128,9 @@ describe("SessionModal", () => {
 
     render(<SessionModal session={baseSession} clearSession={vi.fn()} />);
 
-    expect(mockUseQuery).toHaveBeenCalledWith(
-      { ids: ["game-1"] },
-      { enabled: true }
-    );
+    expect(mockUseQuery).toHaveBeenCalledWith({
+      sessionId: "session-1",
+    });
 
     expect(screen.getByText(/Created by:/i)).toBeTruthy();
     expect(screen.getByText("user-creator")).toBeTruthy();
@@ -133,10 +143,14 @@ describe("SessionModal", () => {
           id: "game-1",
           game_number: 1,
           created_by: null,
+          created_by_name: null,
           winner_id: null,
           session_id: "session-1",
           status: "draft",
           draft_id: null,
+          draft: null,
+          player1_game_score: 0,
+          player2_game_score: 0,
           created_at: "2024-01-01T00:00:00Z",
           updated_at: "2024-01-01T00:00:00Z",
           finished_at: null,

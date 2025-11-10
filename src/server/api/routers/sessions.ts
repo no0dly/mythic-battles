@@ -172,8 +172,8 @@ export const sessionsRouter = router({
         const sessionInsert = {
           player1_id: userId,
           player2_id: opponentId,
-          player1_score: 0,
-          player2_score: 0,
+          player1_session_score: 0,
+          player2_session_score: 0,
           status: SESSION_STATUS.INVITE_TO_DRAFT,
           error_message: null,
           game_list: null,

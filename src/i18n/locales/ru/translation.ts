@@ -39,7 +39,8 @@ const translation = {
   won: "Выиграно",
   lost: "Проиграно",
   draw: "Ничья",
-  createdBy: "Создано",
+  created: "Когда создано",
+  createdBy: "Кем создано",
   // Session related
   playedVSPlayer: "{{player1}} vs {{player2}}",
   errorLoadingSessions: "Ошибка загрузки сессий: {{message}}",
@@ -147,6 +148,28 @@ const translation = {
   requiredField: "Это поле обязательно",
   sessionCreatedSuccessfully: "Сессия успешно создана",
   errorCreatingSession: "Ошибка создания сессии",
+  // Games related
+  gameNumber: "Игра №{{number}}",
+  gameScore: "Счет игры",
+  draftInformation: "Информация о драфте",
+  noDraftAvailable: "Драфт не проводился",
+  draftHistory: "История драфта",
+  draftHistoryEmpty: "История драфта отсутствует",
+  pick: "Выбор",
+  picks: "выборов",
+  pickNumber: "Выбор #{{number}}",
+  showingGames: "Показано игр: {{count}}",
+  errorLoadingGames: "Ошибка загрузки игр",
+  gamesWillAppearHere: "Игры будут отображены здесь",
+  // Draft history modal
+  draftHistoryDetails: "Детальная история драфта",
+  draftHistoryDescription: "Просмотр выборов, карт и финальных колод обоих игроков",
+  pickHistory: "История выборов",
+  viewDetailedHistory: "Просмотреть детальную историю",
+  totalCost: "Общая стоимость",
+  cardsSelected: "карт выбрано",
+  unknownCard: "Неизвестная карта",
+  cardPreview: "Предпросмотр карты",
 } as const;
 
 export default translation;

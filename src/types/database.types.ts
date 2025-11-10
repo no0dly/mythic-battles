@@ -64,8 +64,8 @@ export type Session = {
   id: string
   player1_id: string
   player2_id: string
-  player1_score: number
-  player2_score: number
+  player1_session_score: number
+  player2_session_score: number
   status: SessionStatus
   error_message: string | null
   game_list: string[] | null
@@ -91,6 +91,21 @@ export type Game = {
 }
 
 export type DraftStatus = ValueOf<typeof DRAFT_STATUS>;
+
+export type DraftPick = {
+  card_id: string
+  player_id: string
+  pick_number: number
+  timestamp: string
+}
+
+export type DraftHistory = {
+  picks: DraftPick[]        
+  initial_roll?: {          
+    player1_roll: number
+    player2_roll: number
+  }
+}
 
 export type Draft = {
   id: string
@@ -148,11 +163,11 @@ export type Database = {
         Row: Draft
         Insert: Omit<Draft, 'id' | 'created_at' | 'updated_at'> & {
           initial_roll?: Json
-          draft_history?: Json
+          draft_history?: Json | DraftHistory
         }
         Update: Partial<Omit<Draft, 'id' | 'created_at' | 'updated_at'>> & {
           initial_roll?: Json
-          draft_history?: Json
+          draft_history?: Json | DraftHistory
         }
       }
     }
@@ -179,9 +194,9 @@ export type GameInsert = Omit<Game, 'id' | 'created_at' | 'updated_at'>
 export type GameUpdate = Partial<Omit<Game, 'id' | 'created_at' | 'updated_at'>>
 export type DraftInsert = Omit<Draft, 'id' | 'created_at' | 'updated_at'> & {
   initial_roll?: Json
-  draft_history?: Json
+  draft_history?: Json | DraftHistory
 }
 export type DraftUpdate = Partial<Omit<Draft, 'id' | 'created_at' | 'updated_at'>> & {
   initial_roll?: Json
-  draft_history?: Json
+  draft_history?: Json | DraftHistory
 }
