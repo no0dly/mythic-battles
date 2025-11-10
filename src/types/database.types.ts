@@ -77,6 +77,13 @@ export type Session = {
 
 export type GameStatus = ValueOf<typeof GAME_STATUS>;
 
+export type DraftSettings = {
+  user_allowed_points: number
+  draft_size: number
+  gods_amount: number
+  titans_amount: number
+}
+
 export type Game = {
   id: string
   session_id: string
@@ -85,6 +92,7 @@ export type Game = {
   winner_id: string | null
   draft_id: string | null
   created_by: string
+  draft_settings: DraftSettings
   created_at: string
   updated_at: string
   finished_at: string | null
@@ -112,15 +120,13 @@ export type Draft = {
   game_id: string
   player1_id: string
   player2_id: string
-  draft_total_cost: number
-  player_allowed_points: number
   initial_roll: Json | null
-  first_turn_user_id: string
   draft_status: DraftStatus
   draft_history: Json | null
   current_turn_user_id: string
   created_at: string
   updated_at: string
+  draft_pool: string[]
 }
 
 export type Database = {
@@ -156,8 +162,12 @@ export type Database = {
       }
       games: {
         Row: Game
-        Insert: Omit<Game, 'id' | 'created_at' | 'updated_at'>
-        Update: Partial<Omit<Game, 'id' | 'created_at' | 'updated_at'>>
+        Insert: Omit<Game, 'id' | 'created_at' | 'updated_at'> & {
+          draft_settings?: Json
+        }
+        Update: Partial<Omit<Game, 'id' | 'created_at' | 'updated_at'>> & {
+          draft_settings?: Json
+        }
       }
       drafts: {
         Row: Draft
@@ -190,8 +200,12 @@ export type SessionInsert = Omit<Session, 'id' | 'created_at' | 'updated_at'> & 
 export type SessionUpdate = Partial<Omit<Session, 'id' | 'created_at' | 'updated_at'>> & {
   game_list?: Json
 }
-export type GameInsert = Omit<Game, 'id' | 'created_at' | 'updated_at'>
-export type GameUpdate = Partial<Omit<Game, 'id' | 'created_at' | 'updated_at'>>
+export type GameInsert = Omit<Game, 'id' | 'created_at' | 'updated_at'> & {
+  draft_settings?: Json
+}
+export type GameUpdate = Partial<Omit<Game, 'id' | 'created_at' | 'updated_at'>> & {
+  draft_settings?: Json
+}
 export type DraftInsert = Omit<Draft, 'id' | 'created_at' | 'updated_at'> & {
   initial_roll?: Json
   draft_history?: Json | DraftHistory

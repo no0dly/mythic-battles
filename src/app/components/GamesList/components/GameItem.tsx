@@ -1,5 +1,9 @@
 import { useTranslation } from "react-i18next";
-import { AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion-1";
+import {
+  AccordionItem,
+  AccordionTrigger,
+  AccordionContent,
+} from "@/components/ui/accordion-1";
 import type { GameWithDraft } from "@/server/api/routers/games/types";
 import { DraftInfo } from "../../DraftInfo";
 import { GameStatusBadge } from "./GameStatusBadge";
@@ -65,7 +69,7 @@ export const GameItem = ({
                     draft_history: game.draft.parsed_draft_history,
                     player1_id: game.draft.player1_id,
                     player2_id: game.draft.player2_id,
-                    draft_total_cost: game.draft.draft_total_cost,
+                    draft_total_cost: game.draft_settings?.draft_size,
                   }
                 : null
             }
@@ -73,8 +77,8 @@ export const GameItem = ({
             player2Name={player2Name}
           />
 
-          <GameMetadata 
-            createdAt={game.created_at} 
+          <GameMetadata
+            createdAt={game.created_at}
             finishedAt={game.finished_at}
             createdBy={game.created_by_name}
           />
@@ -83,4 +87,3 @@ export const GameItem = ({
     </AccordionItem>
   );
 };
-

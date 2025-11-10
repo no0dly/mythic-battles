@@ -123,6 +123,8 @@ const translation = {
   chooseOneFromTheList: "Choose one from the list",
   battleDetails: "Battle details (not sure yet)",
   draftCount: "Draft count",
+  godsAmount: "Gods Amount",
+  titansAmount: "Titans Amount",
   generateDraft: "Generate Draft",
   cardType: {
     hero: "Hero",

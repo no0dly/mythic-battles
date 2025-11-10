@@ -6,31 +6,19 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useFriends } from "@/hooks";
 import { ShimmerButton } from "@/components/ui/shimmer-button";
 import { toast } from "sonner";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { LoaderCircle } from "lucide-react";
+import { Form } from "@/components/ui/form";
+import { SelectWithLoading, NumberInputField } from "@/components/FormFields";
 import {
   DraftSettingsFormValues,
   getDraftSettingsSchema,
-  DRAFT_COUNT_OPTIONS,
+  DRAFT_SIZE_OPTIONS,
   USER_ALLOWED_POINTS_OPTIONS,
 } from "./constants";
 import Loader from "@/components/Loader";
 import { useRouter } from "next/navigation";
 import { api } from "@/trpc/client";
+import { DEFAULT_DRAFT_SETTINGS } from "@/types/constants";
+import { useMemo } from "react";
 
 export default function DraftSettings() {
   const { t } = useTranslation();
@@ -40,8 +28,10 @@ export default function DraftSettings() {
     resolver: zodResolver(getDraftSettingsSchema(t)),
     defaultValues: {
       opponentId: "",
-      userAllowedPoints: 18,
-      draftCount: 40,
+      user_allowed_points: DEFAULT_DRAFT_SETTINGS.user_allowed_points,
+      draft_size: DEFAULT_DRAFT_SETTINGS.draft_size,
+      gods_amount: DEFAULT_DRAFT_SETTINGS.gods_amount,
+      titans_amount: DEFAULT_DRAFT_SETTINGS.titans_amount,
     },
   });
 
@@ -59,6 +49,15 @@ export default function DraftSettings() {
     },
   });
 
+  const opponentOptions = useMemo(
+    () =>
+      friends.map((friend) => ({
+        value: friend.id,
+        label: friend.displayName,
+      })),
+    [friends]
+  );
+
   const handleSubmit = (values: DraftSettingsFormValues) => {
     createSessionWithDraft(values);
   };
@@ -70,119 +69,47 @@ export default function DraftSettings() {
           onSubmit={form.handleSubmit(handleSubmit)}
           className="flex flex-col gap-4 flex-1"
         >
-          <div className="flex flex-col gap-20">
+          <div className="flex flex-col gap-6">
             <div className="max-w-[400px]">
-              <FormField
+              <SelectWithLoading
                 control={form.control}
                 name="opponentId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t("selectYourOpponent")}</FormLabel>
-                    <FormControl>
-                      <Select
-                        value={field.value}
-                        onValueChange={field.onChange}
-                        disabled={isLoading}
-                      >
-                        <SelectTrigger
-                          className={`w-full ${
-                            isLoading ? "[&>svg:last-of-type]:hidden" : ""
-                          }`}
-                        >
-                          <SelectValue
-                            placeholder={
-                              isLoading
-                                ? t("loading")
-                                : t("chooseOneFromTheList")
-                            }
-                          />
-                          {isLoading && (
-                            <LoaderCircle className="h-4 w-4 animate-spin opacity-50 shrink-0 pointer-events-none" />
-                          )}
-                        </SelectTrigger>
-                        <SelectContent>
-                          {isLoading ? (
-                            <div className="flex items-center gap-2 px-2 py-1.5 text-sm text-muted-foreground">
-                              <LoaderCircle className="h-4 w-4 animate-spin" />
-                              <span>{t("loading")}</span>
-                            </div>
-                          ) : friends.length === 0 ? (
-                            <SelectItem value="no-friends" disabled>
-                              {t("noFriendsYet")}
-                            </SelectItem>
-                          ) : (
-                            friends.map((friend) => (
-                              <SelectItem key={friend.id} value={friend.id}>
-                                {friend.displayName}
-                              </SelectItem>
-                            ))
-                          )}
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                labelKey="selectYourOpponent"
+                options={opponentOptions}
+                isLoading={isLoading}
+                emptyMessageKey="noFriendsYet"
               />
             </div>
             <div className="max-w-[400px]">
-              <FormField
+              <SelectWithLoading
                 control={form.control}
-                name="userAllowedPoints"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t("userAllowedPoints")}</FormLabel>
-                    <FormControl>
-                      <Select
-                        disabled={true}
-                        value={field.value.toString()}
-                        onValueChange={(value) => field.onChange(Number(value))}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder={t("userAllowedPoints")} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {USER_ALLOWED_POINTS_OPTIONS.map((count) => (
-                            <SelectItem key={count} value={count.toString()}>
-                              {count}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                name="user_allowed_points"
+                labelKey="userAllowedPoints"
+                options={USER_ALLOWED_POINTS_OPTIONS}
+                disabled={true}
               />
             </div>
             <div className="max-w-[400px]">
-              <FormField
+              <SelectWithLoading
                 control={form.control}
-                name="draftCount"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t("draftCount")}</FormLabel>
-                    <FormControl>
-                      <Select
-                        disabled={true}
-                        value={field.value.toString()}
-                        onValueChange={(value) => field.onChange(Number(value))}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder={t("draftCount")} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {DRAFT_COUNT_OPTIONS.map((count) => (
-                            <SelectItem key={count} value={count.toString()}>
-                              {count}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                name="draft_size"
+                labelKey="draftCount"
+                options={DRAFT_SIZE_OPTIONS}
+                disabled={true}
+              />
+            </div>
+            <div className="max-w-[400px]">
+              <NumberInputField
+                control={form.control}
+                name="titans_amount"
+                labelKey="titansAmount"
+              />
+            </div>
+            <div className="max-w-[400px]">
+              <NumberInputField
+                control={form.control}
+                name="gods_amount"
+                labelKey="godsAmount"
               />
             </div>
           </div>
@@ -198,7 +125,7 @@ export default function DraftSettings() {
           </div>
         </form>
       </Form>
-      {isLoading || (isCreatingSessionPending && <Loader />)}
+      {(isLoading || isCreatingSessionPending) && <Loader />}
     </div>
   );
 }

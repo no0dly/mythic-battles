@@ -106,23 +106,13 @@ export const gamesRouter = router({
 
       const games: GameWithDraft[] = (gamesData as GameWithUserJoin[]).map((game) => {
         const draft = game.draft_id ? draftsMap[game.draft_id] : null;
-        
-        const parsedDraftHistory = draft?.draft_history 
-          ? parseDraftHistory(draft.draft_history) 
+
+        const parsedDraftHistory = draft?.draft_history
+          ? parseDraftHistory(draft.draft_history)
           : null;
 
         return {
-          id: game.id,
-          session_id: game.session_id,
-          game_number: game.game_number,
-          status: game.status,
-          winner_id: game.winner_id,
-          draft_id: game.draft_id,
-          created_by: game.created_by,
-          created_at: game.created_at,
-          updated_at: game.updated_at,
-          finished_at: game.finished_at,
-          created_by_name: game.users?.display_name ?? null,
+          ...game,
           draft: draft ? {
             ...draft,
             parsed_draft_history: parsedDraftHistory,
@@ -164,9 +154,9 @@ export const gamesRouter = router({
           draft = draftData as Draft;
         }
       }
-      
-      const parsedDraftHistory = draft?.draft_history 
-        ? parseDraftHistory(draft.draft_history) 
+
+      const parsedDraftHistory = draft?.draft_history
+        ? parseDraftHistory(draft.draft_history)
         : null;
 
       const gameWithDraft: GameWithDraft = {
