@@ -1,5 +1,5 @@
 import PageLayout from "@/components/PageLayout";
-import DraftPageContent from "./DraftPageContent";
+import { DraftPageContent } from "./components/DraftPageContent";
 import { requireUser } from "@/lib/auth/requireUser";
 
 export default async function DraftPage() {

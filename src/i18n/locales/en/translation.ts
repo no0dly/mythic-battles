@@ -172,6 +172,27 @@ const translation = {
   cardsSelected: "cards selected",
   unknownCard: "Unknown Card",
   cardPreview: "Card Preview",
+  // Draft page status
+  picking: "Picking",
+  awaits: "Awaits",
+  yourTurn: "Your Turn",
+  turnNumber: "Turn Number",
+  availablePoints: "Available Points",
+  pickedCards: "Picked Cards",
+  pickCard: "Pick Card",
+  picked: "Picked",
+  noCardsAvailable: "No cards available",
+  cardPickedSuccessfully: "Card picked successfully",
+  errorPickingCard: "Error picking card",
+  pleaseLogin: "Please login to continue",
+  youAreFirstDrafting: "You are first drafting ({{turn}} - {{points}})",
+  isDrafting: "is drafting",
+  noCardsPicked: "No cards picked yet",
+  you: "You",
+  initialRoll: "initial roll",
+  draftRound: "draft round",
+  startGame: "Start Game",
+  requestReset: "Request Reset",
 } as const;
 
 export default translation;

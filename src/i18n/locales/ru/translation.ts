@@ -172,6 +172,27 @@ const translation = {
   cardsSelected: "карт выбрано",
   unknownCard: "Неизвестная карта",
   cardPreview: "Предпросмотр карты",
+  // Draft page status
+  picking: "Выбирает",
+  awaits: "Ожидает",
+  yourTurn: "Ваш ход",
+  turnNumber: "Номер хода",
+  availablePoints: "Доступные очки",
+  pickedCards: "Выбранные карты",
+  pickCard: "Выбрать карту",
+  picked: "Выбрано",
+  noCardsAvailable: "Карты недоступны",
+  cardPickedSuccessfully: "Карта успешно выбрана",
+  errorPickingCard: "Ошибка выбора карты",
+  pleaseLogin: "Пожалуйста, войдите в систему",
+  youAreFirstDrafting: "Вы выбираете первым ({{turn}} - {{points}})",
+  isDrafting: "выбирает",
+  noCardsPicked: "Карты еще не выбраны",
+  you: "Вы",
+  initialRoll: "начальный бросок",
+  draftRound: "раунд драфта",
+  startGame: "Начать игру",
+  requestReset: "Запросить сброс",
 } as const;
 
 export default translation;
