@@ -3,18 +3,47 @@ import type { DraftPoolResult } from "./types";
 import {
   organizeCardsByType,
   pickRandom,
-  handleTitanSpecialCase,
-  handleHeroSpecialCase,
+  handleSpecialCase,
   selectAffordableCard,
 } from "./helpers";
-import { MAX_DRAFT_ITERATIONS } from "./constants";
+import { MAX_DRAFT_ITERATIONS, SPECIAL_CASE_UNITS } from "./constants";
 import { DraftPoolConfig } from "@/types/draft-settings.types";
 
-// Note: We use regular Error instead of custom class for simplicity
-// The router can check error messages to determine error type
+type CardSelectionResult = {
+  selectedIds: string[];
+  remainingCards: Card[];
+};
+
+type SpecialCaseHandler = (card: Card, remainingCards: Card[]) => Card[];
 
 /**
- * Select titans for the draft pool
+ * Generic function to select a fixed number of cards from a pool
+ */
+function selectFixedAmountCards(
+  availableCards: Card[],
+  amount: number,
+  onSelect?: (card: Card, remainingCards: Card[]) => Card[]
+): CardSelectionResult {
+  const selectedIds: string[] = [];
+  let remainingCards = [...availableCards];
+
+  for (let i = 0; i < amount && remainingCards.length > 0; i++) {
+    const pick = pickRandom(remainingCards);
+    if (!pick) break;
+
+    selectedIds.push(pick.item.id);
+    remainingCards = pick.remaining;
+
+    if (onSelect) {
+      remainingCards = onSelect(pick.item, remainingCards);
+    }
+  }
+
+  return { selectedIds, remainingCards };
+}
+
+/**
+ * Select titans and handle special cases (remove corresponding monsters)
  */
 function selectTitans(
   availableTitans: Card[],
@@ -22,7 +51,6 @@ function selectTitans(
   availableMonsters: Card[]
 ): {
   selectedTitanIds: string[];
-  remainingTitans: Card[];
   remainingMonsters: Card[];
 } {
   const selectedTitanIds: string[] = [];
@@ -33,19 +61,16 @@ function selectTitans(
     const pick = pickRandom(remainingTitans);
     if (!pick) break;
 
-    const titan = pick.item;
-    selectedTitanIds.push(titan.id);
+    selectedTitanIds.push(pick.item.id);
     remainingTitans = pick.remaining;
-
-    // Handle special cases (remove corresponding monsters)
-    remainingMonsters = handleTitanSpecialCase(titan, remainingMonsters);
+    remainingMonsters = handleSpecialCase(
+      pick.item,
+      remainingMonsters,
+      SPECIAL_CASE_UNITS.TITAN_MONSTER_PAIRS
+    );
   }
 
-  return {
-    selectedTitanIds,
-    remainingTitans,
-    remainingMonsters,
-  };
+  return { selectedTitanIds, remainingMonsters };
 }
 
 /**
@@ -56,23 +81,67 @@ function selectGods(
   godsAmount: number
 ): {
   selectedGodIds: string[];
-  remainingGods: Card[];
 } {
-  const selectedGodIds: string[] = [];
-  let remainingGods = [...availableGods];
+  const { selectedIds } = selectFixedAmountCards(availableGods, godsAmount);
+  return { selectedGodIds: selectedIds };
+}
 
-  for (let i = 0; i < godsAmount && remainingGods.length > 0; i++) {
-    const pick = pickRandom(remainingGods);
-    if (!pick) break;
+type SelectionState = {
+  selectedIds: string[];
+  size: number;
+  cardPools: {
+    monsters: Card[];
+    heroes: Card[];
+    troops: Card[];
+  };
+};
 
-    selectedGodIds.push(pick.item.id);
-    remainingGods = pick.remaining;
+type CardTypeConfig = {
+  key: keyof SelectionState["cardPools"];
+  specialCaseHandler?: SpecialCaseHandler;
+};
+
+/**
+ * Attempt to select a card from a given pool
+ */
+function attemptCardSelection(
+  pool: Card[],
+  state: SelectionState,
+  draftSize: number,
+  specialCaseHandler?: SpecialCaseHandler
+): { success: boolean; updatedPool: Card[] } {
+  if (pool.length === 0) {
+    return { success: false, updatedPool: pool };
   }
 
-  return {
-    selectedGodIds,
-    remainingGods,
-  };
+  const selection = selectAffordableCard(pool, state.size, draftSize);
+  if (!selection) {
+    return { success: false, updatedPool: pool };
+  }
+
+  let updatedPool = selection.remaining;
+
+  if (selection.added) {
+    state.selectedIds.push(selection.card.id);
+    state.size += selection.card.cost;
+  }
+
+  if (specialCaseHandler) {
+    updatedPool = specialCaseHandler(selection.card, updatedPool);
+  }
+
+  return { success: selection.added, updatedPool };
+}
+
+/**
+ * Check if we can still make progress with available cards
+ */
+function canMakeProgress(cardPools: SelectionState["cardPools"]): boolean {
+  return (
+    cardPools.monsters.length > 0 ||
+    cardPools.heroes.length > 0 ||
+    cardPools.troops.length > 0
+  );
 }
 
 /**
@@ -88,75 +157,59 @@ function fillRemainingDraftSize(
   selectedIds: string[];
   finalSize: number;
 } {
-  const selectedIds: string[] = [];
-  let remainingMonsters = [...availableMonsters];
-  let remainingHeroes = [...availableHeroes];
-  let remainingTroops = [...availableTroops];
-  let size = currentSize;
+  const state: SelectionState = {
+    selectedIds: [],
+    size: currentSize,
+    cardPools: {
+      monsters: [...availableMonsters],
+      heroes: [...availableHeroes],
+      troops: [...availableTroops],
+    },
+  };
+
+  const cardTypeConfigs: CardTypeConfig[] = [
+    { key: "monsters" },
+    {
+      key: "heroes",
+      specialCaseHandler: (card, remainingCards) =>
+        handleSpecialCase(card, remainingCards, SPECIAL_CASE_UNITS.HERO_VARIANTS),
+    },
+    { key: "troops" },
+  ];
+
   let iterations = 0;
 
-  while (size < draftSize && iterations < MAX_DRAFT_ITERATIONS) {
+  while (state.size < draftSize && iterations < MAX_DRAFT_ITERATIONS) {
     iterations++;
     let madeProgress = false;
 
-    // Try to select a monster
-    if (remainingMonsters.length > 0) {
-      const selection = selectAffordableCard(remainingMonsters, size, draftSize);
-      if (selection) {
-        remainingMonsters = selection.remaining;
-        if (selection.added) {
-          selectedIds.push(selection.card.id);
-          size += selection.card.cost;
-          madeProgress = true;
-        }
+    // Try each card type in order
+    for (const config of cardTypeConfigs) {
+      const pool = state.cardPools[config.key];
+      const result = attemptCardSelection(
+        pool,
+        state,
+        draftSize,
+        config.specialCaseHandler
+      );
+
+      state.cardPools[config.key] = result.updatedPool;
+
+      if (result.success) {
+        madeProgress = true;
       }
     }
 
-    // Try to select a hero
-    if (remainingHeroes.length > 0) {
-      const selection = selectAffordableCard(remainingHeroes, size, draftSize);
-      if (selection) {
-        remainingHeroes = selection.remaining;
-
-        if (selection.added) {
-          selectedIds.push(selection.card.id);
-          size += selection.card.cost;
-          madeProgress = true;
-        }
-
-        // Handle special cases (remove other hero variants)
-        remainingHeroes = handleHeroSpecialCase(selection.card, remainingHeroes);
+    // Early exit: no cards available
+    if (!canMakeProgress(state.cardPools)) {
+      if (state.size < draftSize) {
+        throw new Error("Not enough units for the draft size");
       }
+      break;
     }
 
-    // Try to select a troop
-    if (remainingTroops.length > 0) {
-      const selection = selectAffordableCard(remainingTroops, size, draftSize);
-      if (selection) {
-        remainingTroops = selection.remaining;
-        if (selection.added) {
-          selectedIds.push(selection.card.id);
-          size += selection.card.cost;
-          madeProgress = true;
-        }
-      }
-    } else {
-      // No troops left - check if we can still make progress
-      if (remainingMonsters.length === 0 && remainingHeroes.length === 0) {
-        if (size < draftSize) {
-          throw new Error("Not enough units for the draft size");
-        }
-        break;
-      }
-    }
-
-    // If no progress made and no more units available, break
-    if (
-      !madeProgress &&
-      remainingMonsters.length === 0 &&
-      remainingHeroes.length === 0 &&
-      remainingTroops.length === 0
-    ) {
+    // Early exit: no progress and no more cards
+    if (!madeProgress) {
       break;
     }
   }
@@ -168,8 +221,8 @@ function fillRemainingDraftSize(
   }
 
   return {
-    selectedIds,
-    finalSize: size,
+    selectedIds: state.selectedIds,
+    finalSize: state.size,
   };
 }
 

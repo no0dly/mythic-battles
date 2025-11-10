@@ -1,19 +1,41 @@
 import type { Card } from "@/types/database.types";
 import { CARD_TYPES } from "@/types/constants";
 import type { CardsByType } from "./types";
-import { SPECIAL_CASE_UNITS } from "./constants";
+
+/**
+ * Reverse lookup map: card type value -> result key
+ * Enables O(1) lookup instead of iterating through all types
+ */
+const TYPE_TO_KEY_MAP: Record<string, keyof CardsByType> = {
+  [CARD_TYPES.TITAN]: "titans",
+  [CARD_TYPES.GOD]: "gods",
+  [CARD_TYPES.MONSTER]: "monsters",
+  [CARD_TYPES.HERO]: "heroes",
+  [CARD_TYPES.TROOP]: "troops",
+} as const;
 
 /**
  * Organize cards by type for efficient filtering
+ * Uses a single pass through the cards array with O(1) type lookup
  */
 export function organizeCardsByType(cards: Card[]): CardsByType {
-  return {
-    titans: cards.filter((card) => card.unit_type === CARD_TYPES.TITAN),
-    gods: cards.filter((card) => card.unit_type === CARD_TYPES.GOD),
-    monsters: cards.filter((card) => card.unit_type === CARD_TYPES.MONSTER),
-    heroes: cards.filter((card) => card.unit_type === CARD_TYPES.HERO),
-    troops: cards.filter((card) => card.unit_type === CARD_TYPES.TROOP),
+  const result: CardsByType = {
+    titans: [],
+    gods: [],
+    monsters: [],
+    heroes: [],
+    troops: [],
   };
+
+  // Single pass through all cards with O(1) lookup
+  for (const card of cards) {
+    const key = TYPE_TO_KEY_MAP[card.unit_type];
+    if (key) {
+      result[key].push(card);
+    }
+  }
+
+  return result;
 }
 
 /**
@@ -57,40 +79,25 @@ export function removeSpecialCaseCards(
 }
 
 /**
- * Handle special case: when a titan is selected, remove corresponding monster
+ * Generic function to handle special case card selection
+ * Finds a matching special case name and removes corresponding cards
  */
-export function handleTitanSpecialCase(
-  titan: Card,
-  availableMonsters: Card[]
+export function handleSpecialCase(
+  selectedCard: Card,
+  availableCards: Card[],
+  specialCasePairs: readonly string[]
 ): Card[] {
-  const matchingName = SPECIAL_CASE_UNITS.TITAN_MONSTER_PAIRS.find((name) =>
-    titan.unit_name.includes(name)
+  const matchingName = specialCasePairs.find((name) =>
+    selectedCard.unit_name.includes(name)
   );
 
   if (!matchingName) {
-    return availableMonsters;
+    return availableCards;
   }
 
-  return removeSpecialCaseCards(availableMonsters, [matchingName]);
+  return removeSpecialCaseCards(availableCards, [matchingName]);
 }
 
-/**
- * Handle special case: when a hero variant is selected, remove other variants
- */
-export function handleHeroSpecialCase(
-  hero: Card,
-  availableHeroes: Card[]
-): Card[] {
-  const matchingName = SPECIAL_CASE_UNITS.HERO_VARIANTS.find((name) =>
-    hero.unit_name.includes(name)
-  );
-
-  if (!matchingName) {
-    return availableHeroes;
-  }
-
-  return removeSpecialCaseCards(availableHeroes, [matchingName]);
-}
 
 /**
  * Check if a card can fit within the remaining draft size
@@ -102,6 +109,7 @@ export function canFitInDraft(card: Card, currentSize: number, draftSize: number
 /**
  * Select a random card that fits within the budget
  * Returns the card and updated arrays
+ * If no affordable cards exist, still removes one to make progress
  */
 export function selectAffordableCard<T extends Card>(
   cards: T[],
@@ -117,20 +125,20 @@ export function selectAffordableCard<T extends Card>(
     canFitInDraft(card, currentSize, draftSize)
   );
 
-  if (affordableCards.length === 0) {
-    // No affordable cards, but still remove one to make progress
-    const pick = pickRandom(cards);
+  // If we have affordable cards, pick from them
+  if (affordableCards.length > 0) {
+    const pick = pickRandom(affordableCards);
     if (!pick) return null;
-    return { card: pick.item, remaining: pick.remaining, added: false };
+
+    // Remove from original array
+    const remaining = cards.filter((card) => card.id !== pick.item.id);
+    return { card: pick.item, remaining, added: true };
   }
 
-  // Pick from affordable cards
-  const pick = pickRandom(affordableCards);
+  // No affordable cards, but still remove one to make progress
+  const pick = pickRandom(cards);
   if (!pick) return null;
 
-  // Remove from original array
-  const remaining = cards.filter((card) => card.id !== pick.item.id);
-
-  return { card: pick.item, remaining, added: true };
+  return { card: pick.item, remaining: pick.remaining, added: false };
 }
 

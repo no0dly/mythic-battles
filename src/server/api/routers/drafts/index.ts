@@ -11,8 +11,7 @@ export {
   pickRandom,
   containsSpecialCaseName,
   removeSpecialCaseCards,
-  handleTitanSpecialCase,
-  handleHeroSpecialCase,
+  handleSpecialCase,
   canFitInDraft,
   selectAffordableCard,
 } from "./helpers";
