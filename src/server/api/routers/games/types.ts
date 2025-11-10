@@ -1,4 +1,4 @@
-import type { Game, Draft, DraftHistory } from '@/types/database.types'
+import type { Game, Draft, DraftHistory, DraftSettings } from '@/types/database.types'
 
 // Game data from Supabase with users join
 export type GameWithUserJoin = Game & {
@@ -23,6 +23,7 @@ export type GameDetail = {
   winner_id: string | null
   created_at: string
   finished_at: string | null
+  draft_settings: DraftSettings
   draft: {
     id: string
     draft_status: string

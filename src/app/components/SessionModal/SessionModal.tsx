@@ -50,7 +50,6 @@ export default function SessionModal({ session, clearSession }: Props) {
           <GamesList
             sessionId={session.id}
             player1Id={session.player1_id}
-            player2Id={session.player2_id}
             player1Name={session.player1_name}
             player2Name={session.player2_name}
           />
