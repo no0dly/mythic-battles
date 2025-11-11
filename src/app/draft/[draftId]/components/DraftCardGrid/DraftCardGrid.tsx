@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import Loader from "@/components/Loader";
 import { DraftCardItem } from "../DraftCardItem";
@@ -40,8 +40,19 @@ export function DraftCardGrid({
     [cards, selectedType, selectedCost]
   );
 
-  const onCardClickHandler = (card: Card) => () => setSelectedCard(card);
-  const onCloseModalHandler = () => setSelectedCard(null);
+  const onCloseModalHandler = useCallback(() => {
+    setSelectedCard(null);
+  }, []);
+
+  // Мемоизировать проверку, выбрана ли карта
+  const isCardPicked = useCallback((cardId: string) => {
+    return pickedCardIds.has(cardId);
+  }, [pickedCardIds]);
+
+  // Мемоизировать обработчик клика по карте (принимает card напрямую)
+  const handleCardClick = useCallback((card: Card) => {
+    setSelectedCard(card);
+  }, []);
 
   if (isLoading) {
     return <Loader />;
@@ -84,10 +95,10 @@ export function DraftCardGrid({
                 key={card.id}
                 card={card}
                 onPick={onPickCard}
-                isPicked={pickedCardIds.has(card.id)}
+                onCardClick={handleCardClick}
+                isPicked={isCardPicked(card.id)}
                 canPick={canPick}
                 isLoading={isLoading}
-                onCardClick={onCardClickHandler(card)}
               />
             ))}
           </div>

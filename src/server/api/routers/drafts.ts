@@ -251,7 +251,44 @@ export const draftsRouter = router({
         });
       }
 
-      return draft as Draft;
+      const draftData = draft as Draft;
+
+      // Получить игру
+      const { data: game } = await ctx.supabase
+        .from("games")
+        .select("*")
+        .eq("id", draftData.game_id)
+        .single();
+
+      // Получить последнее приглашение (по updated_at, чтобы видеть актуальный статус)
+      // Сначала пытаемся найти pending приглашение, если нет - берем последнее по updated_at
+      const { data: pendingInvitation } = await ctx.supabase
+        .from("game_invitations")
+        .select("*")
+        .eq("game_id", draftData.game_id)
+        .eq("status", "pending")
+        .maybeSingle();
+
+      let invitation = pendingInvitation;
+      
+      // Если pending приглашения нет, получаем последнее обновленное
+      if (!invitation) {
+        const { data: latestInvitation } = await ctx.supabase
+          .from("game_invitations")
+          .select("*")
+          .eq("game_id", draftData.game_id)
+          .order("updated_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        
+        invitation = latestInvitation;
+      }
+
+      return {
+        ...draftData,
+        game: game || undefined,
+        invitation: invitation || undefined,
+      } as Draft & { game?: import("@/types/database.types").Game; invitation?: import("@/types/database.types").GameInvitation };
     }),
 
   // Get drafts by array of IDs
@@ -279,18 +316,17 @@ export const draftsRouter = router({
 
   // Update draft
   update: protectedProcedure
-    .input(
-      z.object({
-        id: zUuid,
-        draft_total_cost: z.number().optional(),
-        player_allowed_points: z.number().optional(),
-        initial_roll: z.any().optional(),
-        first_turn_user_id: zUuid.optional(),
-        draft_status: z.enum(Object.values(DRAFT_STATUS)).optional(),
-        draft_history: z.any().optional(),
-        current_turn_user_id: zUuid.optional(),
-      })
-    )
+      .input(
+        z.object({
+          id: zUuid,
+          draft_total_cost: z.number().optional(),
+          initial_roll: z.any().optional(),
+          first_turn_user_id: zUuid.optional(),
+          draft_status: z.enum(Object.values(DRAFT_STATUS)).optional(),
+          draft_history: z.any().optional(),
+          current_turn_user_id: zUuid.optional(),
+        })
+      )
     .mutation(async ({ ctx, input }) => {
       const { id, ...updateData } = input;
 
@@ -348,11 +384,37 @@ export const draftsRouter = router({
       // Verify draft exists and user is a participant
       const { data: draft, error: draftError } = await ctx.supabase
         .from("drafts")
-        .select("player1_id, player2_id, current_turn_user_id, draft_pool, draft_history, player_allowed_points")
+        .select("player1_id, player2_id, current_turn_user_id, draft_pool, draft_history, game_id")
         .eq("id", input.draft_id)
         .single();
 
-      if (draftError || !draft) {
+      if (draftError) {
+        // Log the error for debugging
+        console.error("Draft fetch error:", {
+          error: draftError,
+          draft_id: input.draft_id,
+          user_id: userId,
+          error_code: draftError.code,
+          error_message: draftError.message,
+        });
+
+        // Check if it's an RLS/permission error
+        if (draftError.code === "PGRST116" || draftError.message?.includes("permission") || draftError.message?.includes("policy")) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "You don't have permission to access this draft. This may be due to missing RLS policies.",
+            cause: draftError,
+          });
+        }
+
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: `Draft not found: ${draftError.message}`,
+          cause: draftError,
+        });
+      }
+
+      if (!draft) {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Draft not found",
@@ -365,7 +427,7 @@ export const draftsRouter = router({
         current_turn_user_id: string;
         draft_pool: string[];
         draft_history: unknown;
-        player_allowed_points: number;
+        game_id: string;
       };
 
       // Verify user is a participant
@@ -408,6 +470,30 @@ export const draftsRouter = router({
 
       const cardData = card as { cost: number };
 
+      // Get game to retrieve draft_settings with user_allowed_points
+      const { data: game, error: gameError } = await ctx.supabase
+        .from("games")
+        .select("draft_settings")
+        .eq("id", draftData.game_id)
+        .single();
+
+      if (gameError || !game) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Game not found",
+        });
+      }
+
+      const draftSettings = game.draft_settings as { user_allowed_points: number } | null;
+      if (!draftSettings || typeof draftSettings.user_allowed_points !== "number") {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Invalid draft settings: user_allowed_points not found",
+        });
+      }
+
+      const playerAllowedPoints = draftSettings.user_allowed_points;
+
       // Parse draft history
       const { parseDraftHistory } = await import("@/utils/drafts/helpers");
       const draftHistory = parseDraftHistory(draftData.draft_history);
@@ -431,7 +517,7 @@ export const draftsRouter = router({
       }
 
       const spentPoints = (pickedCards as { cost: number }[] || []).reduce((sum, c) => sum + c.cost, 0);
-      const remainingPoints = draftData.player_allowed_points - spentPoints;
+      const remainingPoints = playerAllowedPoints - spentPoints;
 
       // Verify user has enough points
       if (cardData.cost > remainingPoints) {
@@ -624,5 +710,73 @@ export const draftsRouter = router({
 
       return updatedDraft as Draft;
     }),
+
+  // Get active draft for current user
+  getActiveDraft: protectedProcedure.query(async ({ ctx }) => {
+    const userId = ctx.session.user.id;
+
+    const { data: draft, error } = await ctx.supabase
+      .from("drafts")
+      .select("*")
+      .or(`player1_id.eq.${userId},player2_id.eq.${userId}`)
+      .eq("draft_status", DRAFT_STATUS.DRAFT)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to fetch active draft",
+        cause: error,
+      });
+    }
+
+    return draft as Draft | null;
+  }),
+
+  // Получить все активные драфты для текущего пользователя
+  // Исключаем драфты, где есть pending приглашение (показываем только после принятия)
+  getActiveDrafts: protectedProcedure.query(async ({ ctx }) => {
+    const userId = ctx.session.user.id;
+
+    const { data: drafts, error } = await ctx.supabase
+      .from("drafts")
+      .select("*")
+      .or(`player1_id.eq.${userId},player2_id.eq.${userId}`)
+      .eq("draft_status", DRAFT_STATUS.DRAFT)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to fetch active drafts",
+        cause: error,
+      });
+    }
+
+    if (!drafts || drafts.length === 0) {
+      return [] as Draft[];
+    }
+
+    // Получить все pending приглашения для игр этих драфтов
+    const gameIds = drafts.map((d) => d.game_id);
+    const { data: pendingInvitations } = await ctx.supabase
+      .from("game_invitations")
+      .select("game_id")
+      .in("game_id", gameIds)
+      .eq("status", "pending");
+
+    const gamesWithPendingInvitations = new Set(
+      pendingInvitations?.map((inv) => inv.game_id) || []
+    );
+
+    // Фильтруем драфты: исключаем те, где есть pending приглашение
+    const filteredDrafts = drafts.filter(
+      (draft) => !gamesWithPendingInvitations.has(draft.game_id)
+    ) as Draft[];
+
+    return filteredDrafts;
+  }),
 });
 

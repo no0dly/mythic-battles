@@ -139,7 +139,7 @@ const translation = {
   // Draft page
   draftNotFound: "Драфт не найден",
   draftDetails: "Детали драфта",
-  draftStatus: "Статус",
+  draftStatus: "Статус драфта",
   rollForTurn: "Бросок на первый ход",
   draftTotalCost: "Общая стоимость",
   playerAllowedPoints: "Разрешённые очки игрока",
@@ -193,6 +193,49 @@ const translation = {
   draftRound: "раунд драфта",
   startGame: "Начать игру",
   requestReset: "Запросить сброс",
+  // Game Invitations
+  gameInvitation: "Приглашение в игру",
+  invitationFromPlayer: "{{player}} приглашает вас сыграть",
+  acceptInvitationQuestion: "Вы хотите принять это приглашение?",
+  accept: "Принять",
+  reject: "Отклонить",
+  invitationAccepted: "Приглашение принято",
+  invitationRejected: "Приглашение отклонено",
+  errorAcceptingInvitation: "Ошибка при принятии приглашения",
+  errorRejectingInvitation: "Ошибка при отклонении приглашения",
+  newGameInvitation: "Новое приглашение в игру!",
+  unknownPlayer: "Неизвестный игрок",
+  invitationSent: "Приглашение успешно отправлено",
+  errorSendingInvitation: "Ошибка при отправке приглашения",
+  
+  // Draft confirmation
+  confirmCardPick: "Подтверждение выбора карты",
+  confirmCardPickDescription: "Вы уверены, что хотите выбрать эту карту?",
+  areYouSurePickCard: "Это действие нельзя отменить.",
+  confirm: "Подтвердить",
+  strategicValue: "Стратегическая ценность",
+  
+  // Active Draft
+  activeDraftInProgress: "Активный драфт в процессе",
+  youHaveActiveDraft: "У вас есть активный драфт. Продолжайте играть!",
+  continueDraft: "Продолжить драфт",
+  
+  // Draft management
+  draftFinished: "Драфт успешно завершен",
+  errorFinishingDraft: "Ошибка при завершении драфта",
+  errorRequestingReset: "Ошибка при запросе сброса",
+  
+  // Уведомления
+  notifications: "Уведомления",
+  noNotifications: "Нет уведомлений",
+  continueDraftWithPlayer: "Продолжить драфт с {{player}}",
+  activeDraft: "Активный драфт",
+  
+  // Состояния драфта
+  waitingForOpponent: "Ожидание оппонента",
+  waitingForOpponentDescription: "Ожидание принятия приглашения вашим оппонентом...",
+  waitingForAcceptance: "Ожидание принятия",
+  invitationPending: "Приглашение ожидает",
 } as const;
 
 export default translation;

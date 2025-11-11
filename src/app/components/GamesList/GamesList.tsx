@@ -1,6 +1,8 @@
 "use client";
 
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { createClient } from "@/lib/supabase/client";
 import { api } from "@/trpc/client";
 import Loader from "@/components/Loader";
 import { Accordion } from "@/components/ui/accordion-1";
@@ -21,6 +23,8 @@ export const GamesList = ({
   player2Name,
 }: GamesListProps) => {
   const { t } = useTranslation();
+  const supabase = createClient();
+  const utils = api.useUtils();
 
   const {
     data: games,
@@ -29,6 +33,44 @@ export const GamesList = ({
   } = api.games.getBySessionId.useQuery({
     sessionId,
   });
+
+  // Realtime подписка на новые игры в сессии
+  useEffect(() => {
+    if (!sessionId) return;
+
+    const channel = supabase
+      .channel(`games-session-${sessionId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "games",
+          filter: `session_id=eq.${sessionId}`,
+        },
+        () => {
+          // Инвалидировать запрос списка игр
+          void utils.games.getBySessionId.invalidate({ sessionId });
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "games",
+          filter: `session_id=eq.${sessionId}`,
+        },
+        () => {
+          void utils.games.getBySessionId.invalidate({ sessionId });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [sessionId, supabase, utils]);
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-8">

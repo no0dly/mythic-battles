@@ -1,7 +1,10 @@
 "use client";
 
 import { useTranslation } from "react-i18next";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { api } from "@/trpc/client";
+import { toast } from "sonner";
 import type { Draft, Card as CardType } from "@/types/database.types";
 import { parseDraftHistory } from "@/utils/drafts/helpers";
 
@@ -25,6 +28,36 @@ export function DraftStatusPanel({
   currentUserId,
 }: DraftStatusPanelProps) {
   const { t } = useTranslation();
+  const router = useRouter();
+
+  // Мутация завершения драфта
+  const finishDraftMutation = api.drafts.finishDraft.useMutation({
+    onSuccess: () => {
+      toast.success(t("draftFinished"));
+      router.push("/");
+    },
+    onError: (error) => {
+      toast.error(error.message || t("errorFinishingDraft"));
+    },
+  });
+
+  // Мутация запроса сброса
+  const requestResetMutation = api.drafts.requestReset.useMutation({
+    onSuccess: () => {
+      toast.info(t("resetRequested"));
+    },
+    onError: (error) => {
+      toast.error(error.message || t("errorRequestingReset"));
+    },
+  });
+
+  const handleStartGame = () => {
+    finishDraftMutation.mutate({ draft_id: draft.id });
+  };
+
+  const handleRequestReset = () => {
+    requestResetMutation.mutate({ draft_id: draft.id });
+  };
 
   const draftHistory = parseDraftHistory(draft.draft_history);
   const picks = draftHistory?.picks || [];
@@ -141,14 +174,19 @@ export function DraftStatusPanel({
       </div>
 
       <div className="flex flex-row gap-2 mt-4">
-        <Button onClick={() => console.log("start game")} className="flex-1">
+        <Button
+          onClick={handleStartGame}
+          className="flex-1"
+          disabled={finishDraftMutation.isPending}
+        >
           {t("startGame")}
         </Button>
 
         <Button
-          onClick={() => console.log("request reset")}
+          onClick={handleRequestReset}
           variant="outline"
           className="flex-1"
+          disabled={requestResetMutation.isPending}
         >
           {t("requestReset")}
         </Button>

@@ -141,7 +141,7 @@ const translation = {
   // Draft page
   draftNotFound: "Draft not found",
   draftDetails: "Draft Details",
-  draftStatus: "Status",
+  draftStatus: "Draft Status",
   draftTotalCost: "Total Cost",
   playerAllowedPoints: "Player Allowed Points",
   currentTurn: "Current Turn",
@@ -193,6 +193,49 @@ const translation = {
   draftRound: "draft round",
   startGame: "Start Game",
   requestReset: "Request Reset",
+  // Game Invitations
+  gameInvitation: "Game Invitation",
+  invitationFromPlayer: "{{player}} invites you to play",
+  acceptInvitationQuestion: "Do you want to accept this invitation?",
+  accept: "Accept",
+  reject: "Reject",
+  invitationAccepted: "Invitation accepted",
+  invitationRejected: "Invitation rejected",
+  errorAcceptingInvitation: "Error accepting invitation",
+  errorRejectingInvitation: "Error rejecting invitation",
+  newGameInvitation: "New game invitation!",
+  unknownPlayer: "Unknown Player",
+  invitationSent: "Invitation sent successfully",
+  errorSendingInvitation: "Error sending invitation",
+  
+  // Draft confirmation
+  confirmCardPick: "Confirm Card Selection",
+  confirmCardPickDescription: "Are you sure you want to pick this card?",
+  areYouSurePickCard: "This action cannot be undone.",
+  confirm: "Confirm",
+  strategicValue: "Strategic Value",
+  
+  // Active Draft
+  activeDraftInProgress: "Active Draft in Progress",
+  youHaveActiveDraft: "You have an active draft. Continue playing!",
+  continueDraft: "Continue Draft",
+  
+  // Draft management
+  draftFinished: "Draft finished successfully",
+  errorFinishingDraft: "Error finishing draft",
+  errorRequestingReset: "Error requesting reset",
+  
+  // Notifications
+  notifications: "Notifications",
+  noNotifications: "No notifications",
+  continueDraftWithPlayer: "Continue draft with {{player}}",
+  activeDraft: "Active Draft",
+  
+  // Draft States
+  waitingForOpponent: "Waiting for Opponent",
+  waitingForOpponentDescription: "Waiting for your opponent to accept the invitation...",
+  waitingForAcceptance: "Waiting for Acceptance",
+  invitationPending: "Invitation Pending",
 } as const;
 
 export default translation;

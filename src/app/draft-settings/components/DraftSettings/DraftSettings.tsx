@@ -3,7 +3,7 @@
 import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useFriends } from "@/hooks";
+import { useFriends, useUserProfile } from "@/hooks";
 import { ShimmerButton } from "@/components/ui/shimmer-button";
 import { toast } from "sonner";
 import { Form } from "@/components/ui/form";
@@ -15,7 +15,7 @@ import {
   USER_ALLOWED_POINTS_OPTIONS,
 } from "./constants";
 import Loader from "@/components/Loader";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { api } from "@/trpc/client";
 import { DEFAULT_DRAFT_SETTINGS } from "@/types/constants";
 import { useMemo } from "react";
@@ -23,7 +23,11 @@ import { useMemo } from "react";
 export default function DraftSettings() {
   const { t } = useTranslation();
   const { friends, isLoading } = useFriends();
+  const { user } = useUserProfile();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const sessionId = searchParams.get("sessionId");
+
   const form = useForm<DraftSettingsFormValues>({
     resolver: zodResolver(getDraftSettingsSchema(t)),
     defaultValues: {
@@ -35,13 +39,52 @@ export default function DraftSettings() {
     },
   });
 
+  // Получить информацию о сессии, если sessionId передан
+  const { data: session } = api.sessions.getById.useQuery(
+    { id: sessionId! },
+    { enabled: !!sessionId }
+  );
+
+  // Мутация создания приглашения
+  const createInvitationMutation = api.gameInvitations.create.useMutation({
+    onSuccess: () => {
+      toast.success(t("invitationSent"));
+    },
+    onError: (error) => {
+      toast.error(error.message || t("errorSendingInvitation"));
+    },
+  });
+
   const {
     mutate: createSessionWithDraft,
     isPending: isCreatingSessionPending,
   } = api.sessions.createWithDraft.useMutation({
-    onSuccess: ({ draft }) => {
+    onSuccess: ({ game, session: createdSession, draft }) => {
+      // После создания игры, создать приглашение
+      if (session || createdSession) {
+        const sessionData = session || createdSession;
+        const inviteeId =
+          sessionData.player1_id === user?.id
+            ? sessionData.player2_id
+            : sessionData.player1_id;
+
+        if (inviteeId) {
+          createInvitationMutation.mutate({
+            game_id: game.id,
+            session_id: sessionData.id,
+            invitee_id: inviteeId,
+          });
+        }
+      }
+
       toast.success(t("sessionCreatedSuccessfully"));
-      router.push(`/draft/${draft.id}`);
+      
+      // Перенаправить на страницу драфта, если он создан
+      if (draft?.id) {
+        router.push(`/draft/${draft.id}`);
+      } else {
+        router.push("/");
+      }
     },
     onError: (error) => {
       console.error("Error creating session:", error);

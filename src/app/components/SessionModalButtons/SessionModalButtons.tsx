@@ -36,8 +36,9 @@ function SessionModalButtons({
   };
 
   const startNewGameHandler = (sessionID: string | null) => {
-    // TODO: Implement start new game functionality
-    console.log("Start new game", sessionID);
+    if (!sessionID) return;
+    // Перенаправить на страницу настроек драфта с передачей sessionId
+    window.location.href = `/draft-settings?sessionId=${sessionID}`;
   };
 
   const finishHandler = (sessionID: string | null) => {

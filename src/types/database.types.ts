@@ -40,6 +40,21 @@ export type Friendship = {
   updated_at: string
 }
 
+export type GameInvitationStatus = 'pending' | 'accepted' | 'rejected' | 'cancelled' | 'expired'
+
+export type GameInvitation = {
+  id: string
+  game_id: string
+  session_id: string
+  inviter_id: string
+  invitee_id: string
+  status: GameInvitationStatus
+  message: string | null
+  created_at: string
+  updated_at: string
+  responded_at: string | null
+}
+
 
 
 export type CardType = ValueOf<typeof CARD_TYPES>;
@@ -180,6 +195,11 @@ export type Database = {
           draft_history?: Json | DraftHistory
         }
       }
+      game_invitations: {
+        Row: GameInvitation
+        Insert: Omit<GameInvitation, 'id' | 'created_at' | 'updated_at' | 'responded_at'>
+        Update: Partial<Omit<GameInvitation, 'id' | 'created_at' | 'updated_at'>>
+      }
     }
     Views: Record<string, never>
     Functions: Record<string, never>
@@ -214,3 +234,5 @@ export type DraftUpdate = Partial<Omit<Draft, 'id' | 'created_at' | 'updated_at'
   initial_roll?: Json
   draft_history?: Json | DraftHistory
 }
+export type GameInvitationInsert = Omit<GameInvitation, 'id' | 'created_at' | 'updated_at' | 'responded_at'>
+export type GameInvitationUpdate = Partial<Omit<GameInvitation, 'id' | 'created_at' | 'updated_at'>>

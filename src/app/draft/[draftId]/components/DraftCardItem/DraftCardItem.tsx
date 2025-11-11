@@ -19,19 +19,19 @@ import { Check } from "lucide-react";
 interface DraftCardItemProps {
   card: CardType;
   onPick: (cardId: string) => void;
+  onCardClick?: (card: CardType) => void;
   isPicked?: boolean;
   canPick?: boolean;
   isLoading?: boolean;
-  onCardClick?: () => void;
 }
 
 function DraftCardItem({
   card,
   onPick,
+  onCardClick,
   isPicked = false,
   canPick = true,
   isLoading = false,
-  onCardClick,
 }: DraftCardItemProps) {
   const { t } = useTranslation();
   const {
@@ -55,7 +55,7 @@ function DraftCardItem({
       return;
     }
     if (onCardClick && !isPicked) {
-      onCardClick();
+      onCardClick(card);
     }
   };
 
@@ -117,4 +117,19 @@ function DraftCardItem({
   );
 }
 
-export default memo(DraftCardItem);
+// Использовать более точное сравнение в memo
+// Сравниваем только id карты и критичные для рендера свойства
+// onPick и onCardClick стабильны благодаря useCallback в родителе
+export default memo(DraftCardItem, (prevProps, nextProps) => {
+  // Если изменился статус picked или canPick - нужен ререндер
+  if (prevProps.isPicked !== nextProps.isPicked) return false;
+  if (prevProps.canPick !== nextProps.canPick) return false;
+  if (prevProps.isLoading !== nextProps.isLoading) return false;
+  
+  // Если это та же карта по id - не рендерим
+  // (визуальное содержимое карты не меняется)
+  if (prevProps.card.id === nextProps.card.id) return true;
+  
+  // В остальных случаях - рендерим
+  return false;
+});
