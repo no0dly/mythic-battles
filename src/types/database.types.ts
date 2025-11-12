@@ -1,4 +1,4 @@
-import { CARD_TYPES, GAME_STATUS, SESSION_STATUS, DRAFT_STATUS } from "./constants"
+import { CARD_TYPES, GAME_STATUS, SESSION_STATUS, DRAFT_STATUS, GAME_INVITATION_STATUS, FRIENDSHIP_STATUS } from "./constants"
 import { ValueOf } from "./interfaces"
 
 export type Json =
@@ -29,7 +29,7 @@ export type UserProfile = {
   statistics: Statistics
 }
 
-export type FriendshipStatus = 'pending' | 'accepted' | 'rejected' | 'blocked'
+export type FriendshipStatus = ValueOf<typeof FRIENDSHIP_STATUS>
 
 export type Friendship = {
   id: string
@@ -40,7 +40,7 @@ export type Friendship = {
   updated_at: string
 }
 
-export type GameInvitationStatus = 'pending' | 'accepted' | 'rejected' | 'cancelled' | 'expired'
+export type GameInvitationStatus = ValueOf<typeof GAME_INVITATION_STATUS>
 
 export type GameInvitation = {
   id: string
@@ -123,8 +123,8 @@ export type DraftPick = {
 }
 
 export type DraftHistory = {
-  picks: DraftPick[]        
-  initial_roll?: {          
+  picks: DraftPick[]
+  initial_roll?: {
     player1_roll: number
     player2_roll: number
   }
@@ -206,6 +206,8 @@ export type Database = {
     Enums: Record<string, never>
   }
 }
+
+export type UserSubset = Pick<UserProfile, 'id' | 'email' | 'display_name' | 'avatar_url'>;
 
 // Helper types for type-safe database operations
 export type UserInsert = Omit<UserProfile, 'id' | 'created_at' | 'updated_at'>

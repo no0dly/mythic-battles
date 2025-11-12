@@ -1,2 +1,2 @@
-export { ConfirmCardPickModal } from "./ConfirmCardPickModal";
+export { default } from "./ConfirmCardPickModal";
 

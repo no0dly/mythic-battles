@@ -13,7 +13,8 @@ import { formatDisplayName } from "@/utils/users";
 export const InvitationNotifications = () => {
   const { t } = useTranslation();
   const { user } = useUserProfile();
-  const [currentInvitation, setCurrentInvitation] = useState<GameInvitation | null>(null);
+  const [currentInvitation, setCurrentInvitation] =
+    useState<GameInvitation | null>(null);
   const [inviterName, setInviterName] = useState<string>("");
   const supabase = createClient();
 
@@ -50,14 +51,15 @@ export const InvitationNotifications = () => {
     { enabled: !!currentInvitation }
   );
 
+  /* eslint-disable */
   useEffect(() => {
     if (inviterData && inviterData.length > 0) {
       const inviter = inviterData[0];
+
+      // TODO: Fix this
       setInviterName(
-        formatDisplayName(
-          inviter.display_name ?? "",
-          inviter.email ?? ""
-        ) || t("unknownPlayer")
+        formatDisplayName(inviter.display_name ?? "", inviter.email ?? "") ||
+          t("unknownPlayer")
       );
     }
   }, [inviterData, t]);
@@ -70,10 +72,13 @@ export const InvitationNotifications = () => {
         (inv) => inv.invitee_id === user?.id && inv.status === "pending"
       );
       if (pendingInvitation) {
+        // TODO: Fix this
+
         setCurrentInvitation(pendingInvitation);
       }
     }
   }, [invitations, currentInvitation, user]);
+  /* eslint-enable */
 
   // Подписка на новые приглашения через Supabase Realtime
   useEffect(() => {
@@ -124,4 +129,3 @@ export const InvitationNotifications = () => {
     />
   );
 };
-

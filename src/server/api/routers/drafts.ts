@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { router, publicProcedure, protectedProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
-import type { Draft, Card, DraftHistory } from "@/types/database.types";
+import type { Draft, Card, DraftHistory, DraftSettings } from "@/types/database.types";
 import { zUuid } from "../schemas";
 import { DRAFT_STATUS, DEFAULT_DRAFT_SETTINGS } from "@/types/constants";
 import { generateDraftPool } from "./drafts/index";
@@ -270,7 +270,7 @@ export const draftsRouter = router({
         .maybeSingle();
 
       let invitation = pendingInvitation;
-      
+
       // Если pending приглашения нет, получаем последнее обновленное
       if (!invitation) {
         const { data: latestInvitation } = await ctx.supabase
@@ -280,7 +280,7 @@ export const draftsRouter = router({
           .order("updated_at", { ascending: false })
           .limit(1)
           .maybeSingle();
-        
+
         invitation = latestInvitation;
       }
 
@@ -316,17 +316,17 @@ export const draftsRouter = router({
 
   // Update draft
   update: protectedProcedure
-      .input(
-        z.object({
-          id: zUuid,
-          draft_total_cost: z.number().optional(),
-          initial_roll: z.any().optional(),
-          first_turn_user_id: zUuid.optional(),
-          draft_status: z.enum(Object.values(DRAFT_STATUS)).optional(),
-          draft_history: z.any().optional(),
-          current_turn_user_id: zUuid.optional(),
-        })
-      )
+    .input(
+      z.object({
+        id: zUuid,
+        draft_total_cost: z.number().optional(),
+        initial_roll: z.any().optional(),
+        first_turn_user_id: zUuid.optional(),
+        draft_status: z.enum(Object.values(DRAFT_STATUS)).optional(),
+        draft_history: z.any().optional(),
+        current_turn_user_id: zUuid.optional(),
+      })
+    )
     .mutation(async ({ ctx, input }) => {
       const { id, ...updateData } = input;
 
@@ -475,7 +475,7 @@ export const draftsRouter = router({
         .from("games")
         .select("draft_settings")
         .eq("id", draftData.game_id)
-        .single();
+        .single<{ draft_settings: DraftSettings | null }>();
 
       if (gameError || !game) {
         throw new TRPCError({
@@ -484,7 +484,7 @@ export const draftsRouter = router({
         });
       }
 
-      const draftSettings = game.draft_settings as { user_allowed_points: number } | null;
+      const draftSettings = game.draft_settings;
       if (!draftSettings || typeof draftSettings.user_allowed_points !== "number") {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
@@ -755,24 +755,29 @@ export const draftsRouter = router({
       });
     }
 
-    if (!drafts || drafts.length === 0) {
+    const draftsData = (drafts ?? []) as Draft[];
+
+    if (draftsData.length === 0) {
       return [] as Draft[];
     }
 
     // Получить все pending приглашения для игр этих драфтов
-    const gameIds = drafts.map((d) => d.game_id);
+    const gameIds = draftsData.map((d) => d.game_id);
     const { data: pendingInvitations } = await ctx.supabase
       .from("game_invitations")
       .select("game_id")
       .in("game_id", gameIds)
       .eq("status", "pending");
 
+    const pendingInvitationsData =
+      (pendingInvitations ?? []) as Array<{ game_id: string }>;
+
     const gamesWithPendingInvitations = new Set(
-      pendingInvitations?.map((inv) => inv.game_id) || []
+      pendingInvitationsData.map((inv) => inv.game_id)
     );
 
     // Фильтруем драфты: исключаем те, где есть pending приглашение
-    const filteredDrafts = drafts.filter(
+    const filteredDrafts = draftsData.filter(
       (draft) => !gamesWithPendingInvitations.has(draft.game_id)
     ) as Draft[];
 

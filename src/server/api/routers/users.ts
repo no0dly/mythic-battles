@@ -1,8 +1,11 @@
 import { z } from "zod";
 import { router, protectedProcedure, publicProcedure } from "@/server/api/trpc";
 import { TRPCError } from "@trpc/server";
-import type { UserProfile, Statistics, Json } from "@/types/database.types";
+import type { UserProfile, Statistics, Json, UserSubset } from "@/types/database.types";
 import { zUuid } from "../schemas";
+
+// Type for user subset returned by getUsersByIds
+
 
 export const usersRouter = router({
   // Get current user profile
@@ -69,7 +72,6 @@ export const usersRouter = router({
         });
       }
 
-      type UserSubset = Pick<UserProfile, 'id' | 'email' | 'display_name' | 'avatar_url'>;
       return (data ?? []) as UserSubset[];
     }),
 

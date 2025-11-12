@@ -1,100 +1,73 @@
 "use client";
 
 import { useTranslation } from "react-i18next";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { api } from "@/trpc/client";
-import { toast } from "sonner";
 import type { Draft, Card as CardType } from "@/types/database.types";
-import { parseDraftHistory } from "@/utils/drafts/helpers";
+import { useDraftDetails } from "@/hooks";
+import { DraftActionButtons, DraftStatusPanelSkeleton } from "./components";
+import { api } from "@/trpc/client";
 
 interface DraftStatusPanelProps {
   draft: Draft;
-  player1Name: string;
-  player2Name: string;
-  player1Cards: CardType[];
-  player2Cards: CardType[];
-  playerAllowedPoints: number;
-  currentUserId: string;
+  cards: CardType[] | undefined;
 }
 
-export function DraftStatusPanel({
-  draft,
-  player1Name,
-  player2Name,
-  player1Cards,
-  player2Cards,
-  playerAllowedPoints,
-  currentUserId,
-}: DraftStatusPanelProps) {
+export function DraftStatusPanel({ draft, cards }: DraftStatusPanelProps) {
   const { t } = useTranslation();
-  const router = useRouter();
+  const {
+    game_id: gameId,
+    player1_id: player1Id,
+    player2_id: player2Id,
+  } = draft;
 
-  // Мутация завершения драфта
-  const finishDraftMutation = api.drafts.finishDraft.useMutation({
-    onSuccess: () => {
-      toast.success(t("draftFinished"));
-      router.push("/");
-    },
-    onError: (error) => {
-      toast.error(error.message || t("errorFinishingDraft"));
-    },
+  const playerIds = [player1Id, player2Id];
+
+  const { data: players, isLoading: playersLoading } =
+    api.users.getUsersByIds.useQuery(
+      {
+        userIds: playerIds,
+      },
+      {
+        enabled: !!draft && playerIds.length === 2,
+      }
+    );
+
+  const { data: userAllowedPoints, isLoading: gameLoading } =
+    api.games.getGameSettings.useQuery(
+      {
+        game_id: gameId,
+      },
+      {
+        enabled: !!gameId,
+        select: (data) => data?.user_allowed_points,
+      }
+    );
+
+  const isLoading = playersLoading || gameLoading;
+
+  const {
+    player1Cards,
+    player2Cards,
+    player1Name,
+    player2Name,
+    firstUserRoll,
+    secondUserRoll,
+    player1Remaining,
+    player2Remaining,
+    isPlayer1Turn,
+    isPlayer2Turn,
+    draftRound,
+    player1Status,
+    player2Status,
+  } = useDraftDetails({
+    draft,
+    cards,
+    players,
+    userAllowedPoints,
   });
 
-  // Мутация запроса сброса
-  const requestResetMutation = api.drafts.requestReset.useMutation({
-    onSuccess: () => {
-      toast.info(t("resetRequested"));
-    },
-    onError: (error) => {
-      toast.error(error.message || t("errorRequestingReset"));
-    },
-  });
-
-  const handleStartGame = () => {
-    finishDraftMutation.mutate({ draft_id: draft.id });
-  };
-
-  const handleRequestReset = () => {
-    requestResetMutation.mutate({ draft_id: draft.id });
-  };
-
-  const draftHistory = parseDraftHistory(draft.draft_history);
-  const picks = draftHistory?.picks || [];
-
-  // Parse initial roll
-  let firstUserRoll = 0;
-  let secondUserRoll = 0;
-  if (draft.initial_roll && Array.isArray(draft.initial_roll)) {
-    const initialRoll = draft.initial_roll as Array<{
-      userID: string;
-      roll: number;
-    }>;
-    const roll1 = initialRoll.find((r) => r.userID === draft.player1_id);
-    const roll2 = initialRoll.find((r) => r.userID === draft.player2_id);
-    firstUserRoll = roll1?.roll || 0;
-    secondUserRoll = roll2?.roll || 0;
+  if (isLoading) {
+    return <DraftStatusPanelSkeleton />;
   }
-
-  // Calculate remaining points for each player
-  const player1Spent = player1Cards.reduce((sum, card) => sum + card.cost, 0);
-  const player2Spent = player2Cards.reduce((sum, card) => sum + card.cost, 0);
-  const player1Remaining = playerAllowedPoints - player1Spent;
-  const player2Remaining = playerAllowedPoints - player2Spent;
-
-  // Determine current turn
-  const isPlayer1Turn = draft.current_turn_user_id === draft.player1_id;
-  const isPlayer2Turn = draft.current_turn_user_id === draft.player2_id;
-
-  // Calculate turn number (each pick is a turn)
-  const turnNumber = picks.length + 1;
-
-  // Calculate draft round (each round has 2 picks - one per player)
-  const draftRound = Math.ceil(turnNumber / 2);
-
-  // Determine player status
-  const player1Status = isPlayer1Turn ? t("picking") : t("awaits");
-  const player2Status = isPlayer2Turn ? t("picking") : t("awaits");
 
   return (
     <div className="space-y-4">
@@ -173,24 +146,7 @@ export function DraftStatusPanel({
         </div>
       </div>
 
-      <div className="flex flex-row gap-2 mt-4">
-        <Button
-          onClick={handleStartGame}
-          className="flex-1"
-          disabled={finishDraftMutation.isPending}
-        >
-          {t("startGame")}
-        </Button>
-
-        <Button
-          onClick={handleRequestReset}
-          variant="outline"
-          className="flex-1"
-          disabled={requestResetMutation.isPending}
-        >
-          {t("requestReset")}
-        </Button>
-      </div>
+      <DraftActionButtons draftId={draft.id} />
     </div>
   );
 }

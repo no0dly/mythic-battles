@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/button";
 import type { SessionStatus } from "@/types/database.types";
 import { useTranslation } from "react-i18next";
+import { useRouter } from "next/navigation";
 
 interface SessionModalButtonsProps {
   status: SessionStatus;
@@ -24,6 +25,7 @@ function SessionModalButtons({
   sessionID,
 }: SessionModalButtonsProps) {
   const { t } = useTranslation();
+  const router = useRouter();
 
   const goToDraftHandler = (sessionID: string | null) => {
     // TODO: Implement go to draft functionality
@@ -38,7 +40,7 @@ function SessionModalButtons({
   const startNewGameHandler = (sessionID: string | null) => {
     if (!sessionID) return;
     // Перенаправить на страницу настроек драфта с передачей sessionId
-    window.location.href = `/draft-settings?sessionId=${sessionID}`;
+    router.push(`/draft-settings?sessionId=${sessionID}`);
   };
 
   const finishHandler = (sessionID: string | null) => {

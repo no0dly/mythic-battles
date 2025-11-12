@@ -2,36 +2,27 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import Loader from "@/components/Loader";
 import { DraftCardItem } from "../DraftCardItem";
 import { DraftCardFilter } from "../DraftCardFilter";
-import CardGalleryModal from "@/app/wiki/components/CardGalleryModal/CardGalleryModal";
 import {
   getFilteredData,
   getUniqueCosts,
 } from "@/app/wiki/components/CardGallery/utils";
 import { useSelectedType, useSelectedCost } from "@/stores/cardFilters";
-import type { Card } from "@/types/database.types";
+import type { Card, Draft, UserSubset } from "@/types/database.types";
+import useGetPickedCardsIDs from "./hooks/useGetPickedCardsIDs";
 
 interface DraftCardGridProps {
   cards: Card[];
-  pickedCardIds: Set<string>;
-  onPickCard: (cardId: string) => void;
-  isLoading?: boolean;
-  canPick?: boolean;
+  draft: Draft;
+  user: UserSubset;
 }
 
-export function DraftCardGrid({
-  cards,
-  pickedCardIds,
-  onPickCard,
-  isLoading = false,
-  canPick = true,
-}: DraftCardGridProps) {
+export function DraftCardGrid({ cards, draft, user }: DraftCardGridProps) {
   const { t } = useTranslation();
-  const [selectedCard, setSelectedCard] = useState<Card | null>(null);
   const selectedType = useSelectedType();
   const selectedCost = useSelectedCost();
+  const pickedCardIds = useGetPickedCardsIDs(draft);
 
   const uniqueCosts = useMemo(() => getUniqueCosts(cards || []), [cards]);
 
@@ -40,23 +31,16 @@ export function DraftCardGrid({
     [cards, selectedType, selectedCost]
   );
 
-  const onCloseModalHandler = useCallback(() => {
-    setSelectedCard(null);
-  }, []);
+  const isCurrentUserTurn = useMemo(() => {
+    return draft.current_turn_user_id === user.id;
+  }, [draft, user]);
 
-  // Мемоизировать проверку, выбрана ли карта
-  const isCardPicked = useCallback((cardId: string) => {
-    return pickedCardIds.has(cardId);
-  }, [pickedCardIds]);
-
-  // Мемоизировать обработчик клика по карте (принимает card напрямую)
-  const handleCardClick = useCallback((card: Card) => {
-    setSelectedCard(card);
-  }, []);
-
-  if (isLoading) {
-    return <Loader />;
-  }
+  const isCardPicked = useCallback(
+    (cardId: string) => {
+      return pickedCardIds.has(cardId);
+    },
+    [pickedCardIds]
+  );
 
   if (cards.length === 0) {
     return (
@@ -94,23 +78,13 @@ export function DraftCardGrid({
               <DraftCardItem
                 key={card.id}
                 card={card}
-                onPick={onPickCard}
-                onCardClick={handleCardClick}
                 isPicked={isCardPicked(card.id)}
-                canPick={canPick}
-                isLoading={isLoading}
+                isCurrentUserTurn={isCurrentUserTurn}
               />
             ))}
           </div>
         )}
       </div>
-
-      {!!selectedCard && (
-        <CardGalleryModal
-          selected={selectedCard}
-          onCloseAction={onCloseModalHandler}
-        />
-      )}
     </div>
   );
 }
