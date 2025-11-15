@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import type { Card } from "@/types/database.types";
 import { Check } from "lucide-react";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import Image from "next/image";
 import { toast } from "sonner";
 import { api } from "@/trpc/client";
@@ -20,6 +20,8 @@ import { useParams } from "next/navigation";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { createOptimisticDraftUpdate } from "@/utils/drafts/helpers";
 import type { Draft } from "@/types/database.types";
+import { Badge } from "@/components/ui/badge";
+import { CardPreviewDialog } from "@/app/components/DraftInfo/components";
 
 interface ConfirmCardPickModalProps {
   card: Card;
@@ -33,6 +35,7 @@ export default function ConfirmCardPickModal({
   const { user } = useUserProfile();
   const [isConfirmModalShown, setIsConfirmModalShown] = useState(false);
   const utils = api.useUtils();
+  const [previewCard, setPreviewCard] = useState<Card | null>(null);
 
   const { mutate: mutatePickCard, isPending } = api.drafts.pickCard.useMutation(
     {
@@ -89,6 +92,10 @@ export default function ConfirmCardPickModal({
     });
   };
 
+  const handleSetPreviewCard = useCallback((card: Card | null) => {
+    setPreviewCard(card);
+  }, []);
+
   return (
     <>
       <Button
@@ -122,13 +129,12 @@ export default function ConfirmCardPickModal({
                     width={96}
                     height={96}
                     className="h-24 w-24 rounded object-cover"
+                    onClick={() => handleSetPreviewCard(card)}
                   />
                 )}
                 <div className="flex-1">
                   <h3 className="text-lg font-semibold">{card.unit_name}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {t(`cardType.${card.unit_type}`)}
-                  </p>
+                  <Badge variant={card.unit_type}>{card.unit_type}</Badge>
                   <div className="mt-2 flex gap-4">
                     <div>
                       <span className="text-xs text-muted-foreground">
@@ -164,6 +170,11 @@ export default function ConfirmCardPickModal({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <CardPreviewDialog
+        card={previewCard}
+        onClose={() => handleSetPreviewCard(null)}
+      />
     </>
   );
 }
