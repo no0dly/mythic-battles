@@ -9,6 +9,7 @@ import {
 import Image from "next/image";
 import type { Card as CardType } from "@/types/database.types";
 import { useTranslation } from "react-i18next";
+import { Badge } from "@/components/ui/badge";
 
 interface CardGalleryModalProps {
   isShown: boolean;
@@ -35,24 +36,25 @@ export default function CardGalleryModal({
 
   return (
     <Dialog open={isShown} onOpenChange={onCloseModal}>
-      <DialogContent data-testid="card-modal">
+      <DialogContent className="max-w-3xl!" data-testid="card-modal">
         <DialogHeader>
           <DialogTitle>{name}</DialogTitle>
         </DialogHeader>
-        <div className="relative w-full aspect-[4/3] overflow-hidden rounded-md border bg-muted mt-2">
+        <div className="relative overflow-hidden rounded-md border bg-muted mt-2">
           <Image
             src={imageUrl}
             alt={name}
-            fill
             loading="lazy"
             className="object-contain p-4"
-            sizes="100vw"
+            width={900}
+            height={900}
           />
         </div>
         <DialogDescription className="mt-3">
           <span className="space-y-2">
-            <span className="block">
-              <strong>{t("type")}:</strong> {unitType}
+            <span className="flex gap-1">
+              <strong>{t("type")}:</strong>
+              <Badge variant={unitType}>{unitType}</Badge>
             </span>
             <span className="block">
               <strong>{t("class")}:</strong> {cardClass}
