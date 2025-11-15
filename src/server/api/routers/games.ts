@@ -169,5 +169,26 @@ export const gamesRouter = router({
 
       return gameWithDraft;
     }),
+
+  // Get game settings by game ID
+  getGameSettings: publicProcedure
+    .input(z.object({ game_id: zUuid }))
+    .query(async ({ ctx, input }) => {
+      const { data: gameData, error: gameError } = await ctx.supabase
+        .from("games")
+        .select("draft_settings")
+        .eq("id", input.game_id)
+        .single();
+
+      if (gameError || !gameData) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Game not found",
+        });
+      }
+
+      const game = gameData as Pick<Game, "draft_settings">;
+      return game.draft_settings;
+    }),
 });
 

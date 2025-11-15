@@ -2,6 +2,7 @@ import { AuthStatus } from "../AuthStatus";
 import Logo from "../Logo";
 import HeaderActions from "../HeaderActions/HeaderActions";
 import { createClient } from "@/lib/supabase/server";
+import { NotificationsBell } from "@/components/NotificationsBell";
 
 export default async function Header() {
   const supabase = await createClient();
@@ -16,6 +17,7 @@ export default async function Header() {
           <Logo />
         </div>
         <HeaderActions>
+          {user && <NotificationsBell />}
           <AuthStatus userEmail={user?.email ?? null} />
         </HeaderActions>
       </div>

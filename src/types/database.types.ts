@@ -1,4 +1,4 @@
-import { CARD_TYPES, GAME_STATUS, SESSION_STATUS, DRAFT_STATUS } from "./constants"
+import { CARD_TYPES, GAME_STATUS, SESSION_STATUS, DRAFT_STATUS, GAME_INVITATION_STATUS, FRIENDSHIP_STATUS } from "./constants"
 import { ValueOf } from "./interfaces"
 
 export type Json =
@@ -29,7 +29,7 @@ export type UserProfile = {
   statistics: Statistics
 }
 
-export type FriendshipStatus = 'pending' | 'accepted' | 'rejected' | 'blocked'
+export type FriendshipStatus = ValueOf<typeof FRIENDSHIP_STATUS>
 
 export type Friendship = {
   id: string
@@ -38,6 +38,21 @@ export type Friendship = {
   status: FriendshipStatus
   created_at: string
   updated_at: string
+}
+
+export type GameInvitationStatus = ValueOf<typeof GAME_INVITATION_STATUS>
+
+export type GameInvitation = {
+  id: string
+  game_id: string
+  session_id: string
+  inviter_id: string
+  invitee_id: string
+  status: GameInvitationStatus
+  message: string | null
+  created_at: string
+  updated_at: string
+  responded_at: string | null
 }
 
 
@@ -108,8 +123,8 @@ export type DraftPick = {
 }
 
 export type DraftHistory = {
-  picks: DraftPick[]        
-  initial_roll?: {          
+  picks: DraftPick[]
+  initial_roll?: {
     player1_roll: number
     player2_roll: number
   }
@@ -180,12 +195,19 @@ export type Database = {
           draft_history?: Json | DraftHistory
         }
       }
+      game_invitations: {
+        Row: GameInvitation
+        Insert: Omit<GameInvitation, 'id' | 'created_at' | 'updated_at' | 'responded_at'>
+        Update: Partial<Omit<GameInvitation, 'id' | 'created_at' | 'updated_at'>>
+      }
     }
     Views: Record<string, never>
     Functions: Record<string, never>
     Enums: Record<string, never>
   }
 }
+
+export type UserSubset = Pick<UserProfile, 'id' | 'email' | 'display_name' | 'avatar_url'>;
 
 // Helper types for type-safe database operations
 export type UserInsert = Omit<UserProfile, 'id' | 'created_at' | 'updated_at'>
@@ -214,3 +236,5 @@ export type DraftUpdate = Partial<Omit<Draft, 'id' | 'created_at' | 'updated_at'
   initial_roll?: Json
   draft_history?: Json | DraftHistory
 }
+export type GameInvitationInsert = Omit<GameInvitation, 'id' | 'created_at' | 'updated_at' | 'responded_at'>
+export type GameInvitationUpdate = Partial<Omit<GameInvitation, 'id' | 'created_at' | 'updated_at'>>

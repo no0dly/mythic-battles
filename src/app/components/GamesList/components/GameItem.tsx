@@ -1,15 +1,18 @@
 import { useTranslation } from "react-i18next";
+import { useRouter } from "next/navigation";
 import {
   AccordionItem,
   AccordionTrigger,
   AccordionContent,
 } from "@/components/ui/accordion-1";
+import { Button } from "@/components/ui/button";
 import type { GameWithDraft } from "@/server/api/routers/games/types";
 import { DraftInfo } from "../../DraftInfo";
 import { GameStatusBadge } from "./GameStatusBadge";
 import { GameResult } from "./GameResult";
 import { GameScore } from "./GameScore";
 import { GameMetadata } from "./GameMetadata";
+import { DRAFT_STATUS, GAME_STATUS } from "@/types/constants";
 
 interface GameItemProps {
   game: GameWithDraft;
@@ -27,6 +30,23 @@ export const GameItem = ({
   index,
 }: GameItemProps) => {
   const { t } = useTranslation();
+  const router = useRouter();
+
+  const handleGoToDraft = () => {
+    if (game.draft_id) {
+      router.push(`/draft/${game.draft_id}`);
+    }
+  };
+
+  // Показать кнопку если:
+  // 1. Есть draft_id
+  // 2. Драфт существует и его статус - 'draft'
+  // 3. Игра в статусе 'draft' или 'inviteToDraft'
+  const showGoToDraftButton =
+    game.draft_id &&
+    game.draft?.draft_status === DRAFT_STATUS.DRAFT &&
+    (game.status === GAME_STATUS.DRAFT ||
+      game.status === GAME_STATUS.INVITE_TO_DRAFT);
 
   return (
     <AccordionItem
@@ -82,6 +102,19 @@ export const GameItem = ({
             finishedAt={game.finished_at}
             createdBy={game.created_by_name}
           />
+
+          {showGoToDraftButton && (
+            <div className="mt-4">
+              <Button
+                onClick={handleGoToDraft}
+                variant="default"
+                size="sm"
+                className="w-full"
+              >
+                {t("goToDraft")}
+              </Button>
+            </div>
+          )}
         </div>
       </AccordionContent>
     </AccordionItem>

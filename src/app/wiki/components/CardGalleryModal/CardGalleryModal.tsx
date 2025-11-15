@@ -8,28 +8,20 @@ import {
 } from "@/components/ui/dialog";
 import Image from "next/image";
 import type { Card as CardType } from "@/types/database.types";
-import { useState } from "react";
+import { useTranslation } from "react-i18next";
+
+interface CardGalleryModalProps {
+  isShown: boolean;
+  card: CardType;
+  onCloseModal: () => void;
+}
 
 export default function CardGalleryModal({
-  selected,
-  onCloseAction,
-}: {
-  selected: CardType | null;
-  onCloseAction: () => void;
-}) {
-  const [isOpen, setIsOpen] = useState(!!selected);
-
-  const onOpenChangeHandler = (open: boolean) => {
-    if (!open) {
-      setIsOpen(false);
-      setTimeout(() => {
-        onCloseAction();
-      }, 400);
-    }
-  };
-
-  if (!selected) return null;
-
+  isShown,
+  card,
+  onCloseModal,
+}: CardGalleryModalProps) {
+  const { t } = useTranslation();
   const {
     unit_name: name,
     unit_type: unitType,
@@ -39,10 +31,10 @@ export default function CardGalleryModal({
     talents,
     strategic_value: strategicValue,
     amount_of_card_activations: activations,
-  } = selected;
+  } = card;
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChangeHandler}>
+    <Dialog open={isShown} onOpenChange={onCloseModal}>
       <DialogContent data-testid="card-modal">
         <DialogHeader>
           <DialogTitle>{name}</DialogTitle>
@@ -58,15 +50,25 @@ export default function CardGalleryModal({
           />
         </div>
         <DialogDescription className="mt-3">
-          <div className="space-y-2">
-            <p><strong>Type:</strong> {unitType}</p>
-            <p><strong>Class:</strong> {cardClass}</p>
-            <p><strong>Cost:</strong> {cost}</p>
-            <p><strong>Strategic Value:</strong> {strategicValue}</p>
-            <p><strong>Activations:</strong> {activations}</p>
+          <span className="space-y-2">
+            <span className="block">
+              <strong>{t("type")}:</strong> {unitType}
+            </span>
+            <span className="block">
+              <strong>{t("class")}:</strong> {cardClass}
+            </span>
+            <span className="block">
+              <strong>{t("cost")}:</strong> {cost}
+            </span>
+            <span className="block">
+              <strong>{t("strategicValue")}:</strong> {strategicValue}
+            </span>
+            <span className="block">
+              <strong>{t("activations")}:</strong> {activations}
+            </span>
             {talents && talents.length > 0 && (
               <div>
-                <strong>Talents:</strong>
+                <strong>{t("talents")}:</strong>
                 <ul className="list-disc list-inside">
                   {talents.map((talent, index) => (
                     <li key={index}>{talent}</li>
@@ -74,7 +76,7 @@ export default function CardGalleryModal({
                 </ul>
               </div>
             )}
-          </div>
+          </span>
         </DialogDescription>
       </DialogContent>
     </Dialog>

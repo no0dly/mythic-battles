@@ -1,0 +1,90 @@
+"use client";
+
+import { useCallback, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { DraftCardItem } from "../DraftCardItem";
+import { DraftCardFilter } from "../DraftCardFilter";
+import {
+  getFilteredData,
+  getUniqueCosts,
+} from "@/app/wiki/components/CardGallery/utils";
+import { useSelectedType, useSelectedCost } from "@/stores/cardFilters";
+import type { Card, Draft, UserSubset } from "@/types/database.types";
+import useGetPickedCardsIDs from "./hooks/useGetPickedCardsIDs";
+
+interface DraftCardGridProps {
+  cards: Card[];
+  draft: Draft;
+  user: UserSubset;
+}
+
+export function DraftCardGrid({ cards, draft, user }: DraftCardGridProps) {
+  const { t } = useTranslation();
+  const selectedType = useSelectedType();
+  const selectedCost = useSelectedCost();
+  const pickedCardIds = useGetPickedCardsIDs(draft);
+
+  const uniqueCosts = useMemo(() => getUniqueCosts(cards || []), [cards]);
+
+  const filteredCards = useMemo(
+    () => getFilteredData(cards || [], "", selectedType, selectedCost),
+    [cards, selectedType, selectedCost]
+  );
+
+  const isCurrentUserTurn = useMemo(() => {
+    return draft.current_turn_user_id === user.id;
+  }, [draft, user]);
+
+  const isCardPicked = useCallback(
+    (cardId: string) => {
+      return pickedCardIds.has(cardId);
+    },
+    [pickedCardIds]
+  );
+
+  if (cards.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <p className="text-muted-foreground">{t("noCardsAvailable")}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col h-full overflow-hidden">
+      <div className="sticky top-0 z-10 bg-background pb-2">
+        <DraftCardFilter uniqueCosts={uniqueCosts} />
+
+        {filteredCards && (
+          <p className="text-sm text-muted-foreground py-2">
+            {t("showingCards", {
+              count: filteredCards.length,
+              total: cards.length,
+            })}
+          </p>
+        )}
+      </div>
+
+      <div className="flex-1 overflow-y-auto">
+        {filteredCards.length === 0 ? (
+          <div className="flex items-center justify-center h-full py-8">
+            <p className="text-muted-foreground">
+              {t("noCardsFoundMatchingYourFilters")}
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+            {filteredCards.map((card) => (
+              <DraftCardItem
+                key={card.id}
+                card={card}
+                isPicked={isCardPicked(card.id)}
+                isCurrentUserTurn={isCurrentUserTurn}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

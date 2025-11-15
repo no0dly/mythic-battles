@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { router, publicProcedure, protectedProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
-import type { Draft, Card } from "@/types/database.types";
+import type { Draft, Card, DraftHistory, DraftSettings } from "@/types/database.types";
 import { zUuid } from "../schemas";
 import { DRAFT_STATUS, DEFAULT_DRAFT_SETTINGS } from "@/types/constants";
 import { generateDraftPool } from "./drafts/index";
@@ -251,7 +251,44 @@ export const draftsRouter = router({
         });
       }
 
-      return draft as Draft;
+      const draftData = draft as Draft;
+
+      // Получить игру
+      const { data: game } = await ctx.supabase
+        .from("games")
+        .select("*")
+        .eq("id", draftData.game_id)
+        .single();
+
+      // Получить последнее приглашение (по updated_at, чтобы видеть актуальный статус)
+      // Сначала пытаемся найти pending приглашение, если нет - берем последнее по updated_at
+      const { data: pendingInvitation } = await ctx.supabase
+        .from("game_invitations")
+        .select("*")
+        .eq("game_id", draftData.game_id)
+        .eq("status", "pending")
+        .maybeSingle();
+
+      let invitation = pendingInvitation;
+
+      // Если pending приглашения нет, получаем последнее обновленное
+      if (!invitation) {
+        const { data: latestInvitation } = await ctx.supabase
+          .from("game_invitations")
+          .select("*")
+          .eq("game_id", draftData.game_id)
+          .order("updated_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        invitation = latestInvitation;
+      }
+
+      return {
+        ...draftData,
+        game: game || undefined,
+        invitation: invitation || undefined,
+      } as Draft & { game?: import("@/types/database.types").Game; invitation?: import("@/types/database.types").GameInvitation };
     }),
 
   // Get drafts by array of IDs
@@ -283,7 +320,6 @@ export const draftsRouter = router({
       z.object({
         id: zUuid,
         draft_total_cost: z.number().optional(),
-        player_allowed_points: z.number().optional(),
         initial_roll: z.any().optional(),
         first_turn_user_id: zUuid.optional(),
         draft_status: z.enum(Object.values(DRAFT_STATUS)).optional(),
@@ -333,5 +369,419 @@ export const draftsRouter = router({
 
       return updatedDraft as Draft;
     }),
+
+  // Pick a card in the draft
+  pickCard: protectedProcedure
+    .input(
+      z.object({
+        draft_id: zUuid,
+        card_id: zUuid,
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+
+      // Verify draft exists and user is a participant
+      const { data: draft, error: draftError } = await ctx.supabase
+        .from("drafts")
+        .select("player1_id, player2_id, current_turn_user_id, draft_pool, draft_history, game_id")
+        .eq("id", input.draft_id)
+        .single();
+
+      if (draftError) {
+        // Log the error for debugging
+        console.error("Draft fetch error:", {
+          error: draftError,
+          draft_id: input.draft_id,
+          user_id: userId,
+          error_code: draftError.code,
+          error_message: draftError.message,
+        });
+
+        // Check if it's an RLS/permission error
+        if (draftError.code === "PGRST116" || draftError.message?.includes("permission") || draftError.message?.includes("policy")) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "You don't have permission to access this draft. This may be due to missing RLS policies.",
+            cause: draftError,
+          });
+        }
+
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: `Draft not found: ${draftError.message}`,
+          cause: draftError,
+        });
+      }
+
+      if (!draft) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Draft not found",
+        });
+      }
+
+      const draftData = draft as {
+        player1_id: string;
+        player2_id: string;
+        current_turn_user_id: string;
+        draft_pool: string[];
+        draft_history: unknown;
+        game_id: string;
+      };
+
+      // Verify user is a participant
+      if (draftData.player1_id !== userId && draftData.player2_id !== userId) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You are not a participant in this draft",
+        });
+      }
+
+      // Verify it's the user's turn
+      if (draftData.current_turn_user_id !== userId) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "It's not your turn",
+        });
+      }
+
+      // Verify card is in draft pool
+      if (!draftData.draft_pool.includes(input.card_id)) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Card is not available in the draft pool",
+        });
+      }
+
+      // Get card to check cost
+      const { data: card, error: cardError } = await ctx.supabase
+        .from("cards")
+        .select("cost")
+        .eq("id", input.card_id)
+        .single();
+
+      if (cardError || !card) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Card not found",
+        });
+      }
+
+      const cardData = card as { cost: number };
+
+      // Get game to retrieve draft_settings with user_allowed_points
+      const { data: game, error: gameError } = await ctx.supabase
+        .from("games")
+        .select("draft_settings")
+        .eq("id", draftData.game_id)
+        .single<{ draft_settings: DraftSettings | null }>();
+
+      if (gameError || !game) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Game not found",
+        });
+      }
+
+      const draftSettings = game.draft_settings;
+      if (!draftSettings || typeof draftSettings.user_allowed_points !== "number") {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Invalid draft settings: user_allowed_points not found",
+        });
+      }
+
+      const playerAllowedPoints = draftSettings.user_allowed_points;
+
+      // Parse draft history
+      const { parseDraftHistory } = await import("@/utils/drafts/helpers");
+      const draftHistory = parseDraftHistory(draftData.draft_history);
+      const picks = draftHistory?.picks || [];
+
+      // Calculate spent points for current user
+      const userPicks = picks.filter((pick) => pick.player_id === userId);
+      const userPickedCardIds = userPicks.map((pick) => pick.card_id);
+
+      // Get costs of picked cards
+      const { data: pickedCards, error: pickedCardsError } = await ctx.supabase
+        .from("cards")
+        .select("cost")
+        .in("id", userPickedCardIds.length > 0 ? userPickedCardIds : ["00000000-0000-0000-0000-000000000000"]);
+
+      if (pickedCardsError) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch picked cards",
+        });
+      }
+
+      const spentPoints = (pickedCards as { cost: number }[] || []).reduce((sum, c) => sum + c.cost, 0);
+      const remainingPoints = playerAllowedPoints - spentPoints;
+
+      // Verify user has enough points
+      if (cardData.cost > remainingPoints) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Not enough points to pick this card",
+        });
+      }
+
+      // Check if card was already picked
+      const alreadyPicked = picks.some((pick) => pick.card_id === input.card_id);
+      if (alreadyPicked) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Card has already been picked",
+        });
+      }
+
+      // Get next pick number
+      const nextPickNumber = picks.length + 1;
+
+      // Add pick to draft history
+      const newPick = {
+        card_id: input.card_id,
+        player_id: userId,
+        pick_number: nextPickNumber,
+        timestamp: new Date().toISOString(),
+      };
+
+      const updatedPicks = [...picks, newPick];
+      const updatedHistory: DraftHistory = {
+        picks: updatedPicks,
+        ...(draftHistory?.initial_roll && { initial_roll: draftHistory.initial_roll }),
+      };
+
+      // Determine next turn (alternate between players)
+      const nextTurnUserId =
+        draftData.current_turn_user_id === draftData.player1_id
+          ? draftData.player2_id
+          : draftData.player1_id;
+
+      // Update draft
+      const { data: updatedDraft, error: updateError } = await ctx.supabase
+        .from("drafts")
+        .update({
+          draft_history: updatedHistory,
+          current_turn_user_id: nextTurnUserId,
+        } as never)
+        .eq("id", input.draft_id)
+        .select()
+        .single();
+
+      if (updateError || !updatedDraft) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to update draft",
+          cause: updateError,
+        });
+      }
+
+      return updatedDraft as Draft;
+    }),
+
+  // Finish draft (mark as finished)
+  finishDraft: protectedProcedure
+    .input(
+      z.object({
+        draft_id: zUuid,
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+
+      // Verify draft exists and user is a participant
+      const { data: draft, error: draftError } = await ctx.supabase
+        .from("drafts")
+        .select("player1_id, player2_id, draft_status")
+        .eq("id", input.draft_id)
+        .single();
+
+      if (draftError || !draft) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Draft not found",
+        });
+      }
+
+      const draftData = draft as {
+        player1_id: string;
+        player2_id: string;
+        draft_status: string;
+      };
+
+      // Verify user is a participant
+      if (draftData.player1_id !== userId && draftData.player2_id !== userId) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You are not a participant in this draft",
+        });
+      }
+
+      // Verify draft is in draft status
+      if (draftData.draft_status !== DRAFT_STATUS.DRAFT) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Draft is not in draft status",
+        });
+      }
+
+      // Update draft status to finished
+      const { data: updatedDraft, error: updateError } = await ctx.supabase
+        .from("drafts")
+        .update({ draft_status: DRAFT_STATUS.FINISHED } as never)
+        .eq("id", input.draft_id)
+        .select()
+        .single();
+
+      if (updateError || !updatedDraft) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to finish draft",
+          cause: updateError,
+        });
+      }
+
+      return updatedDraft as Draft;
+    }),
+
+  // Request draft reset
+  requestReset: protectedProcedure
+    .input(
+      z.object({
+        draft_id: zUuid,
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+
+      // Verify draft exists and user is a participant
+      const { data: draft, error: draftError } = await ctx.supabase
+        .from("drafts")
+        .select("player1_id, player2_id, draft_status")
+        .eq("id", input.draft_id)
+        .single();
+
+      if (draftError || !draft) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Draft not found",
+        });
+      }
+
+      const draftData = draft as {
+        player1_id: string;
+        player2_id: string;
+        draft_status: string;
+      };
+
+      // Verify user is a participant
+      if (draftData.player1_id !== userId && draftData.player2_id !== userId) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You are not a participant in this draft",
+        });
+      }
+
+      // Verify draft is in draft status
+      if (draftData.draft_status !== DRAFT_STATUS.DRAFT) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Draft is not in draft status",
+        });
+      }
+
+      // Update draft status to resetRequested
+      const { data: updatedDraft, error: updateError } = await ctx.supabase
+        .from("drafts")
+        .update({ draft_status: DRAFT_STATUS.RESET_REQUESTED } as never)
+        .eq("id", input.draft_id)
+        .select()
+        .single();
+
+      if (updateError || !updatedDraft) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to request draft reset",
+          cause: updateError,
+        });
+      }
+
+      return updatedDraft as Draft;
+    }),
+
+  // Get active draft for current user
+  getActiveDraft: protectedProcedure.query(async ({ ctx }) => {
+    const userId = ctx.session.user.id;
+
+    const { data: draft, error } = await ctx.supabase
+      .from("drafts")
+      .select("*")
+      .or(`player1_id.eq.${userId},player2_id.eq.${userId}`)
+      .eq("draft_status", DRAFT_STATUS.DRAFT)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to fetch active draft",
+        cause: error,
+      });
+    }
+
+    return draft as Draft | null;
+  }),
+
+  // Получить все активные драфты для текущего пользователя
+  // Исключаем драфты, где есть pending приглашение (показываем только после принятия)
+  getActiveDrafts: protectedProcedure.query(async ({ ctx }) => {
+    const userId = ctx.session.user.id;
+
+    const { data: drafts, error } = await ctx.supabase
+      .from("drafts")
+      .select("*")
+      .or(`player1_id.eq.${userId},player2_id.eq.${userId}`)
+      .eq("draft_status", DRAFT_STATUS.DRAFT)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to fetch active drafts",
+        cause: error,
+      });
+    }
+
+    const draftsData = (drafts ?? []) as Draft[];
+
+    if (draftsData.length === 0) {
+      return [] as Draft[];
+    }
+
+    // Получить все pending приглашения для игр этих драфтов
+    const gameIds = draftsData.map((d) => d.game_id);
+    const { data: pendingInvitations } = await ctx.supabase
+      .from("game_invitations")
+      .select("game_id")
+      .in("game_id", gameIds)
+      .eq("status", "pending");
+
+    const pendingInvitationsData =
+      (pendingInvitations ?? []) as Array<{ game_id: string }>;
+
+    const gamesWithPendingInvitations = new Set(
+      pendingInvitationsData.map((inv) => inv.game_id)
+    );
+
+    // Фильтруем драфты: исключаем те, где есть pending приглашение
+    const filteredDrafts = draftsData.filter(
+      (draft) => !gamesWithPendingInvitations.has(draft.game_id)
+    ) as Draft[];
+
+    return filteredDrafts;
+  }),
 });
 

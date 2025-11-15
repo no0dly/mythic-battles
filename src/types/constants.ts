@@ -34,6 +34,20 @@ export const DRAFT_STATUS = {
   FINISHED: 'finished',
 } as const;
 
+export const GAME_INVITATION_STATUS = {
+  PENDING: 'pending',
+  ACCEPTED: 'accepted',
+  REJECTED: 'rejected',
+  CANCELLED: 'cancelled',
+  EXPIRED: 'expired',
+} as const;
+
+export const FRIENDSHIP_STATUS = {
+  PENDING: 'pending',
+  ACCEPTED: 'accepted',
+  REJECTED: 'rejected',
+  BLOCKED: 'blocked',
+} as const;
 
 export const DEFAULT_DRAFT_SETTINGS: DraftSettings = {
   user_allowed_points: 18,

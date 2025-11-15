@@ -3,11 +3,9 @@
 import { api } from "@/trpc/client";
 
 import Loader from "@/components/Loader";
-import CardGalleryModal from "../CardGalleryModal";
 import CardGalleryItem from "../CardGalleryItem";
 import CardGalleryFilter from "../CardGalleryFilter";
-import { useMemo, useRef, useState } from "react";
-import type { Card } from "@/types/database.types";
+import { useMemo, useRef } from "react";
 import {
   useSearchName,
   useSelectedType,
@@ -25,7 +23,6 @@ const OVERSCAN = 5;
 export default function CardGallery() {
   const { t } = useTranslation();
   const { data, isLoading, error } = api.cards.list.useQuery();
-  const [selected, setSelected] = useState<Card | null>(null);
   const searchName = useSearchName();
   const selectedType = useSelectedType();
   const selectedCost = useSelectedCost();
@@ -78,9 +75,6 @@ export default function CardGallery() {
       </div>
     );
   }
-
-  const onCardClickHandler = (item: Card) => () => setSelected(item);
-  const onCloseHandler = () => setSelected(null);
 
   return (
     <div className="h-full flex flex-col">
@@ -140,11 +134,7 @@ export default function CardGallery() {
                 >
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     {row.map((item) => (
-                      <CardGalleryItem
-                        key={item.id}
-                        item={item}
-                        onCardClickHandler={onCardClickHandler(item)}
-                      />
+                      <CardGalleryItem key={item.id} item={item} />
                     ))}
                   </div>
                 </div>
@@ -153,10 +143,6 @@ export default function CardGallery() {
           </div>
         )}
       </div>
-
-      {!!selected && (
-        <CardGalleryModal selected={selected} onCloseAction={onCloseHandler} />
-      )}
 
       {isLoading && <Loader />}
     </div>
