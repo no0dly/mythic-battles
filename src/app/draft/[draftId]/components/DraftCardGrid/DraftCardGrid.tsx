@@ -11,6 +11,10 @@ import {
 import { useSelectedType, useSelectedCost } from "@/stores/cardFilters";
 import type { Card, Draft, UserSubset } from "@/types/database.types";
 import useGetPickedCardsIDs from "./hooks/useGetPickedCardsIDs";
+import { api } from "@/trpc/client";
+import { canPickCard } from "@/utils/drafts/cardPickRestrictions";
+import { getPlayerCards } from "@/utils/drafts/helpers";
+import { DEFAULT_DRAFT_SETTINGS } from "@/types/constants";
 
 interface DraftCardGridProps {
   cards: Card[];
@@ -24,6 +28,14 @@ export function DraftCardGrid({ cards, draft, user }: DraftCardGridProps) {
   const selectedCost = useSelectedCost();
   const pickedCardIds = useGetPickedCardsIDs(draft);
 
+  // Get game settings to get allowed points
+  const { data: gameSettings } = api.games.getGameSettings.useQuery(
+    { game_id: draft.game_id },
+    { enabled: !!draft.game_id }
+  );
+
+  const allowedPoints = gameSettings?.user_allowed_points ?? DEFAULT_DRAFT_SETTINGS.user_allowed_points;
+
   const uniqueCosts = useMemo(() => getUniqueCosts(cards || []), [cards]);
 
   const filteredCards = useMemo(
@@ -34,6 +46,12 @@ export function DraftCardGrid({ cards, draft, user }: DraftCardGridProps) {
   const isCurrentUserTurn = useMemo(() => {
     return draft.current_turn_user_id === user.id;
   }, [draft, user]);
+
+  // Get player's currently picked cards
+  const playerCards = useMemo(
+    () => getPlayerCards(draft, cards, user.id),
+    [draft, cards, user.id]
+  );
 
   const isCardPicked = useCallback(
     (cardId: string) => {
@@ -74,14 +92,28 @@ export function DraftCardGrid({ cards, draft, user }: DraftCardGridProps) {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-            {filteredCards.map((card) => (
-              <DraftCardItem
-                key={card.id}
-                card={card}
-                isPicked={isCardPicked(card.id)}
-                isCurrentUserTurn={isCurrentUserTurn}
-              />
-            ))}
+            {filteredCards.map((card) => {
+              const isPicked = isCardPicked(card.id);
+              
+              // Check card pick restrictions
+              const restrictions = canPickCard(
+                card,
+                playerCards,
+                allowedPoints,
+                cards // Available cards from draft pool
+              );
+              
+              return (
+                <DraftCardItem
+                  key={card.id}
+                  card={card}
+                  isPicked={isPicked}
+                  isCurrentUserTurn={isCurrentUserTurn}
+                  canPickCard={restrictions.canPick}
+                  restrictionReason={restrictions.reason}
+                />
+              );
+            })}
           </div>
         )}
       </div>

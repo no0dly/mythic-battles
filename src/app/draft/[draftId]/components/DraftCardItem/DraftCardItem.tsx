@@ -22,12 +22,16 @@ interface DraftCardItemProps {
   card: CardType;
   isPicked?: boolean;
   isCurrentUserTurn: boolean;
+  canPickCard?: boolean;
+  restrictionReason?: string;
 }
 
 function DraftCardItem({
   card,
   isPicked = false,
   isCurrentUserTurn,
+  canPickCard = true,
+  restrictionReason,
 }: DraftCardItemProps) {
   const { t } = useTranslation();
   const {
@@ -59,11 +63,13 @@ function DraftCardItem({
     <>
       <Card
         onClick={handleCardClick}
-        className={`h-full hover:shadow-sm transition-shadow py-2 gap-1 cursor-pointer ${
+        className={`h-full transition-shadow py-2 gap-1 cursor-pointer ${
           isPicked
             ? "opacity-50 bg-gray-100 dark:bg-gray-800 border-2 border-blue-500"
             : isCurrentUserTurn
-            ? "hover:shadow-lg"
+            ? canPickCard
+              ? "hover:shadow-lg"
+              : "opacity-40 cursor-not-allowed border-2 border-red-400"
             : "opacity-60"
         }`}
       >
@@ -73,7 +79,11 @@ function DraftCardItem({
               {name} ({cost})
             </span>
             {!isPicked && isCurrentUserTurn && (
-              <ConfirmCardPickModal card={card} />
+              <ConfirmCardPickModal 
+                card={card} 
+                disabled={!canPickCard}
+                restrictionReason={restrictionReason}
+              />
             )}
             {!isPicked && !isCurrentUserTurn && (
               <Button
@@ -126,6 +136,8 @@ function DraftCardItem({
 export default memo(DraftCardItem, (prevProps, nextProps) => {
   if (prevProps.isPicked !== nextProps.isPicked) return false;
   if (prevProps.isCurrentUserTurn !== nextProps.isCurrentUserTurn) return false;
+  if (prevProps.canPickCard !== nextProps.canPickCard) return false;
+  if (prevProps.restrictionReason !== nextProps.restrictionReason) return false;
   if (prevProps.card.id === nextProps.card.id) return true;
 
   return false;

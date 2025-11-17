@@ -5,12 +5,24 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { api } from "@/trpc/client";
 import { toast } from "sonner";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface DraftActionButtonsProps {
   draftId: string;
+  canStartGame?: boolean;
+  startGameRestrictionReason?: string;
 }
 
-export function DraftActionButtons({ draftId }: DraftActionButtonsProps) {
+export function DraftActionButtons({ 
+  draftId,
+  canStartGame = true,
+  startGameRestrictionReason,
+}: DraftActionButtonsProps) {
   const { t } = useTranslation();
   const router = useRouter();
 
@@ -43,13 +55,26 @@ export function DraftActionButtons({ draftId }: DraftActionButtonsProps) {
 
   return (
     <div className="flex flex-row gap-2 mt-4">
-      <Button
-        onClick={handleStartGame}
-        className="flex-1"
-        disabled={finishDraftMutation.isPending}
-      >
-        {t("startGame")}
-      </Button>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="flex-1">
+              <Button
+                onClick={handleStartGame}
+                className="w-full"
+                disabled={finishDraftMutation.isPending || !canStartGame}
+              >
+                {t("startGame")}
+              </Button>
+            </div>
+          </TooltipTrigger>
+          {!canStartGame && startGameRestrictionReason && (
+            <TooltipContent>
+              <p>{t(startGameRestrictionReason)}</p>
+            </TooltipContent>
+          )}
+        </Tooltip>
+      </TooltipProvider>
 
       <Button
         onClick={handleRequestReset}

@@ -236,6 +236,18 @@ const translation = {
   waitingForOpponentDescription: "Ожидание принятия приглашения вашим оппонентом...",
   waitingForAcceptance: "Ожидание принятия",
   invitationPending: "Приглашение ожидает",
+  
+  // Ограничения выбора карт
+  notEnoughPoints: "Недостаточно очков для выбора этой карты",
+  godCardLimitReached: "Вы можете выбрать только 1 карту Бога",
+  monster5CostLimitReached: "Вы можете выбрать только 1 карту Монстра стоимостью 5",
+  cannotPickCard: "Невозможно выбрать эту карту",
+  cardRestricted: "Эта карта недоступна",
+  mustReservePointsForGod: "Необходимо зарезервировать достаточно очков для карты Бога (обязательно)",
+  
+  // Ограничения начала игры
+  mustPickGodCard: "Необходимо выбрать карту Бога перед началом игры",
+  mustUseAllPoints: "Необходимо использовать все доступные очки перед началом игры",
 } as const;
 
 export default translation;

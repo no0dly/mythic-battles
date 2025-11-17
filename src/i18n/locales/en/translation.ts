@@ -236,6 +236,18 @@ const translation = {
   waitingForOpponentDescription: "Waiting for your opponent to accept the invitation...",
   waitingForAcceptance: "Waiting for Acceptance",
   invitationPending: "Invitation Pending",
+  
+  // Card Pick Restrictions
+  notEnoughPoints: "Not enough points to pick this card",
+  godCardLimitReached: "You can only pick 1 God card",
+  monster5CostLimitReached: "You can only pick 1 Monster card with cost 5",
+  cannotPickCard: "Cannot pick this card",
+  cardRestricted: "This card is restricted",
+  mustReservePointsForGod: "You must reserve enough points for a God card (mandatory)",
+  
+  // Start Game Restrictions
+  mustPickGodCard: "You must pick a God card before starting the game",
+  mustUseAllPoints: "You must use all available points before starting the game",
 } as const;
 
 export default translation;
