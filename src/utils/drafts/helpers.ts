@@ -4,6 +4,7 @@ import { DRAFT_STATUS, GAME_STATUS, GAME_INVITATION_STATUS } from '@/types/const
 import { DraftWithRelations, DraftState } from './interfaces'
 import { DRAFT_STATE } from './constants'
 import { OptimisticDraftUpdateInput, OptimisticDraftUpdateResult } from './interfaces'
+import { type CardIdMap } from '@/utils/cards/createCardIdMap'
 
 /**
 * Parse draft_history from JSONB
@@ -63,19 +64,24 @@ export const hasPicks = (history: DraftHistory | null): boolean => {
 */
 export const getPlayerCards = (
   draft: Draft | null,
-  cards: Card[] | undefined,
+  cardsMap: CardIdMap | undefined,
   playerId: string
 ): Card[] => {
-  if (!draft || !cards) return []
+  if (!draft || !cardsMap) return []
 
   const draftHistory = parseDraftHistory(draft.draft_history)
   if (!draftHistory?.picks) return []
 
-  const playerPicks = draftHistory.picks.filter(
-    (pick) => pick.player_id === playerId
-  )
-  const playerCardIds = playerPicks.map((pick) => pick.card_id)
-  return cards.filter((card) => playerCardIds.includes(card.id))
+  return draftHistory.picks.reduce((acc, pick) => {
+
+    if (pick.player_id !== playerId) return acc
+
+    const card = cardsMap.get(pick.card_id)
+    if (card) {
+      acc.push(card)
+    }
+    return acc
+  }, [] as Card[])
 }
 
 /**
@@ -189,6 +195,10 @@ export const getDraftState = (
 
     // По умолчанию показываем драфт
     return DRAFT_STATE.DRAFT_IN_PROGRESS
+  }
+
+  if (draft.draft_status === DRAFT_STATUS.FINISHED) {
+    return DRAFT_STATE.FINISHED
   }
 
   return DRAFT_STATE.UNKNOWN

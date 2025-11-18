@@ -22,6 +22,10 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
+vi.mock("@/components/NotificationsBell", () => ({
+  NotificationsBell: () => <div data-testid="notifications-bell" />,
+}));
+
 // Mock the Supabase client
 vi.mock("@/lib/supabase/server", () => ({
   createClient: vi.fn(),

@@ -1,12 +1,13 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import type { Draft, Card as CardType, UserSubset, DraftSettings } from "@/types/database.types";
+import type { Draft, Card as CardType, UserSubset } from "@/types/database.types";
 import {
   parseDraftHistory,
   getPlayerCards,
   getPlayerName,
   parseInitialRoll,
 } from "@/utils/drafts/helpers";
+import { createCardIdMap } from "@/utils/cards/createCardIdMap";
 
 interface UseDraftDetailsParams {
   draft: Draft;
@@ -48,15 +49,18 @@ export function useDraftDetails({
   // Use default value if userAllowedPoints is undefined
   const allowedPoints = userAllowedPoints ?? 0;
 
+
+  const cardMap = useMemo(() => createCardIdMap(cards), [cards]);
+
   // Calculate player cards using helper function
   const player1Cards = useMemo(
-    () => getPlayerCards(draft, cards, draft.player1_id),
-    [draft, cards]
+    () => getPlayerCards(draft, cardMap, draft.player1_id),
+    [draft, cardMap]
   );
 
   const player2Cards = useMemo(
-    () => getPlayerCards(draft, cards, draft.player2_id),
-    [draft, cards]
+    () => getPlayerCards(draft, cardMap, draft.player2_id),
+    [draft, cardMap]
   );
 
   // Get player names using helper function

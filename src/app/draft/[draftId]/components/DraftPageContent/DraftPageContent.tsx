@@ -13,6 +13,8 @@ import { useDraftRealtime } from "@/hooks";
 import DraftNotFound from "../DraftNotFound";
 import DraftCardsError from "../DraftCardsError";
 import DraftWaitingForOpponent from "../DraftWaitingForOpponent";
+import { DRAFT_STATE } from "@/utils/drafts/constants";
+import DraftFinished from "../DraftFinished";
 
 export default function DraftPageContent() {
   const { t } = useTranslation();
@@ -85,11 +87,11 @@ export default function DraftPageContent() {
     );
   }
 
-  if (draftState === "waiting_for_opponent") {
+  if (draftState === DRAFT_STATE.WAITING_FOR_OPPONENT) {
     return <DraftWaitingForOpponent />;
   }
 
-  if (draftState === "invitation_pending") {
+  if (draftState === DRAFT_STATE.INVITATION_PENDING) {
     return (
       <div className="flex flex-col items-center justify-center h-full">
         <div className="text-center space-y-4">
@@ -102,7 +104,7 @@ export default function DraftPageContent() {
     );
   }
 
-  if (draftState === "draft_in_progress") {
+  if (draftState === DRAFT_STATE.DRAFT_IN_PROGRESS) {
     return (
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full min-h-0">
         <div className="lg:col-span-1">
@@ -116,6 +118,10 @@ export default function DraftPageContent() {
         {draftLoading && <Loader />}
       </div>
     );
+  }
+
+  if (draftState === DRAFT_STATE.FINISHED) {
+    return <DraftFinished draft={draft} cards={cards} />;
   }
 
   return (

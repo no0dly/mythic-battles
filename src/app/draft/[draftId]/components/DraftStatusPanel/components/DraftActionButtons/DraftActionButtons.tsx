@@ -1,7 +1,6 @@
 "use client";
 
 import { useTranslation } from "react-i18next";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { api } from "@/trpc/client";
 import { toast } from "sonner";
@@ -12,12 +11,10 @@ interface DraftActionButtonsProps {
 
 export function DraftActionButtons({ draftId }: DraftActionButtonsProps) {
   const { t } = useTranslation();
-  const router = useRouter();
 
   const finishDraftMutation = api.drafts.finishDraft.useMutation({
     onSuccess: () => {
       toast.success(t("draftFinished"));
-      router.push("/");
     },
     onError: (error) => {
       toast.error(error.message || t("errorFinishingDraft"));

@@ -3,7 +3,7 @@ import { router, protectedProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
 import { zUuid } from "../schemas";
 import type { GameInvitation } from "@/types/database.types";
-import { GAME_STATUS } from "@/types/constants";
+import { GAME_STATUS, SESSION_STATUS } from "@/types/constants";
 
 export const gameInvitationsRouter = router({
   // Создать приглашение
@@ -177,6 +177,28 @@ export const gameInvitationsRouter = router({
         .from("games")
         .update({ status: GAME_STATUS.DRAFT } as never)
         .eq("id", invitationData.game_id);
+
+      if (!invitationData.session_id) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Invitation is not linked to a session",
+        });
+      }
+
+      const { error: sessionUpdateError } = await ctx.supabase
+        .from("sessions")
+        .update({ status: SESSION_STATUS.DRAFT } as never)
+        .eq("id", invitationData.session_id)
+        .select("id")
+        .single();
+
+      if (sessionUpdateError) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to update session status after accepting invitation",
+          cause: sessionUpdateError,
+        });
+      }
 
       return updatedInvitation as GameInvitation;
     }),
