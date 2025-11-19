@@ -32,29 +32,32 @@ export const NotificationsBell = () => {
   const { t } = useTranslation();
   const { user } = useUserProfile();
   const router = useRouter();
+  const utils = api.useUtils();
+
   const [isOpen, setIsOpen] = useState(false);
   const supabase = createClient();
 
   // Получить активные драфты
-  const { data: activeDrafts, refetch: refetchDrafts } = 
+  const { data: activeDrafts, refetch: refetchDrafts } =
     api.drafts.getActiveDrafts.useQuery(undefined, { enabled: !!user });
 
   // Получить приглашения
-  const { data: invitations, refetch: refetchInvitations } = 
+  const { data: invitations, refetch: refetchInvitations } =
     api.gameInvitations.getMyInvitations.useQuery(
       { status: "pending" },
       { enabled: !!user }
     );
 
   // Получить информацию об игроках для драфтов
-  const draftPlayerIds = activeDrafts?.flatMap(d => [d.player1_id, d.player2_id]) || [];
+  const draftPlayerIds =
+    activeDrafts?.flatMap((d) => [d.player1_id, d.player2_id]) || [];
   const { data: players } = api.users.getUsersByIds.useQuery(
     { userIds: [...new Set(draftPlayerIds)] },
     { enabled: draftPlayerIds.length > 0 }
   );
 
   // Получить информацию об отправителях приглашений
-  const inviterIds = invitations?.map(inv => inv.inviter_id) || [];
+  const inviterIds = invitations?.map((inv) => inv.inviter_id) || [];
   const { data: inviters } = api.users.getUsersByIds.useQuery(
     { userIds: [...new Set(inviterIds)] },
     { enabled: inviterIds.length > 0 }
@@ -67,6 +70,7 @@ export const NotificationsBell = () => {
       // После принятия приглашения обновляем оба списка
       void refetchInvitations();
       void refetchDrafts();
+      void utils.sessions.getUserSessions.invalidate();
     },
   });
 
@@ -180,7 +184,9 @@ export const NotificationsBell = () => {
   const gamesWithPendingInvitations = useMemo(() => {
     return new Set(
       invitations
-        ?.filter((inv) => inv.invitee_id === user?.id && inv.status === "pending")
+        ?.filter(
+          (inv) => inv.invitee_id === user?.id && inv.status === "pending"
+        )
         .map((inv) => inv.game_id) || []
     );
   }, [invitations, user?.id]);
@@ -188,9 +194,10 @@ export const NotificationsBell = () => {
   // Добавить приглашения (приоритет над активными драфтами)
   invitations?.forEach((invitation) => {
     // Показываем только приглашения, где текущий пользователь - получатель и статус pending
-    if (invitation.invitee_id !== user?.id || invitation.status !== "pending") return;
+    if (invitation.invitee_id !== user?.id || invitation.status !== "pending")
+      return;
 
-    const inviter = inviters?.find(p => p.id === invitation.inviter_id);
+    const inviter = inviters?.find((p) => p.id === invitation.inviter_id);
     const inviterName = inviter
       ? formatDisplayName(inviter.display_name, inviter.email)
       : t("unknownPlayer");
@@ -214,11 +221,10 @@ export const NotificationsBell = () => {
     // Пропускаем драфты, для которых есть pending приглашение где текущий пользователь - получатель
     if (gamesWithPendingInvitations.has(draft.game_id)) return;
 
-    const opponentId = draft.player1_id === user?.id 
-      ? draft.player2_id 
-      : draft.player1_id;
-    const opponent = players?.find(p => p.id === opponentId);
-    const opponentName = opponent 
+    const opponentId =
+      draft.player1_id === user?.id ? draft.player2_id : draft.player1_id;
+    const opponent = players?.find((p) => p.id === opponentId);
+    const opponentName = opponent
       ? formatDisplayName(opponent.display_name, opponent.email)
       : t("unknownPlayer");
 
@@ -275,7 +281,9 @@ export const NotificationsBell = () => {
                   >
                     <div className="flex flex-col items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm">{notification.title}</p>
+                        <p className="font-medium text-sm">
+                          {notification.title}
+                        </p>
                         <p className="text-xs text-muted-foreground mt-1">
                           {notification.description}
                         </p>
@@ -306,10 +314,7 @@ export const NotificationsBell = () => {
                         </div>
                       )}
                       {notification.type === "active_draft" && (
-                        <Button
-                          size="sm"
-                          onClick={notification.action}
-                        >
+                        <Button size="sm" onClick={notification.action}>
                           {t("goToDraft")}
                         </Button>
                       )}
@@ -324,4 +329,3 @@ export const NotificationsBell = () => {
     </Popover>
   );
 };
-

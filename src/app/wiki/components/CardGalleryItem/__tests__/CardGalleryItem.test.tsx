@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import CardGalleryItem from "../CardGalleryItem";
 import type { Card } from "@/types/database.types";
 import { CARD_TYPES } from "@/types/constants";
@@ -10,6 +10,12 @@ vi.mock("next/image", () => ({
     // eslint-disable-next-line @next/next/no-img-element
     <img src={src} alt={alt} {...props} />
   ),
+}));
+
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string) => key,
+  }),
 }));
 
 const mockCardItem: Card = {
@@ -28,9 +34,8 @@ const mockCardItem: Card = {
 
 describe("CardGalleryItem Component", () => {
   it("renders card with all required information", () => {
-    const mockHandler = vi.fn();
     const { container } = render(
-      <CardGalleryItem item={mockCardItem} onCardClickHandler={mockHandler} />
+      <CardGalleryItem item={mockCardItem} />
     );
 
     expect(container.textContent).toContain("Zeus");
@@ -41,25 +46,21 @@ describe("CardGalleryItem Component", () => {
     expect(image?.getAttribute("src")).toContain("/globe.svg");
   });
 
-  it("calls onCardClickHandler when clicked", () => {
-    const mockHandler = vi.fn();
-
-    const { container } = render(
-      <CardGalleryItem item={mockCardItem} onCardClickHandler={mockHandler} />
-    );
+  it("opens the modal when clicked", async () => {
+    const { container } = render(<CardGalleryItem item={mockCardItem} />);
 
     const button = container.querySelector("button");
     expect(button).toBeTruthy();
+
     fireEvent.click(button!);
 
-    expect(mockHandler).toHaveBeenCalledTimes(1);
+    await waitFor(() => {
+      expect(screen.getByTestId("card-modal")).toBeTruthy();
+    });
   });
 
   it("renders with proper aria-label for accessibility", () => {
-    const mockHandler = vi.fn();
-    const { container } = render(
-      <CardGalleryItem item={mockCardItem} onCardClickHandler={mockHandler} />
-    );
+    const { container } = render(<CardGalleryItem item={mockCardItem} />);
 
     // Use container to get the button directly to avoid multiple matches
     const button = container.querySelector("button[aria-label]");
@@ -70,10 +71,7 @@ describe("CardGalleryItem Component", () => {
   });
 
   it("renders image with fill prop and relative container", () => {
-    const mockHandler = vi.fn();
-    const { container } = render(
-      <CardGalleryItem item={mockCardItem} onCardClickHandler={mockHandler} />
-    );
+    const { container } = render(<CardGalleryItem item={mockCardItem} />);
 
     const imageContainer = container.querySelector('[class*="relative"]');
     expect(imageContainer).toBeTruthy();
@@ -84,10 +82,7 @@ describe("CardGalleryItem Component", () => {
   });
 
   it("renders card item with memo optimization", () => {
-    const mockHandler = vi.fn();
-    const { container } = render(
-      <CardGalleryItem item={mockCardItem} onCardClickHandler={mockHandler} />
-    );
+    const { container } = render(<CardGalleryItem item={mockCardItem} />);
 
     // Verify component renders correctly
     expect(container.querySelector('[data-testid="card-item"]')).toBeTruthy();

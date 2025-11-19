@@ -3,7 +3,12 @@ import { router, publicProcedure, protectedProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
 import type { Draft, Card, DraftHistory, DraftSettings } from "@/types/database.types";
 import { zUuid } from "../schemas";
-import { DRAFT_STATUS, DEFAULT_DRAFT_SETTINGS } from "@/types/constants";
+import {
+  DRAFT_STATUS,
+  DEFAULT_DRAFT_SETTINGS,
+  GAME_STATUS,
+  SESSION_STATUS,
+} from "@/types/constants";
 import { generateDraftPool } from "./drafts/index";
 import type { AppRouter } from "../root";
 import { DraftPoolConfig } from "@/types/draft-settings.types";
@@ -594,7 +599,7 @@ export const draftsRouter = router({
       // Verify draft exists and user is a participant
       const { data: draft, error: draftError } = await ctx.supabase
         .from("drafts")
-        .select("player1_id, player2_id, draft_status")
+        .select("player1_id, player2_id, draft_status, game_id")
         .eq("id", input.draft_id)
         .single();
 
@@ -609,6 +614,7 @@ export const draftsRouter = router({
         player1_id: string;
         player2_id: string;
         draft_status: string;
+        game_id: string | null;
       };
 
       // Verify user is a participant
@@ -627,6 +633,13 @@ export const draftsRouter = router({
         });
       }
 
+      if (!draftData.game_id) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Draft is not linked to a game",
+        });
+      }
+
       // Update draft status to finished
       const { data: updatedDraft, error: updateError } = await ctx.supabase
         .from("drafts")
@@ -640,6 +653,50 @@ export const draftsRouter = router({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to finish draft",
           cause: updateError,
+        });
+      }
+
+      // Update game status to in progress to reflect the finished draft
+      const { data: updatedGame, error: gameUpdateError } = await ctx.supabase
+        .from("games")
+        .update({ status: GAME_STATUS.IN_PROGRESS } as never)
+        .eq("id", draftData.game_id)
+        .select("id, session_id")
+        .single();
+
+      if (gameUpdateError || !updatedGame) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to start game after finishing draft",
+          cause: gameUpdateError,
+        });
+      }
+
+      const gameData = updatedGame as {
+        id: string;
+        session_id: string | null;
+      };
+
+      if (!gameData.session_id) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Game is not linked to a session",
+        });
+      }
+
+      // Update session status to in progress as the game begins
+      const { error: sessionUpdateError } = await ctx.supabase
+        .from("sessions")
+        .update({ status: SESSION_STATUS.IN_PROGRESS } as never)
+        .eq("id", gameData.session_id)
+        .select("id")
+        .single();
+
+      if (sessionUpdateError) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to start session after finishing draft",
+          cause: sessionUpdateError,
         });
       }
 

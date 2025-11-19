@@ -1,44 +1,22 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
+import {
+  describe,
+  expect,
+  it,
+  vi,
+  afterEach,
+  beforeEach,
+  beforeAll,
+} from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
-import SessionModal from "../SessionModal";
 import type { SessionWithPlayers } from "@/server/api/routers/sessions/types";
-
-const mockUseQuery = vi.fn();
-
-vi.mock("@/trpc/client", () => ({
-  api: {
-    games: {
-      getBySessionId: {
-        useQuery: (...args: unknown[]) => mockUseQuery(...args),
-      },
-    },
-  },
-}));
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (key: string, params?: Record<string, string | number>) => {
-      const translations: Record<string, string> = {
-        game: "Game",
-        won: "Won",
-        createdBy: "Created by",
-        sessionDetails: "Session Details",
-        duration: "Duration",
-        rounds: "Rounds",
-        created: "created",
-        noDraftAvailable: "noDraftAvailable",
-        goToDraft: "goToDraft",
-      };
-
       if (key === "playedVSPlayer" && params) {
         return `${params.player1} vs ${params.player2}`;
       }
-
-      if (key === "showingGames" && params) {
-        return "showingGames";
-      }
-
-      return translations[key] ?? key;
+      return key;
     },
   }),
 }));
@@ -75,6 +53,52 @@ vi.mock("@/components/ui/accordion-1", () => ({
   ),
 }));
 
+const mockGamesList = vi.hoisted(
+  () =>
+    vi.fn(
+      ({
+        sessionId,
+        player1Name,
+        player2Name,
+      }: {
+        sessionId: string;
+        player1Name: string;
+        player2Name: string;
+      }) => (
+        <div data-testid="games-list">
+          {sessionId}-{player1Name}-{player2Name}
+        </div>
+      ),
+    ),
+);
+
+vi.mock("../GamesList", () => ({
+  __esModule: true,
+  GamesList: (props: Parameters<typeof mockGamesList>[0]) =>
+    mockGamesList(props),
+}));
+
+vi.mock("@/app/components/GamesList", () => ({
+  __esModule: true,
+  GamesList: (props: Parameters<typeof mockGamesList>[0]) =>
+    mockGamesList(props),
+}));
+
+vi.mock("../SessionModalButtons", () => ({
+  __esModule: true,
+  default: () => <div data-testid="session-modal-buttons" />,
+}));
+
+vi.mock("../SessionModalButtons/SessionModalButtons", () => ({
+  __esModule: true,
+  default: () => <div data-testid="session-modal-buttons" />,
+}));
+
+vi.mock("@/app/components/SessionModalButtons", () => ({
+  __esModule: true,
+  default: () => <div data-testid="session-modal-buttons" />,
+}));
+
 const baseSession: SessionWithPlayers = {
   id: "session-1",
   player1_id: "player-1",
@@ -94,8 +118,13 @@ const baseSession: SessionWithPlayers = {
 };
 
 describe("SessionModal", () => {
+  let SessionModal: typeof import("../SessionModal").default;
+
+  beforeAll(async () => {
+    SessionModal = (await import("../SessionModal")).default;
+  });
   beforeEach(() => {
-    mockUseQuery.mockReset();
+    mockGamesList.mockClear();
   });
 
   afterEach(() => {
@@ -103,65 +132,26 @@ describe("SessionModal", () => {
     vi.clearAllMocks();
   });
 
-  it("displays the created by information for each game", () => {
-    mockUseQuery.mockReturnValue({
-      data: [
-        {
-          id: "game-1",
-          game_number: 1,
-          created_by: "user-creator-id",
-          created_by_name: "user-creator",
-          winner_id: "player-1",
-          session_id: "session-1",
-          status: "draft",
-          draft_id: null,
-          draft: null,
-          player1_game_score: 15,
-          player2_game_score: 12,
-          created_at: "2024-01-01T00:00:00Z",
-          updated_at: "2024-01-01T00:00:00Z",
-          finished_at: null,
-        },
-      ],
-      isLoading: false,
-    });
-
+  it("renders session information and passes props to GamesList", () => {
     render(<SessionModal session={baseSession} clearSession={vi.fn()} />);
 
-    expect(mockUseQuery).toHaveBeenCalledWith({
-      sessionId: "session-1",
-    });
-
-    expect(screen.getByText(/Created by:/i)).toBeTruthy();
-    expect(screen.getByText("user-creator")).toBeTruthy();
+    expect(screen.getByText("Zeus vs Hades 2-1")).toBeTruthy();
+    expect(screen.getByTestId("session-modal-buttons")).toBeTruthy();
+    expect(mockGamesList).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sessionId: "session-1",
+        player1Name: "Zeus",
+        player2Name: "Hades",
+      }),
+    );
   });
 
-  it("gracefully handles missing created_by details", () => {
-    mockUseQuery.mockReturnValue({
-      data: [
-        {
-          id: "game-1",
-          game_number: 1,
-          created_by: null,
-          created_by_name: null,
-          winner_id: null,
-          session_id: "session-1",
-          status: "draft",
-          draft_id: null,
-          draft: null,
-          player1_game_score: 0,
-          player2_game_score: 0,
-          created_at: "2024-01-01T00:00:00Z",
-          updated_at: "2024-01-01T00:00:00Z",
-          finished_at: null,
-        },
-      ],
-      isLoading: false,
-    });
+  it("returns null when session is null", () => {
+    const { container } = render(
+      <SessionModal session={null} clearSession={vi.fn()} />,
+    );
 
-    render(<SessionModal session={baseSession} clearSession={vi.fn()} />);
-
-    expect(screen.queryByText(/Created by:/i)).toBeNull();
+    expect(container.firstChild).toBeNull();
   });
 });
 
