@@ -35,6 +35,14 @@ const translation = {
   goToDraft: "Go to draft",
   goToGame: "Go to game",
   finish: "Finish",
+  finishGame: "Finish Game",
+  selectWinner: "Select winner",
+  selectWinCondition: "Select win condition",
+  winConditionOptions: {
+    killedGod: "Killed God",
+    obtainedGems: "Obtained gems",
+  },
+  submit: "Submit",
   sessionDetails: "Session Details",
   game: "Game",
   duration: "Duration",
@@ -207,36 +215,36 @@ const translation = {
   unknownPlayer: "Unknown Player",
   invitationSent: "Invitation sent successfully",
   errorSendingInvitation: "Error sending invitation",
-  
+
   // Draft confirmation
   confirmCardPick: "Confirm Card Selection",
   confirmCardPickDescription: "Are you sure you want to pick this card?",
   areYouSurePickCard: "This action cannot be undone.",
   confirm: "Confirm",
   strategicValue: "Strategic Value",
-  
+
   // Active Draft
   activeDraftInProgress: "Active Draft in Progress",
   youHaveActiveDraft: "You have an active draft. Continue playing!",
   continueDraft: "Continue Draft",
-  
+
   // Draft management
   draftFinished: "Draft finished successfully",
   errorFinishingDraft: "Error finishing draft",
   errorRequestingReset: "Error requesting reset",
-  
+
   // Notifications
   notifications: "Notifications",
   noNotifications: "No notifications",
   continueDraftWithPlayer: "Continue draft with {{player}}",
   activeDraft: "Active Draft",
-  
+
   // Draft States
   waitingForOpponent: "Waiting for Opponent",
   waitingForOpponentDescription: "Waiting for your opponent to accept the invitation...",
   waitingForAcceptance: "Waiting for Acceptance",
   invitationPending: "Invitation Pending",
-  
+
   // Card Pick Restrictions
   notEnoughPoints: "Not enough points to pick this card",
   godCardLimitReached: "You can only pick 1 God card",
@@ -244,7 +252,7 @@ const translation = {
   cannotPickCard: "Cannot pick this card",
   cardRestricted: "This card is restricted",
   mustReservePointsForGod: "You must reserve enough points for a God card (mandatory)",
-  
+
   // Start Game Restrictions
   mustPickGodCard: "You must pick a God card before starting the game",
   mustUseAllPoints: "You must use all available points before starting the game",

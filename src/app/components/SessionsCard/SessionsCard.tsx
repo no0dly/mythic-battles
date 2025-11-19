@@ -3,7 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
-import SessionModal from "../SessionModal";
+import SessionDrawer from "../SessionDrawer";
 import { api } from "@/trpc/client";
 import Loader from "@/components/Loader/Loader";
 import type { SessionWithPlayers } from "@/server/api/routers/sessions/types";
@@ -97,7 +97,7 @@ function SessionsCard() {
       <div className="relative border-2 border-foreground rounded-2xl p-3 md:p-4 bg-background transition-shadow duration-300">
         <div className="flex min-h-[200px]">{renderContent()}</div>
       </div>
-      <SessionModal
+      <SessionDrawer
         session={selectedSession}
         clearSession={onClearSessionHandler}
       />

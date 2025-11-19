@@ -5,6 +5,7 @@ import type { Game, Draft } from "@/types/database.types";
 import { zUuid } from "../schemas";
 import type { GameWithDraft, GameWithUserJoin } from "./games/types";
 import { parseDraftHistory } from "@/utils/drafts";
+import { GAME_STATUS, SESSION_STATUS } from "@/types/constants";
 
 export const gamesRouter = router({
   // Get games by array of IDs
@@ -189,6 +190,55 @@ export const gamesRouter = router({
 
       const game = gameData as Pick<Game, "draft_settings">;
       return game.draft_settings;
+    }),
+  finishGame: protectedProcedure
+    .input(
+      z.object({
+        gameId: zUuid,
+        sessionId: zUuid,
+        winnerId: zUuid,
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { gameId, sessionId, winnerId } = input;
+
+      const { data: updatedGame, error: gameUpdateError } = await ctx.supabase
+        .from("games")
+        .update({
+          status: GAME_STATUS.FINISHED,
+          winner_id: winnerId ?? null,
+          finished_at: new Date().toISOString(),
+        } as never)
+        .eq("id", gameId)
+        .eq("session_id", sessionId)
+        .select("id")
+        .single();
+
+      if (gameUpdateError || !updatedGame) {
+        throw new TRPCError({
+          code:
+            gameUpdateError?.code === "PGRST116"
+              ? "NOT_FOUND"
+              : "INTERNAL_SERVER_ERROR",
+          message: "Failed to finish game",
+        });
+      }
+
+      const { error: sessionUpdateError } = await ctx.supabase
+        .from("sessions")
+        .update({
+          status: SESSION_STATUS.AVAILABLE,
+        } as never)
+        .eq("id", sessionId);
+
+      if (sessionUpdateError) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to update session status",
+        });
+      }
+
+      return { success: true };
     }),
 });
 
