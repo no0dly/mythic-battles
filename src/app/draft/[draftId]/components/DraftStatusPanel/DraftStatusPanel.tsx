@@ -1,10 +1,13 @@
 "use client";
 
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import type { Draft, Card as CardType } from "@/types/database.types";
 import { useDraftDetails } from "@/hooks";
 import { DraftActionButtons, DraftStatusPanelSkeleton } from "./components";
 import { api } from "@/trpc/client";
+import { canStartGame } from "@/utils/drafts";
+import { useUserProfile } from "@/hooks/useUserProfile";
 
 interface DraftStatusPanelProps {
   draft: Draft;
@@ -13,6 +16,7 @@ interface DraftStatusPanelProps {
 
 export function DraftStatusPanel({ draft, cards }: DraftStatusPanelProps) {
   const { t } = useTranslation();
+  const { user } = useUserProfile();
   const {
     game_id: gameId,
     player1_id: player1Id,
@@ -64,6 +68,17 @@ export function DraftStatusPanel({ draft, cards }: DraftStatusPanelProps) {
     players,
     userAllowedPoints,
   });
+
+  // Check if current user can start the game
+  const currentUserCards = useMemo(() => {
+    if (!user) return [];
+    return user.id === player1Id ? player1Cards : player2Cards;
+  }, [user, player1Id, player1Cards, player2Cards]);
+
+  const { canPick, reason } = useMemo(() => {
+    if (!user || !userAllowedPoints) return { canPick: true };
+    return canStartGame(currentUserCards, userAllowedPoints);
+  }, [currentUserCards, userAllowedPoints, user]);
 
   if (isLoading) {
     return <DraftStatusPanelSkeleton />;
@@ -146,7 +161,11 @@ export function DraftStatusPanel({ draft, cards }: DraftStatusPanelProps) {
         </div>
       </div>
 
-      <DraftActionButtons draftId={draft.id} />
+      <DraftActionButtons
+        draftId={draft.id}
+        canStartGame={canPick}
+        startGameRestrictionReason={reason}
+      />
     </div>
   );
 }

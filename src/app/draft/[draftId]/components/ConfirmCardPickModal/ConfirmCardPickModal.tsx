@@ -9,9 +9,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import type { Card } from "@/types/database.types";
-import { Check } from "lucide-react";
+import { Check, X } from "lucide-react";
 import { useCallback, useState } from "react";
 import Image from "next/image";
 import { toast } from "sonner";
@@ -25,10 +30,14 @@ import { CardPreviewDialog } from "@/app/components/DraftInfo/components";
 
 interface ConfirmCardPickModalProps {
   card: Card;
+  disabled?: boolean;
+  restrictionReason?: string;
 }
 
 export default function ConfirmCardPickModal({
   card,
+  disabled = false,
+  restrictionReason,
 }: ConfirmCardPickModalProps) {
   const { t } = useTranslation();
   const { draftId } = useParams<{ draftId: string }>();
@@ -98,15 +107,32 @@ export default function ConfirmCardPickModal({
 
   return (
     <>
-      <Button
-        onClick={onToggleChangeHandle(true)}
-        disabled={isPending}
-        size="icon"
-        className="h-6 w-6 bg-green-600 hover:bg-green-700 rounded-full shadow-md flex-shrink-0 cursor-pointer"
-        aria-label={t("pickCard")}
-      >
-        <Check className="h-3.5 w-3.5 text-white" />
-      </Button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            onClick={disabled ? undefined : onToggleChangeHandle(true)}
+            disabled={isPending || disabled}
+            size="icon"
+            className={`h-6 w-6 rounded-full shadow-md flex-shrink-0 ${
+              disabled
+                ? "bg-red-600 hover:bg-red-700 cursor-not-allowed"
+                : "bg-green-600 hover:bg-green-700 cursor-pointer"
+            }`}
+            aria-label={disabled ? t(restrictionReason || 'cannotPickCard') : t("pickCard")}
+          >
+            {disabled ? (
+              <X className="h-3.5 w-3.5 text-white" />
+            ) : (
+              <Check className="h-3.5 w-3.5 text-white" />
+            )}
+          </Button>
+        </TooltipTrigger>
+        {disabled && restrictionReason && (
+          <TooltipContent>
+            <p>{t(restrictionReason)}</p>
+          </TooltipContent>
+        )}
+      </Tooltip>
       <Dialog
         open={isConfirmModalShown}
         onOpenChange={onToggleChangeHandle(false)}
