@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import CardGalleryItem from "../CardGalleryItem";
 import type { Card } from "@/types/database.types";
@@ -34,9 +34,7 @@ const mockCardItem: Card = {
 
 describe("CardGalleryItem Component", () => {
   it("renders card with all required information", () => {
-    const { container } = render(
-      <CardGalleryItem item={mockCardItem} />
-    );
+    const { container } = render(<CardGalleryItem item={mockCardItem} />);
 
     expect(container.textContent).toContain("Zeus");
     expect(container.textContent).toContain("5"); // Cost is shown

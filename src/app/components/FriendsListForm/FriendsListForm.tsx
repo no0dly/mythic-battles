@@ -31,7 +31,7 @@ export default function FriendsListForm({ isOpen }: FriendsListFormProps) {
   });
 
   const utils = api.useUtils();
-  
+
   const sendRequestMutation = api.friendships.sendRequest.useMutation({
     onSuccess: () => {
       utils.friendships.getSentRequests.invalidate();
@@ -67,14 +67,14 @@ export default function FriendsListForm({ isOpen }: FriendsListFormProps) {
                   <FormLabel>{t("friendEmail")}</FormLabel>
                   <div className="flex gap-2 items-center">
                     <FormControl>
-                      <Input 
-                        className="flex-1" 
+                      <Input
+                        className="flex-1"
                         {...field}
                         disabled={sendRequestMutation.isPending}
                       />
                     </FormControl>
-                    <Button 
-                      type="submit" 
+                    <Button
+                      type="submit"
                       className="h-9 px-3"
                       disabled={sendRequestMutation.isPending}
                     >
@@ -90,7 +90,8 @@ export default function FriendsListForm({ isOpen }: FriendsListFormProps) {
                     )}
                     {sendRequestMutation.isError && (
                       <p className="text-xs text-destructive">
-                        {sendRequestMutation.error?.message || t("errorSendingRequest")}
+                        {sendRequestMutation.error?.message ||
+                          t("errorSendingRequest")}
                       </p>
                     )}
                   </div>

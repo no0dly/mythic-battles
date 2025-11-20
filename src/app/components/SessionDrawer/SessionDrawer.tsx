@@ -29,8 +29,6 @@ export default function SessionDrawer({ session, clearSession }: Props) {
     }
   };
 
-  const hasGames = session.game_list && session.game_list.length > 0;
-
   return (
     <Drawer open={!!session} onOpenChange={onOpenChangeHandler}>
       <DrawerContent className="flex flex-col">
@@ -55,7 +53,7 @@ export default function SessionDrawer({ session, clearSession }: Props) {
           />
         </div>
         <DrawerFooter>
-          <SessionDrawerButtons session={session} />
+          <SessionDrawerButtons session={session} clearSession={clearSession} />
         </DrawerFooter>
       </DrawerContent>
     </Drawer>

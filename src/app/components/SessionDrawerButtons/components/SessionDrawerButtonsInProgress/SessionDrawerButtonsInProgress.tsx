@@ -25,7 +25,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   FINISH_GAME_FORM_DEFAULT_VALUES,
@@ -37,13 +36,16 @@ import {
 } from "./utils";
 import type { FinishGameFormValues } from "./types";
 import { api } from "@/trpc/client";
+import { toast } from "sonner";
 
 interface SessionDrawerButtonsInProgressProps {
   session: SessionWithPlayers;
+  clearSession: () => void;
 }
 
 export default function SessionDrawerButtonsInProgress({
   session,
+  clearSession,
 }: SessionDrawerButtonsInProgressProps) {
   const { t } = useTranslation();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -56,24 +58,23 @@ export default function SessionDrawerButtonsInProgress({
   });
 
   const { mutate: finishGame, isPending: isFinishingGame } =
-    api.games.finishGame.useMutation();
+    api.games.finishGame.useMutation({
+      onSuccess: () => {
+        utils.sessions.invalidate();
+        clearSession();
+        handleCloseModal();
+      },
+      onError: (error) => {
+        toast.error(error.message || t("errorFinishingGame"));
+      },
+    });
 
   const playerOptions = useMemo(
     () => mapSessionPlayersToOptions(session),
-    [
-      session.player1_id,
-      session.player1_name,
-      session.player2_id,
-      session.player2_name,
-    ]
+    [session]
   );
 
   const handleFormSubmit = (values: FinishGameFormValues) => {
-    console.log("Submit in-progress game result", {
-      sessionId: session.id,
-      playerId: values.playerId,
-      winCondition: values.winCondition,
-    });
     const currentGame = session.game_list?.[session.game_list.length - 1];
 
     if (!currentGame) {

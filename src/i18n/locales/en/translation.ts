@@ -158,6 +158,8 @@ const translation = {
   requiredField: "This field is required",
   sessionCreatedSuccessfully: "Session created successfully",
   errorCreatingSession: "Error creating session",
+  errorCreatingGame: "Error creating game",
+  notAuthorizedToAccessSession: "You are not authorized to access this session",
   // Games related
   gameNumber: "Game #{{number}}",
   gameScore: "Game Score",

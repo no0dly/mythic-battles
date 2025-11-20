@@ -21,8 +21,8 @@ export const UserStatistics = ({
   compact = false,
 }: UserStatisticsProps) => {
   const { t } = useTranslation();
-  
-  const { rank, rankKey, rankVariant } = useMemo(() => {
+
+  const { rankKey, rankVariant } = useMemo(() => {
     const rank = getUserRank(statistics);
     return {
       rank,

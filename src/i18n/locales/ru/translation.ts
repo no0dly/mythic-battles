@@ -158,6 +158,8 @@ const translation = {
   requiredField: "Это поле обязательно",
   sessionCreatedSuccessfully: "Сессия успешно создана",
   errorCreatingSession: "Ошибка создания сессии",
+  errorCreatingGame: "Ошибка создания игры",
+  notAuthorizedToAccessSession: "У вас нет доступа к этой сессии",
   // Games related
   gameNumber: "Игра №{{number}}",
   gameScore: "Счет игры",
