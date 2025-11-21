@@ -1,5 +1,4 @@
 import { useTranslation } from "react-i18next";
-import { ChartPie } from "lucide-react";
 
 interface GameScoreProps {
   player1Name: string;

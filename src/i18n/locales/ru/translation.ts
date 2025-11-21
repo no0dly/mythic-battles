@@ -32,6 +32,14 @@ const translation = {
   goToDraft: "Перейти к черновику",
   goToGame: "Перейти к игре",
   finish: "Завершить",
+  finishGame: "Завершить игру",
+  selectWinner: "Выберите победителя",
+  selectWinCondition: "Выберите условие победы",
+  winConditionOptions: {
+    killedGod: "Убит бог",
+    obtainedGems: "Собраны кристаллы",
+  },
+  submit: "Отправить",
   sessionDetails: "Детали сессии",
   game: "Игра",
   duration: "Длительность",
@@ -150,6 +158,8 @@ const translation = {
   requiredField: "Это поле обязательно",
   sessionCreatedSuccessfully: "Сессия успешно создана",
   errorCreatingSession: "Ошибка создания сессии",
+  errorCreatingGame: "Ошибка создания игры",
+  notAuthorizedToAccessSession: "У вас нет доступа к этой сессии",
   // Games related
   gameNumber: "Игра №{{number}}",
   gameScore: "Счет игры",
@@ -207,36 +217,36 @@ const translation = {
   unknownPlayer: "Неизвестный игрок",
   invitationSent: "Приглашение успешно отправлено",
   errorSendingInvitation: "Ошибка при отправке приглашения",
-  
+
   // Draft confirmation
   confirmCardPick: "Подтверждение выбора карты",
   confirmCardPickDescription: "Вы уверены, что хотите выбрать эту карту?",
   areYouSurePickCard: "Это действие нельзя отменить.",
   confirm: "Подтвердить",
   strategicValue: "Стратегическая ценность",
-  
+
   // Active Draft
   activeDraftInProgress: "Активный драфт в процессе",
   youHaveActiveDraft: "У вас есть активный драфт. Продолжайте играть!",
   continueDraft: "Продолжить драфт",
-  
+
   // Draft management
   draftFinished: "Драфт успешно завершен",
   errorFinishingDraft: "Ошибка при завершении драфта",
   errorRequestingReset: "Ошибка при запросе сброса",
-  
+
   // Уведомления
   notifications: "Уведомления",
   noNotifications: "Нет уведомлений",
   continueDraftWithPlayer: "Продолжить драфт с {{player}}",
   activeDraft: "Активный драфт",
-  
+
   // Состояния драфта
   waitingForOpponent: "Ожидание оппонента",
   waitingForOpponentDescription: "Ожидание принятия приглашения вашим оппонентом...",
   waitingForAcceptance: "Ожидание принятия",
   invitationPending: "Приглашение ожидает",
-  
+
   // Ограничения выбора карт
   notEnoughPoints: "Недостаточно очков для выбора этой карты",
   godCardLimitReached: "Вы можете выбрать только 1 карту Бога",
@@ -244,7 +254,7 @@ const translation = {
   cannotPickCard: "Невозможно выбрать эту карту",
   cardRestricted: "Эта карта недоступна",
   mustReservePointsForGod: "Необходимо зарезервировать достаточно очков для карты Бога (обязательно)",
-  
+
   // Ограничения начала игры
   mustPickGodCard: "Необходимо выбрать карту Бога перед началом игры",
   mustUseAllPoints: "Необходимо использовать все доступные очки перед началом игры",

@@ -18,7 +18,8 @@ import Loader from "@/components/Loader";
 import { useRouter, useSearchParams } from "next/navigation";
 import { api } from "@/trpc/client";
 import { DEFAULT_DRAFT_SETTINGS } from "@/types/constants";
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
+import { Game, Session } from "@/types/database.types";
 
 export default function DraftSettings() {
   const { t } = useTranslation();
@@ -40,10 +41,35 @@ export default function DraftSettings() {
   });
 
   // Получить информацию о сессии, если sessionId передан
-  const { data: session } = api.sessions.getById.useQuery(
-    { id: sessionId! },
-    { enabled: !!sessionId }
-  );
+  const { data: session, isLoading: isLoadingSession } =
+    api.sessions.getById.useQuery({ id: sessionId! }, { enabled: !!sessionId });
+
+  // Authorization check: verify user is part of the session
+  useEffect(() => {
+    if (sessionId && session && user) {
+      const isAuthorized =
+        session.player1_id === user.id || session.player2_id === user.id;
+
+      if (!isAuthorized) {
+        toast.error(t("notAuthorizedToAccessSession"));
+        router.push("/");
+      }
+    }
+  }, [sessionId, session, user, router, t]);
+
+  // Prepopulate opponent when sessionId is present
+  useEffect(() => {
+    if (session && user && sessionId) {
+      const opponentId =
+        session.player1_id === user.id
+          ? session.player2_id
+          : session.player1_id;
+
+      if (opponentId) {
+        form.setValue("opponentId", opponentId);
+      }
+    }
+  }, [session, user, sessionId, form]);
 
   // Мутация создания приглашения
   const createInvitationMutation = api.gameInvitations.create.useMutation({
@@ -55,42 +81,61 @@ export default function DraftSettings() {
     },
   });
 
+  const inviteCreation = ({
+    game,
+    session: currentSession,
+    draft,
+  }: {
+    game: Game;
+    session: Session;
+    draft: { id: string };
+  }) => {
+    // После создания игры, создать приглашение
+    if (session || currentSession) {
+      const sessionData = session || currentSession;
+      const inviteeId =
+        sessionData.player1_id === user?.id
+          ? sessionData.player2_id
+          : sessionData.player1_id;
+
+      if (inviteeId) {
+        createInvitationMutation.mutate({
+          game_id: game.id,
+          session_id: sessionData.id,
+          invitee_id: inviteeId,
+        });
+      }
+    }
+
+    toast.success(t("sessionCreatedSuccessfully"));
+
+    // Перенаправить на страницу драфта, если он создан
+    if (draft?.id) {
+      router.push(`/draft/${draft.id}`);
+    } else {
+      router.push("/");
+    }
+  };
+
   const {
     mutate: createSessionWithDraft,
     isPending: isCreatingSessionPending,
   } = api.sessions.createWithDraft.useMutation({
-    onSuccess: ({ game, session: createdSession, draft }) => {
-      // После создания игры, создать приглашение
-      if (session || createdSession) {
-        const sessionData = session || createdSession;
-        const inviteeId =
-          sessionData.player1_id === user?.id
-            ? sessionData.player2_id
-            : sessionData.player1_id;
-
-        if (inviteeId) {
-          createInvitationMutation.mutate({
-            game_id: game.id,
-            session_id: sessionData.id,
-            invitee_id: inviteeId,
-          });
-        }
-      }
-
-      toast.success(t("sessionCreatedSuccessfully"));
-      
-      // Перенаправить на страницу драфта, если он создан
-      if (draft?.id) {
-        router.push(`/draft/${draft.id}`);
-      } else {
-        router.push("/");
-      }
-    },
+    onSuccess: inviteCreation,
     onError: (error) => {
       console.error("Error creating session:", error);
       toast.error(`${t("errorCreatingSession")}: ${error.message}`);
     },
   });
+
+  const { mutate: createGameWithDraft, isPending: isCreatingGamePending } =
+    api.games.createGameWithDraft.useMutation({
+      onSuccess: inviteCreation,
+      onError: (error) => {
+        console.error("Error creating game:", error);
+        toast.error(`${t("errorCreatingGame")}: ${error.message}`);
+      },
+    });
 
   const opponentOptions = useMemo(
     () =>
@@ -102,7 +147,14 @@ export default function DraftSettings() {
   );
 
   const handleSubmit = (values: DraftSettingsFormValues) => {
-    createSessionWithDraft(values);
+    if (sessionId) {
+      createGameWithDraft({
+        ...values,
+        sessionId,
+      });
+    } else {
+      createSessionWithDraft(values);
+    }
   };
 
   return (
@@ -119,8 +171,9 @@ export default function DraftSettings() {
                 name="opponentId"
                 labelKey="selectYourOpponent"
                 options={opponentOptions}
-                isLoading={isLoading}
+                isLoading={isLoading || isLoadingSession}
                 emptyMessageKey="noFriendsYet"
+                disabled={!!sessionId}
               />
             </div>
             <div className="max-w-[400px]">
@@ -160,7 +213,11 @@ export default function DraftSettings() {
             <ShimmerButton
               type="submit"
               className="px-8 py-4 text-lg font-semibold"
-              loading={form.formState.isSubmitting || isCreatingSessionPending}
+              loading={
+                form.formState.isSubmitting ||
+                isCreatingSessionPending ||
+                isCreatingGamePending
+              }
               disabled={isLoading || friends.length === 0}
             >
               {form.formState.isSubmitting ? t("loading") : t("generateDraft")}
@@ -168,7 +225,9 @@ export default function DraftSettings() {
           </div>
         </form>
       </Form>
-      {(isLoading || isCreatingSessionPending) && <Loader />}
+      {(isLoading || isCreatingSessionPending || isCreatingGamePending) && (
+        <Loader />
+      )}
     </div>
   );
 }

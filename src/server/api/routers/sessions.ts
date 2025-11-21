@@ -276,5 +276,37 @@ export const sessionsRouter = router({
         throw error;
       }
     }),
+
+  // Finish a session (set status to finished)
+  finishSession: protectedProcedure
+    .input(
+      z.object({
+        sessionId: zUuid,
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { data: session, error: sessionError } = await ctx.supabase
+        .from("sessions")
+        .update({
+          status: SESSION_STATUS.FINISHED,
+          finished_at: new Date().toISOString(),
+        } as never)
+        .eq("id", input.sessionId)
+        .select("id")
+        .single();
+
+      if (sessionError || !session) {
+        throw new TRPCError({
+          code:
+            sessionError?.code === "PGRST116"
+              ? "NOT_FOUND"
+              : "INTERNAL_SERVER_ERROR",
+          message: "Failed to finish session",
+          cause: sessionError,
+        });
+      }
+
+      return { success: true };
+    }),
 });
 

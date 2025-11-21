@@ -84,17 +84,17 @@ vi.mock("@/app/components/GamesList", () => ({
     mockGamesList(props),
 }));
 
-vi.mock("../SessionModalButtons", () => ({
+vi.mock("../SessionDrawerButtons", () => ({
   __esModule: true,
   default: () => <div data-testid="session-modal-buttons" />,
 }));
 
-vi.mock("../SessionModalButtons/SessionModalButtons", () => ({
+vi.mock("../SessionDrawerButtons/SessionDrawerButtons", () => ({
   __esModule: true,
   default: () => <div data-testid="session-modal-buttons" />,
 }));
 
-vi.mock("@/app/components/SessionModalButtons", () => ({
+vi.mock("@/app/components/SessionDrawerButtons", () => ({
   __esModule: true,
   default: () => <div data-testid="session-modal-buttons" />,
 }));
@@ -117,11 +117,11 @@ const baseSession: SessionWithPlayers = {
   player2_email: "hades@example.com",
 };
 
-describe("SessionModal", () => {
-  let SessionModal: typeof import("../SessionModal").default;
+describe("SessionDrawer", () => {
+  let SessionDrawer: typeof import("../SessionDrawer").default;
 
   beforeAll(async () => {
-    SessionModal = (await import("../SessionModal")).default;
+    SessionDrawer = (await import("../SessionDrawer")).default;
   });
   beforeEach(() => {
     mockGamesList.mockClear();
@@ -133,7 +133,7 @@ describe("SessionModal", () => {
   });
 
   it("renders session information and passes props to GamesList", () => {
-    render(<SessionModal session={baseSession} clearSession={vi.fn()} />);
+    render(<SessionDrawer session={baseSession} clearSession={vi.fn()} />);
 
     expect(screen.getByText("Zeus vs Hades 2-1")).toBeTruthy();
     expect(screen.getByTestId("session-modal-buttons")).toBeTruthy();
@@ -148,7 +148,7 @@ describe("SessionModal", () => {
 
   it("returns null when session is null", () => {
     const { container } = render(
-      <SessionModal session={null} clearSession={vi.fn()} />,
+      <SessionDrawer session={null} clearSession={vi.fn()} />,
     );
 
     expect(container.firstChild).toBeNull();

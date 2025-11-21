@@ -6,7 +6,7 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
-import SessionModalButtons from "../SessionModalButtons";
+import SessionDrawerButtons from "../SessionDrawerButtons";
 import { useTranslation } from "react-i18next";
 import type { SessionWithPlayers } from "@/server/api/routers/sessions/types";
 import { GamesList } from "../GamesList";
@@ -16,7 +16,7 @@ interface Props {
   clearSession: () => void;
 }
 
-export default function SessionModal({ session, clearSession }: Props) {
+export default function SessionDrawer({ session, clearSession }: Props) {
   const { t } = useTranslation();
 
   if (!session) {
@@ -28,8 +28,6 @@ export default function SessionModal({ session, clearSession }: Props) {
       clearSession();
     }
   };
-
-  const hasGames = session.game_list && session.game_list.length > 0;
 
   return (
     <Drawer open={!!session} onOpenChange={onOpenChangeHandler}>
@@ -55,11 +53,7 @@ export default function SessionModal({ session, clearSession }: Props) {
           />
         </div>
         <DrawerFooter>
-          <SessionModalButtons
-            status={session.status}
-            hasGames={!!hasGames}
-            sessionID={session.id}
-          />
+          <SessionDrawerButtons session={session} clearSession={clearSession} />
         </DrawerFooter>
       </DrawerContent>
     </Drawer>
