@@ -1,6 +1,9 @@
 const translation = {
   hello: "Hello World",
   wiki: "Wiki",
+  menu: "Menu",
+  navigation: "Navigation",
+  language: "Language",
   login: "Login",
   logout: "Logout",
   loading: "Loading...",
