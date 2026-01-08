@@ -17,12 +17,19 @@ import { Button } from "@/components/ui/button";
 
 const languageCodes = supportedLngs;
 
-export default function LanguageSwitcher() {
+type LanguageSwitcherProps = {
+  onLanguageChange?: () => void;
+};
+
+export default function LanguageSwitcher({
+  onLanguageChange,
+}: LanguageSwitcherProps) {
   const { i18n } = useTranslation();
   const currentLanguage = i18n.resolvedLanguage || "en";
 
   const onChangeLanguageHandler = (value: AppLanguage) => () => {
     i18n.changeLanguage(value);
+    onLanguageChange?.();
   };
 
   return (

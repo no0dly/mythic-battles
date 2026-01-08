@@ -3,6 +3,7 @@ import Logo from "../Logo";
 import HeaderActions from "../HeaderActions/HeaderActions";
 import { createClient } from "@/lib/supabase/server";
 import { NotificationsBell } from "@/components/NotificationsBell";
+import { MobileMenu } from "./MobileMenu";
 
 export default async function Header() {
   const supabase = await createClient();
@@ -16,10 +17,18 @@ export default async function Header() {
         <div className="flex items-center align-middle gap-4 h-16">
           <Logo />
         </div>
-        <HeaderActions>
-          {user && <NotificationsBell />}
-          <AuthStatus userEmail={user?.email ?? null} />
-        </HeaderActions>
+        <div className="flex items-center gap-4">
+          <div className="hidden md:flex">
+            <HeaderActions>
+              {user && <NotificationsBell />}
+              <AuthStatus userEmail={user?.email ?? null} />
+            </HeaderActions>
+          </div>
+          <div className="flex items-center gap-4 md:hidden">
+            {user && <NotificationsBell />}
+          </div>
+          <MobileMenu userEmail={user?.email ?? null} />
+        </div>
       </div>
     </nav>
   );
