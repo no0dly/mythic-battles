@@ -33,6 +33,7 @@ const translation = {
   available: "Available",
   draft: "Draft",
   inProgress: "In Progress",
+  wonBy: "{{name}} won by {{winCondition}}",
   finished: "Finished",
   error: "Error",
   goToDraft: "Go to draft",

@@ -1,4 +1,4 @@
-import { CARD_TYPES, GAME_STATUS, SESSION_STATUS, DRAFT_STATUS, GAME_INVITATION_STATUS, FRIENDSHIP_STATUS } from "./constants"
+import { CARD_TYPES, GAME_STATUS, SESSION_STATUS, DRAFT_STATUS, GAME_INVITATION_STATUS, FRIENDSHIP_STATUS, WIN_CONDITION } from "./constants"
 import { ValueOf } from "./interfaces"
 
 export type Json =
@@ -99,6 +99,8 @@ export type DraftSettings = {
   titans_amount: number
 }
 
+export type WinCondition = ValueOf<typeof WIN_CONDITION>;
+
 export type Game = {
   id: string
   session_id: string
@@ -111,6 +113,7 @@ export type Game = {
   created_at: string
   updated_at: string
   finished_at: string | null
+  win_condition: WinCondition | null
 }
 
 export type DraftStatus = ValueOf<typeof DRAFT_STATUS>;
@@ -130,12 +133,17 @@ export type DraftHistory = {
   }
 }
 
+export type InitialRoll = {
+  userID: string
+  roll: number
+}
+
 export type Draft = {
   id: string
   game_id: string
   player1_id: string
   player2_id: string
-  initial_roll: Json | null
+  initial_roll: InitialRoll[] | null
   draft_status: DraftStatus
   draft_history: Json | null
   current_turn_user_id: string
@@ -187,11 +195,11 @@ export type Database = {
       drafts: {
         Row: Draft
         Insert: Omit<Draft, 'id' | 'created_at' | 'updated_at'> & {
-          initial_roll?: Json
+          initial_roll?: InitialRoll[]
           draft_history?: Json | DraftHistory
         }
         Update: Partial<Omit<Draft, 'id' | 'created_at' | 'updated_at'>> & {
-          initial_roll?: Json
+          initial_roll?: InitialRoll[]
           draft_history?: Json | DraftHistory
         }
       }
@@ -229,11 +237,11 @@ export type GameUpdate = Partial<Omit<Game, 'id' | 'created_at' | 'updated_at'>>
   draft_settings?: Json
 }
 export type DraftInsert = Omit<Draft, 'id' | 'created_at' | 'updated_at'> & {
-  initial_roll?: Json
+  initial_roll?: InitialRoll[]
   draft_history?: Json | DraftHistory
 }
 export type DraftUpdate = Partial<Omit<Draft, 'id' | 'created_at' | 'updated_at'>> & {
-  initial_roll?: Json
+  initial_roll?: InitialRoll[]
   draft_history?: Json | DraftHistory
 }
 export type GameInvitationInsert = Omit<GameInvitation, 'id' | 'created_at' | 'updated_at' | 'responded_at'>

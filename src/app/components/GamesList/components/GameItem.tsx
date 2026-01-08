@@ -13,24 +13,26 @@ import { GameResult } from "./GameResult";
 import { GameScore } from "./GameScore";
 import { GameMetadata } from "./GameMetadata";
 import { DRAFT_STATUS, GAME_STATUS } from "@/types/constants";
+import { useUserProfile } from "@/hooks";
+import { SessionWithPlayers } from "@/server/api/routers/sessions/types";
 
 interface GameItemProps {
   game: GameWithDraft;
-  player1Id: string;
-  player1Name: string;
-  player2Name: string;
+  session: SessionWithPlayers;
   index: number;
 }
 
-export const GameItem = ({
-  game,
-  player1Id,
-  player1Name,
-  player2Name,
-  index,
-}: GameItemProps) => {
+export const GameItem = ({ game, session, index }: GameItemProps) => {
   const { t } = useTranslation();
   const router = useRouter();
+  const { user } = useUserProfile();
+  const {
+    player1_name: player1Name,
+    player2_name: player2Name,
+    player1_id: player1Id,
+  } = session;
+
+  const winnerName = game.winner_id === player1Id ? player1Name : player2Name;
 
   const handleGoToDraft = () => {
     if (game.draft_id) {
@@ -66,7 +68,10 @@ export const GameItem = ({
             <GameStatusBadge status={game.status} />
           </div>
           <div className="flex items-center gap-2">
-            <GameResult winnerId={game.winner_id} currentPlayerId={player1Id} />
+            <GameResult
+              winnerId={game.winner_id}
+              currentPlayerId={user?.id ?? ""}
+            />
           </div>
         </div>
       </AccordionTrigger>
@@ -74,10 +79,8 @@ export const GameItem = ({
       <AccordionContent className="px-4 pb-4">
         <div className="space-y-4 pt-2 animate-slide-in-down">
           <GameScore
-            player1Name={player1Name}
-            player2Name={player2Name}
-            player1Id={player1Id}
-            winnerId={game.winner_id}
+            winnerName={(game.winner_id && winnerName) ?? ""}
+            winCondition={game.win_condition}
           />
 
           <DraftInfo

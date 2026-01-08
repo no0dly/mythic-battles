@@ -1,21 +1,15 @@
 import { useTranslation } from "react-i18next";
+import type { WinCondition } from "@/types/database.types";
 
 interface GameScoreProps {
-  player1Name: string;
-  player2Name: string;
-  player1Id: string;
-  winnerId: string | null;
+  winnerName: string | null;
+  winCondition: WinCondition | null;
 }
 
-export const GameScore = ({
-  player1Name,
-  player2Name,
-  player1Id,
-  winnerId,
-}: GameScoreProps) => {
+export const GameScore = ({ winnerName, winCondition }: GameScoreProps) => {
   const { t } = useTranslation();
 
-  return winnerId ? (
+  return winnerName ? (
     <div className="rounded-xl border-2 border-gray-200 bg-gradient-to-br from-gray-50 to-gray-100 p-6 shadow-sm">
       <div className="mt-4 text-center">
         <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-800">
@@ -26,7 +20,12 @@ export const GameScore = ({
               clipRule="evenodd"
             />
           </svg>
-          {winnerId === player1Id ? player1Name : player2Name} {t("won")}
+          {winCondition
+            ? t("wonBy", {
+                name: winnerName,
+                winCondition: t(`winConditionOptions.${winCondition}`),
+              })
+            : `${winnerName} ${t("won")}`}
         </span>
       </div>
     </div>
