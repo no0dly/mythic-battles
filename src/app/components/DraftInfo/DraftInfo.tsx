@@ -21,6 +21,7 @@ interface DraftInfoProps {
   } | null;
   player1Name: string;
   player2Name: string;
+  userID?: string;
 }
 
 export const DraftInfo = ({
@@ -39,7 +40,11 @@ export const DraftInfo = ({
     return <EmptyDraftState type="no_picks" draftStatus={draft.draft_status} />;
   }
 
-  const { picks, initial_roll } = draft.draft_history || { picks: [], initial_roll: null };
+  const { picks, initial_roll: initialRoll } = draft.draft_history || {
+    picks: [],
+    initial_roll: null,
+  };
+
   const sortedPicks = sortPicksByNumber(picks);
 
   return (
@@ -59,10 +64,10 @@ export const DraftInfo = ({
         </Badge>
       </div>
 
-      {initial_roll && (
+      {initialRoll && (
         <InitialRollDisplay
-          player1Roll={initial_roll.player1_roll}
-          player2Roll={initial_roll.player2_roll}
+          player1Roll={initialRoll?.player1_roll ?? 0}
+          player2Roll={initialRoll?.player2_roll ?? 0}
           player1Name={player1Name}
           player2Name={player2Name}
         />
@@ -82,7 +87,7 @@ export const DraftInfo = ({
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-          <ClipboardList className="h-4 w-4 text-purple-600" />
+            <ClipboardList className="h-4 w-4 text-purple-600" />
 
             <span className="text-sm font-bold text-gray-800">
               {t("draftHistory")}

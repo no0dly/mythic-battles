@@ -55,3 +55,8 @@ export const DEFAULT_DRAFT_SETTINGS: DraftSettings = {
   gods_amount: 4,
   titans_amount: 2,
 } as const;
+
+export const WIN_CONDITION = {
+  KILLED_GOD: 'killedGod',
+  OBTAINED_GEMS: 'obtainedGems',
+} as const;

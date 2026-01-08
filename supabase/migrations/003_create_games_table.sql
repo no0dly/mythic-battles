@@ -38,6 +38,17 @@ create table public.games (
         ]
       )
     )
+  ),
+  constraint games_win_condition_check check (
+    (
+      win_condition is null
+      or win_condition = any (
+        array[
+          'killedGod'::text,
+          'obtainedGems'::text
+        ]
+      )
+    )
   )
 ) TABLESPACE pg_default;
 

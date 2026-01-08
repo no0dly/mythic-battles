@@ -30,6 +30,7 @@ const translation = {
   draft: "Драфт",
   draftResetRequest: "Запрошен сброс драфта",
   inProgress: "В процессе",
+  wonBy: "{{name}} победил(а), {{winCondition}}",
   finished: "Завершена",
   error: "Ошибка",
   goToDraft: "Перейти к черновику",

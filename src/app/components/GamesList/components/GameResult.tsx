@@ -8,8 +8,8 @@ interface GameResultProps {
 export const GameResult = ({ winnerId, currentPlayerId }: GameResultProps) => {
   const { t } = useTranslation();
 
-  if (!winnerId) {
-    return <span className="text-gray-500">{t("draw")}</span>;
+  if (!winnerId || !currentPlayerId) {
+    return null;
   }
 
   if (winnerId === currentPlayerId) {
@@ -18,4 +18,3 @@ export const GameResult = ({ winnerId, currentPlayerId }: GameResultProps) => {
 
   return <span className="font-medium text-red-600">{t("lost")}</span>;
 };
-

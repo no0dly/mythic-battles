@@ -8,23 +8,17 @@ import Loader from "@/components/Loader";
 import { Accordion } from "@/components/ui/accordion-1";
 import { GameItem } from "./components";
 import { FileText } from "lucide-react";
+import { SessionWithPlayers } from "@/server/api/routers/sessions/types";
 
 interface GamesListProps {
-  sessionId: string;
-  player1Id: string;
-  player1Name: string;
-  player2Name: string;
+  session: SessionWithPlayers;
 }
 
-export const GamesList = ({
-  sessionId,
-  player1Id,
-  player1Name,
-  player2Name,
-}: GamesListProps) => {
+export const GamesList = ({ session }: GamesListProps) => {
   const { t } = useTranslation();
   const supabase = createClient();
   const utils = api.useUtils();
+  const { id: sessionId } = session;
 
   const {
     data: games,
@@ -132,14 +126,7 @@ export const GamesList = ({
         className="space-y-2"
       >
         {games.map((game, index) => (
-          <GameItem
-            key={game.id}
-            game={game}
-            player1Id={player1Id}
-            player1Name={player1Name}
-            player2Name={player2Name}
-            index={index}
-          />
+          <GameItem key={game.id} game={game} session={session} index={index} />
         ))}
       </Accordion>
     </div>

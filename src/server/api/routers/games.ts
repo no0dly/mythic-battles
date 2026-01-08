@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { router, publicProcedure, protectedProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
-import type { Game, Draft, Session } from "@/types/database.types";
+import type { Game, Draft, Session, Statistics, Json } from "@/types/database.types";
 import { zUuid } from "../schemas";
 import type { GameWithDraft, GameWithUserJoin } from "./games/types";
 import { parseDraftHistory } from "@/utils/drafts";
@@ -113,6 +113,29 @@ export const gamesRouter = router({
           ? parseDraftHistory(draft.draft_history)
           : null;
 
+        // Merge initial_roll from draft object into parsed_draft_history if not already present
+        if (
+          draft &&
+          parsedDraftHistory &&
+          !parsedDraftHistory.initial_roll &&
+          draft.initial_roll &&
+          Array.isArray(draft.initial_roll)
+        ) {
+          const initialRoll = draft.initial_roll as Array<{
+            userID: string;
+            roll: number;
+          }>;
+          const player1Roll = initialRoll.find((r) => r.userID === draft.player1_id)?.roll;
+          const player2Roll = initialRoll.find((r) => r.userID === draft.player2_id)?.roll;
+
+          if (player1Roll !== undefined && player2Roll !== undefined) {
+            parsedDraftHistory.initial_roll = {
+              player1_roll: player1Roll,
+              player2_roll: player2Roll,
+            };
+          }
+        }
+
         return {
           ...game,
           draft: draft ? {
@@ -161,6 +184,29 @@ export const gamesRouter = router({
         ? parseDraftHistory(draft.draft_history)
         : null;
 
+      // Merge initial_roll from draft object into parsed_draft_history if not already present
+      if (
+        draft &&
+        parsedDraftHistory &&
+        !parsedDraftHistory.initial_roll &&
+        draft.initial_roll &&
+        Array.isArray(draft.initial_roll)
+      ) {
+        const initialRoll = draft.initial_roll as Array<{
+          userID: string;
+          roll: number;
+        }>;
+        const player1Roll = initialRoll.find((r) => r.userID === draft.player1_id)?.roll;
+        const player2Roll = initialRoll.find((r) => r.userID === draft.player2_id)?.roll;
+
+        if (player1Roll !== undefined && player2Roll !== undefined) {
+          parsedDraftHistory.initial_roll = {
+            player1_roll: player1Roll,
+            player2_roll: player2Roll,
+          };
+        }
+      }
+
       const gameWithDraft: GameWithDraft = {
         ...game,
         draft: draft ? {
@@ -198,10 +244,11 @@ export const gamesRouter = router({
         gameId: zUuid,
         sessionId: zUuid,
         winnerId: zUuid,
+        winCondition: z.string(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const { gameId, sessionId, winnerId } = input;
+      const { gameId, sessionId, winnerId, winCondition } = input;
 
       const { data: updatedGame, error: gameUpdateError } = await ctx.supabase
         .from("games")
@@ -209,6 +256,7 @@ export const gamesRouter = router({
           status: GAME_STATUS.FINISHED,
           winner_id: winnerId ?? null,
           finished_at: new Date().toISOString(),
+          win_condition: winCondition,
         } as never)
         .eq("id", gameId)
         .eq("session_id", sessionId)
@@ -236,6 +284,140 @@ export const gamesRouter = router({
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to update session status",
+        });
+      }
+
+      // Increment session score for the winner
+      const { data: session, error: sessionFetchError } = await ctx.supabase
+        .from("sessions")
+        .select(
+          "player1_id, player2_id, player1_session_score, player2_session_score",
+        )
+        .eq("id", sessionId)
+        .single();
+
+      if (sessionFetchError || !session) {
+        throw new TRPCError({
+          code:
+            sessionFetchError?.code === "PGRST116"
+              ? "NOT_FOUND"
+              : "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch session for score update",
+        });
+      }
+
+      const sessionData = session as Session;
+      const isWinnerPlayer1 = sessionData.player1_id === winnerId;
+      const isWinnerPlayer2 = sessionData.player2_id === winnerId;
+
+      if (!isWinnerPlayer1 && !isWinnerPlayer2) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Winner is not part of this session",
+        });
+      }
+
+      const { error: scoreUpdateError } = await ctx.supabase
+        .from("sessions")
+        .update({
+          player1_session_score:
+            sessionData.player1_session_score + (isWinnerPlayer1 ? 1 : 0),
+          player2_session_score:
+            sessionData.player2_session_score + (isWinnerPlayer2 ? 1 : 0),
+        } as never)
+        .eq("id", sessionId);
+
+      if (scoreUpdateError) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to update session score",
+        });
+      }
+
+      // Update user statistics (winner win, loser loss)
+      const loserId = isWinnerPlayer1 ? sessionData.player2_id : sessionData.player1_id;
+
+      const { data: winnerData, error: winnerFetchError } = await ctx.supabase
+        .from("users")
+        .select("statistics")
+        .eq("id", winnerId)
+        .single();
+
+      if (winnerFetchError || !winnerData) {
+        throw new TRPCError({
+          code:
+            winnerFetchError?.code === "PGRST116"
+              ? "NOT_FOUND"
+              : "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch winner statistics",
+        });
+      }
+
+      // @ts-expect-error - Supabase SSR client typing issue with Database generic
+      const winnerStats = winnerData.statistics as Statistics;
+      const winnerNewWins = winnerStats.wins + 1;
+      const winnerTotalGames = winnerStats.total_games + 1;
+      const winnerWinRate = (winnerNewWins / winnerTotalGames) * 100;
+
+      const updatedWinnerStats: Statistics = {
+        ...winnerStats,
+        wins: winnerNewWins,
+        total_games: winnerTotalGames,
+        win_rate: Number(winnerWinRate.toFixed(2)),
+        longest_win_streak: Math.max(winnerStats.longest_win_streak, winnerNewWins),
+      };
+
+      const { error: winnerUpdateError } = await ctx.supabase
+        .from("users")
+        .update({ statistics: updatedWinnerStats as Json } as never)
+        .eq("id", winnerId);
+
+      if (winnerUpdateError) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to update winner statistics",
+        });
+      }
+
+      const { data: loserData, error: loserFetchError } = await ctx.supabase
+        .from("users")
+        .select("statistics")
+        .eq("id", loserId)
+        .single();
+
+      if (loserFetchError || !loserData) {
+        throw new TRPCError({
+          code:
+            loserFetchError?.code === "PGRST116"
+              ? "NOT_FOUND"
+              : "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch loser statistics",
+        });
+      }
+
+      // @ts-expect-error - Supabase SSR client typing issue with Database generic
+      const loserStats = loserData.statistics as Statistics;
+      const loserNewLosses = loserStats.losses + 1;
+      const loserTotalGames = loserStats.total_games + 1;
+      const loserWinRate = (loserStats.wins / loserTotalGames) * 100;
+
+      const updatedLoserStats: Statistics = {
+        ...loserStats,
+        losses: loserNewLosses,
+        total_games: loserTotalGames,
+        win_rate: Number(loserWinRate.toFixed(2)),
+        longest_loss_streak: Math.max(loserStats.longest_loss_streak, loserNewLosses),
+      };
+
+      const { error: loserUpdateError } = await ctx.supabase
+        .from("users")
+        .update({ statistics: updatedLoserStats as Json } as never)
+        .eq("id", loserId);
+
+      if (loserUpdateError) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to update loser statistics",
         });
       }
 

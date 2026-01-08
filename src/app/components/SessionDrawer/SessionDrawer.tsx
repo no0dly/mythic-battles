@@ -45,12 +45,7 @@ export default function SessionDrawer({ session, clearSession }: Props) {
           </DrawerDescription>
         </DrawerHeader>
         <div className="flex-1 overflow-y-auto px-6">
-          <GamesList
-            sessionId={session.id}
-            player1Id={session.player1_id}
-            player1Name={session.player1_name}
-            player2Name={session.player2_name}
-          />
+          <GamesList session={session} />
         </div>
         <DrawerFooter>
           <SessionDrawerButtons session={session} clearSession={clearSession} />

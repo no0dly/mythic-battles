@@ -8,6 +8,7 @@ import {
   beforeAll,
 } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
+import React from "react";
 import type { SessionWithPlayers } from "@/server/api/routers/sessions/types";
 
 vi.mock("react-i18next", () => ({
@@ -22,7 +23,14 @@ vi.mock("react-i18next", () => ({
 }));
 
 vi.mock("@/components/ui/drawer", () => ({
-  Drawer: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  Drawer: ({
+    children,
+    open,
+  }: {
+    children: React.ReactNode;
+    open?: boolean;
+    onOpenChange?: (open: boolean) => void;
+  }) => (open ? <div>{children}</div> : null),
   DrawerContent: ({ children }: { children: React.ReactNode }) => (
     <div>{children}</div>
   ),
@@ -41,7 +49,9 @@ vi.mock("@/components/ui/drawer", () => ({
 }));
 
 vi.mock("@/components/ui/accordion-1", () => ({
-  Accordion: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  Accordion: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
   AccordionContent: ({ children }: { children: React.ReactNode }) => (
     <div>{children}</div>
   ),
@@ -53,23 +63,12 @@ vi.mock("@/components/ui/accordion-1", () => ({
   ),
 }));
 
-const mockGamesList = vi.hoisted(
-  () =>
-    vi.fn(
-      ({
-        sessionId,
-        player1Name,
-        player2Name,
-      }: {
-        sessionId: string;
-        player1Name: string;
-        player2Name: string;
-      }) => (
-        <div data-testid="games-list">
-          {sessionId}-{player1Name}-{player2Name}
-        </div>
-      ),
-    ),
+const mockGamesList = vi.hoisted(() =>
+  vi.fn(({ session }: { session: SessionWithPlayers }) => (
+    <div data-testid="games-list">
+      {session.id}-{session.player1_name}-{session.player2_name}
+    </div>
+  ))
 );
 
 vi.mock("../GamesList", () => ({
@@ -139,19 +138,16 @@ describe("SessionDrawer", () => {
     expect(screen.getByTestId("session-modal-buttons")).toBeTruthy();
     expect(mockGamesList).toHaveBeenCalledWith(
       expect.objectContaining({
-        sessionId: "session-1",
-        player1Name: "Zeus",
-        player2Name: "Hades",
-      }),
+        session: baseSession,
+      })
     );
   });
 
   it("returns null when session is null", () => {
     const { container } = render(
-      <SessionDrawer session={null} clearSession={vi.fn()} />,
+      <SessionDrawer session={null} clearSession={vi.fn()} />
     );
 
     expect(container.firstChild).toBeNull();
   });
 });
-

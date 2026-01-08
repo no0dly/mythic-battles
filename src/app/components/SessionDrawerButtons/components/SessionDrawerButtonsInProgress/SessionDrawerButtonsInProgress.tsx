@@ -85,6 +85,7 @@ export default function SessionDrawerButtonsInProgress({
       gameId: currentGame,
       sessionId: session.id,
       winnerId: values.playerId,
+      winCondition: values.winCondition,
     });
     utils.sessions.invalidate();
 
