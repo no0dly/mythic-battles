@@ -431,9 +431,9 @@ export const gamesRouter = router({
         sessionId: zUuid,
         user_allowed_points: z.number().min(1).default(18),
         draft_size: z.number().min(1).default(40),
-        gods_amount: z.number().min(1).default(4),
-        titans_amount: z.number().min(1).default(2),
-        troop_attachment_amount: z.number().min(1).default(4),
+        gods_amount: z.number().min(2).default(4),
+        titans_amount: z.number().min(0).default(2),
+        troop_attachment_amount: z.number().min(0).default(4),
       })
     )
     .mutation(async ({ ctx, input }) => {
