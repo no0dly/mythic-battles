@@ -144,9 +144,9 @@ export const sessionsRouter = router({
         opponentId: zUuid,
         user_allowed_points: z.number().min(1).default(DEFAULT_DRAFT_SETTINGS.user_allowed_points),
         draft_size: z.number().min(1).default(DEFAULT_DRAFT_SETTINGS.draft_size),
-        gods_amount: z.number().min(1).default(DEFAULT_DRAFT_SETTINGS.gods_amount),
-        titans_amount: z.number().min(1).default(DEFAULT_DRAFT_SETTINGS.titans_amount),
-        troop_attachment_amount: z.number().min(1).default(DEFAULT_DRAFT_SETTINGS.troop_attachment_amount),
+        gods_amount: z.number().min(2).default(DEFAULT_DRAFT_SETTINGS.gods_amount),
+        titans_amount: z.number().min(0).default(DEFAULT_DRAFT_SETTINGS.titans_amount),
+        troop_attachment_amount: z.number().min(0).default(DEFAULT_DRAFT_SETTINGS.troop_attachment_amount),
       })
     )
     .mutation(async ({ ctx, input }) => {
