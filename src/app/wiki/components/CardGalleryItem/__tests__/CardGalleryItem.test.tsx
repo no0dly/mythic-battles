@@ -86,4 +86,29 @@ describe("CardGalleryItem Component", () => {
     expect(container.querySelector('[data-testid="card-item"]')).toBeTruthy();
     expect(container.textContent).toContain("Zeus");
   });
+
+  it("renders troop_attachment card type correctly", () => {
+    const troopAttachmentCard: Card = {
+      id: "550e8400-e29b-41d4-a716-446655440002",
+      unit_name: "Spartan Shield",
+      unit_type: CARD_TYPES.TROOP_ATTACHMENT,
+      cost: 2,
+      amount_of_card_activations: 1,
+      strategic_value: 5,
+      talents: [],
+      class: "",
+      image_url: "/shield.svg",
+      created_at: "2024-01-01T00:00:00Z",
+      updated_at: "2024-01-01T00:00:00Z",
+    };
+
+    const { container } = render(<CardGalleryItem item={troopAttachmentCard} />);
+
+    expect(container.textContent).toContain("Spartan Shield");
+    expect(container.textContent).toContain("2"); // Cost
+    expect(container.textContent).toContain(CARD_TYPES.TROOP_ATTACHMENT); // Unit type badge
+    const image = container.querySelector('img[alt="Spartan Shield"]');
+    expect(image).toBeTruthy();
+    expect(image?.getAttribute("src")).toContain("/shield.svg");
+  });
 });

@@ -117,4 +117,41 @@ describe("CardGalleryModal Component", () => {
     const image = screen.getByAltText("Ares");
     expect(image.getAttribute("src")).toContain("/logo.svg");
   });
+
+  it("renders modal with troop_attachment card type", () => {
+    const mockCloseHandler = vi.fn();
+    const troopAttachmentCard: Card = {
+      id: "550e8400-e29b-41d4-a716-446655440003",
+      unit_name: "Spartan Shield",
+      unit_type: CARD_TYPES.TROOP_ATTACHMENT,
+      cost: 2,
+      amount_of_card_activations: 1,
+      strategic_value: 5,
+      talents: [],
+      class: "",
+      image_url: "/shield.svg",
+      created_at: "2024-01-01T00:00:00Z",
+      updated_at: "2024-01-01T00:00:00Z",
+    };
+
+    render(
+      <CardGalleryModal
+        isShown
+        card={troopAttachmentCard}
+        onCloseModal={mockCloseHandler}
+      />
+    );
+
+    const modal = screen.getByTestId("card-modal");
+    expect(modal).toBeTruthy();
+
+    const title = screen.getByRole("heading", { name: "Spartan Shield" });
+    expect(title).toBeTruthy();
+
+    const typeRow = screen.getByText(/type:/i).parentElement;
+    expect(typeRow?.textContent).toMatch(/troop_attachment/i);
+
+    const costRow = screen.getByText(/cost:/i).parentElement;
+    expect(costRow?.textContent).toMatch(/2/i);
+  });
 });

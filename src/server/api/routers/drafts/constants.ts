@@ -26,5 +26,6 @@ export const DEFAULT_DRAFT_CONFIG: DraftPoolConfig = {
   draft_size: DEFAULT_DRAFT_SETTINGS.draft_size,
   gods_amount: DEFAULT_DRAFT_SETTINGS.gods_amount,
   titans_amount: DEFAULT_DRAFT_SETTINGS.titans_amount,
+  troop_attachment_amount: DEFAULT_DRAFT_SETTINGS.troop_attachment_amount,
 };
 

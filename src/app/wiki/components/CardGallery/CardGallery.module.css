@@ -1,0 +1,9 @@
+.scrollContainer {
+  contain: strict;
+}
+
+@media (max-width: 639px) {
+  .scrollContainer {
+    contain: none;
+  }
+}

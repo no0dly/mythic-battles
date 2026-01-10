@@ -62,6 +62,36 @@ test.describe('Draft Pages', () => {
       await expect(page.getByLabel(/draft count/i)).toBeVisible({ timeout: 5000 });
     });
 
+    test('draft-settings page displays gods amount field', async ({ page }) => {
+      await checkLoggedIn(page);
+
+      await page.goto('/draft-settings?lng=en');
+      await page.waitForLoadState('networkidle');
+
+      // Should show gods amount field
+      await expect(page.getByLabel(/gods amount/i)).toBeVisible({ timeout: 5000 });
+    });
+
+    test('draft-settings page displays titans amount field', async ({ page }) => {
+      await checkLoggedIn(page);
+
+      await page.goto('/draft-settings?lng=en');
+      await page.waitForLoadState('networkidle');
+
+      // Should show titans amount field
+      await expect(page.getByLabel(/titans amount/i)).toBeVisible({ timeout: 5000 });
+    });
+
+    test('draft-settings page displays troop attachment amount field', async ({ page }) => {
+      await checkLoggedIn(page);
+
+      await page.goto('/draft-settings?lng=en');
+      await page.waitForLoadState('networkidle');
+
+      // Should show troop attachment amount field
+      await expect(page.getByLabel(/troop attachments amount/i)).toBeVisible({ timeout: 5000 });
+    });
+
     test('draft-settings page displays generate draft button', async ({ page }) => {
       await checkLoggedIn(page);
 

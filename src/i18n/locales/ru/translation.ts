@@ -135,6 +135,7 @@ const translation = {
   draftCount: "Количество карт в драфте",
   godsAmount: "Количество богов",
   titansAmount: "Количество титанов",
+  troopAttachmentAmount: "Количество подкреплений войск",
   generateDraft: "Создать драфт",
   cardType: {
     hero: "Герой",
@@ -144,6 +145,7 @@ const translation = {
     troop: "Мясо",
     jarl: "Ярл",
     art_of_war: "Искусство войны",
+    troop_attachment: "Подкрепление войск",
   },
   showingCards: "Показано {{count}} из {{total}} карт",
   noCardsFoundMatchingYourFilters: "Карты, соответствующие вашим фильтрам, не найдены",

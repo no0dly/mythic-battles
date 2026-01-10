@@ -433,11 +433,12 @@ export const gamesRouter = router({
         draft_size: z.number().min(1).default(40),
         gods_amount: z.number().min(1).default(4),
         titans_amount: z.number().min(1).default(2),
+        troop_attachment_amount: z.number().min(1).default(4),
       })
     )
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
-      const { sessionId, user_allowed_points, draft_size, gods_amount, titans_amount } = input;
+      const { sessionId, user_allowed_points, draft_size, gods_amount, titans_amount, troop_attachment_amount } = input;
 
       // Track created records for cleanup on error
       let createdGame: Game | null = null;
@@ -505,6 +506,7 @@ export const gamesRouter = router({
               draft_size,
               gods_amount,
               titans_amount,
+              troop_attachment_amount,
             },
           } as never)
           .select()
@@ -529,6 +531,7 @@ export const gamesRouter = router({
           draft_size,
           gods_amount,
           titans_amount,
+          troop_attachment_amount,
           player1_id: sessionData.player1_id,
           player2_id: sessionData.player2_id,
         });

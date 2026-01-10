@@ -14,6 +14,7 @@ export type CardsByType = {
   monsters: Card[];
   heroes: Card[];
   troops: Card[];
+  troop_attachments: Card[];
 };
 
 /**

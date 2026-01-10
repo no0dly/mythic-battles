@@ -28,5 +28,6 @@ export const getDraftSettingsSchema = (t: (key: string) => string) =>
     draft_size: z.number().min(1, t("requiredField")),
     gods_amount: z.number().min(1, t("requiredField")),
     titans_amount: z.number().min(1, t("requiredField")),
+    troop_attachment_amount: z.number().min(1, t("requiredField")),
   });
 

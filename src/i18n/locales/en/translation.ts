@@ -137,6 +137,7 @@ const translation = {
   draftCount: "Draft count",
   godsAmount: "Gods Amount",
   titansAmount: "Titans Amount",
+  troopAttachmentAmount: "Troop Attachments Amount",
   generateDraft: "Generate Draft",
   cardType: {
     hero: "Hero",
@@ -146,6 +147,7 @@ const translation = {
     troop: "Troop",
     jarl: "Jarl",
     art_of_war: "Art of War",
+    troop_attachment: "Troop Attachment",
   },
   showingCards: "Showing {{count}} of {{total}} cards",
   noCardsFoundMatchingYourFilters: "No cards found matching your filters",

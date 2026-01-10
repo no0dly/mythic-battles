@@ -97,6 +97,7 @@ export type DraftSettings = {
   draft_size: number
   gods_amount: number
   titans_amount: number
+  troop_attachment_amount: number
 }
 
 export type WinCondition = ValueOf<typeof WIN_CONDITION>;

@@ -12,6 +12,7 @@ const TYPE_TO_KEY_MAP: Record<string, keyof CardsByType> = {
   [CARD_TYPES.MONSTER]: "monsters",
   [CARD_TYPES.HERO]: "heroes",
   [CARD_TYPES.TROOP]: "troops",
+  [CARD_TYPES.TROOP_ATTACHMENT]: "troop_attachments",
 } as const;
 
 /**
@@ -25,6 +26,7 @@ export function organizeCardsByType(cards: Card[]): CardsByType {
     monsters: [],
     heroes: [],
     troops: [],
+    troop_attachments: [],
   };
 
   // Single pass through all cards with O(1) lookup

@@ -86,6 +86,19 @@ function selectGods(
   return { selectedGodIds: selectedIds };
 }
 
+/**
+ * Select troop attachments for the draft pool
+ */
+function selectTroopAttachments(
+  availableTroopAttachments: Card[],
+  troopAttachmentAmount: number
+): {
+  selectedTroopAttachmentIds: string[];
+} {
+  const { selectedIds } = selectFixedAmountCards(availableTroopAttachments, troopAttachmentAmount);
+  return { selectedTroopAttachmentIds: selectedIds };
+}
+
 type SelectionState = {
   selectedIds: string[];
   size: number;
@@ -238,8 +251,11 @@ export function generateDraftPool(
   cards: Card[],
   config: DraftPoolConfig
 ): DraftPoolResult {
+  // Filter out 0 cost cards
+  const filteredCards = cards.filter((card) => card.cost > 0);
+
   // Organize cards by type
-  const cardsByType = organizeCardsByType(cards);
+  const cardsByType = organizeCardsByType(filteredCards);
 
   // Select titans (and handle special cases)
   const { selectedTitanIds, remainingMonsters } = selectTitans(
@@ -251,10 +267,16 @@ export function generateDraftPool(
   // Select gods
   const { selectedGodIds } = selectGods(cardsByType.gods, config.gods_amount);
 
+  // Select troop attachments
+  const { selectedTroopAttachmentIds } = selectTroopAttachments(
+    cardsByType.troop_attachments,
+    config.troop_attachment_amount
+  );
+
   // Fill remaining draft size with monsters, heroes, and troops
-  // Note: Titans and gods are "free" - they don't count toward the draft_size cost limit.
+  // Note: Titans, gods, and troop attachments are "free" - they don't count toward the draft_size cost limit.
   // The draft_size is the cost budget ONLY for monsters, heroes, and troops.
-  // This matches the game rules where titans and gods are special units that don't consume the draft budget.
+  // This matches the game rules where titans, gods, and troop attachments are special units that don't consume the draft budget.
   const { selectedIds: remainingIds, finalSize } = fillRemainingDraftSize(
     remainingMonsters,
     cardsByType.heroes,
@@ -267,6 +289,7 @@ export function generateDraftPool(
   const allSelectedIds = [
     ...selectedTitanIds,
     ...selectedGodIds,
+    ...selectedTroopAttachmentIds,
     ...remainingIds,
   ];
 

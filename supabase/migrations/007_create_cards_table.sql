@@ -35,7 +35,8 @@ create table public.cards (
           'titan'::text,
           'troop'::text,
           'jarl'::text,
-          'art_of_war'::text
+          'art_of_war'::text,
+          'troop_attachment'::text
         ]
       )
     )
