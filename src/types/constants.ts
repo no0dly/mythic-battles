@@ -8,6 +8,7 @@ export const CARD_TYPES = {
   TROOP: 'troop',
   JARL: 'jarl',
   ART_OF_WAR: 'art_of_war',
+  TROOP_ATTACHMENT: 'troop_attachment',
 } as const;
 
 export const SESSION_STATUS = {
@@ -54,6 +55,7 @@ export const DEFAULT_DRAFT_SETTINGS: DraftSettings = {
   draft_size: 40,
   gods_amount: 4,
   titans_amount: 2,
+  troop_attachment_amount: 4,
 } as const;
 
 export const WIN_CONDITION = {

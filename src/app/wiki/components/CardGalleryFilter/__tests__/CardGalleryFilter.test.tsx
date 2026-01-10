@@ -176,6 +176,13 @@ describe("CardGalleryFilter", () => {
     expect(clearButtons.length).toBeGreaterThan(0);
   });
 
+  it("renders clear button when troop_attachment type filter is active", () => {
+    mockStoreState.selectedType = CARD_TYPES.TROOP_ATTACHMENT;
+    renderFilter();
+    const clearButtons = screen.getAllByText("clearFilters");
+    expect(clearButtons.length).toBeGreaterThan(0);
+  });
+
   it("renders clear button when cost filter is active", () => {
     mockStoreState.selectedCost = "5";
     renderFilter();

@@ -142,7 +142,7 @@ test.describe('Wiki Page', () => {
     expect(firstCardText?.length).toBeGreaterThan(0);
 
     // Check for card type badges (unit_type) - should be visible in cards
-    const badges = page.locator('[data-testid="card-item"]').locator('text=/god|hero|monster|titan/i');
+    const badges = page.locator('[data-testid="card-item"]').locator('text=/god|hero|monster|titan|troop|jarl|art of war|troop attachment/i');
     const badgeCount = await badges.count();
     expect(badgeCount).toBeGreaterThan(0);
   });

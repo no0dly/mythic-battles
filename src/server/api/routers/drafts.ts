@@ -33,6 +33,11 @@ export const draftsRouter = router({
           .int()
           .nonnegative()
           .default(DEFAULT_DRAFT_SETTINGS.titans_amount),
+        troop_attachment_amount: z
+          .number()
+          .int()
+          .nonnegative()
+          .default(DEFAULT_DRAFT_SETTINGS.troop_attachment_amount),
         player1_id: zUuid.optional(),
       })
     )
@@ -61,6 +66,7 @@ export const draftsRouter = router({
         draft_size: input.draft_size,
         gods_amount: input.gods_amount,
         titans_amount: input.titans_amount,
+        troop_attachment_amount: input.troop_attachment_amount,
       };
 
       // Generate draft pool
@@ -155,7 +161,6 @@ export const draftsRouter = router({
         .single();
 
       if (draftError || !draft) {
-        console.log("draftError:", draftError);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to create draft record",
@@ -204,6 +209,11 @@ export const draftsRouter = router({
           .int()
           .nonnegative()
           .default(DEFAULT_DRAFT_SETTINGS.titans_amount),
+        troop_attachment_amount: z
+          .number()
+          .int()
+          .nonnegative()
+          .default(DEFAULT_DRAFT_SETTINGS.troop_attachment_amount),
         player1_id: zUuid.optional(),
         player2_id: zUuid.optional(),
       })
@@ -218,6 +228,7 @@ export const draftsRouter = router({
         draft_size: input.draft_size,
         gods_amount: input.gods_amount,
         titans_amount: input.titans_amount,
+        troop_attachment_amount: input.troop_attachment_amount,
       });
 
       // Step 2: Create draft record with the generated pool

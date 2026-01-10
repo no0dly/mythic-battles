@@ -44,20 +44,14 @@ const badgeVariants = cva(
           "bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/30",
         rankLegend:
           "bg-gradient-to-r from-yellow-500/30 to-orange-500/30 text-orange-800 dark:text-orange-200 border-orange-500/40 font-bold",
-        hero:
-          "bg-slate-600 text-white border-transparent",
-        monster:
-          "bg-emerald-600 text-white border-transparent",
-        god:
-          "bg-amber-500 text-white border-transparent",
-        titan:
-          "bg-cyan-500 text-white border-transparent",
-        troop:
-          "bg-orange-600 text-white border-transparent",
-        jarl:
-          "bg-purple-600 text-white border-transparent",
-        art_of_war:
-          "bg-red-600 text-white border-transparent",
+        hero: "bg-slate-600 text-white border-transparent",
+        monster: "bg-emerald-600 text-white border-transparent",
+        god: "bg-amber-500 text-white border-transparent",
+        titan: "bg-cyan-500 text-white border-transparent",
+        troop: "bg-orange-600 text-white border-transparent",
+        jarl: "bg-purple-600 text-white border-transparent",
+        art_of_war: "bg-red-600 text-white border-transparent",
+        troop_attachment: "bg-indigo-600 text-white border-transparent",
       },
     },
     defaultVariants: {

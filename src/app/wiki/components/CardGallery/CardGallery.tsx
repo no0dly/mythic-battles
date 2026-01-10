@@ -16,6 +16,7 @@ import { useTranslation } from "react-i18next";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import useResponsiveColumns from "./hooks/useResponsiveColumns";
 import { chunk } from "./utils";
+import styles from "./CardGallery.module.css";
 
 const ROW_HEIGHT_ESTIMATE = 350;
 const OVERSCAN = 5;
@@ -93,8 +94,7 @@ export default function CardGallery() {
 
       <div
         ref={parentRef}
-        className="flex-1 overflow-y-auto"
-        style={{ contain: "strict" }}
+        className={`flex-1 overflow-y-auto ${styles.scrollContainer}`}
       >
         {filteredData?.length === 0 && !isLoading ? (
           <div className="flex items-center justify-center h-full">
@@ -132,7 +132,7 @@ export default function CardGallery() {
                     transform: `translateY(${virtualRow.start}px)`,
                   }}
                 >
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     {row.map((item) => (
                       <CardGalleryItem key={item.id} item={item} />
                     ))}

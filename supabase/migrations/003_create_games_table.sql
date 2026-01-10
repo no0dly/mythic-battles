@@ -17,7 +17,9 @@ create table public.games (
     'gods_amount',
     4,
     'titans_amount',
-    2
+    2,
+    'troop_attachment_amount',
+    4
   ),
   constraint games_pkey primary key (id),
   constraint games_session_id_game_number_key unique (session_id, game_number),

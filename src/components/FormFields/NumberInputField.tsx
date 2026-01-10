@@ -14,7 +14,7 @@ import type { DraftSettingsFormValues } from "@/app/draft-settings/components/Dr
 
 interface NumberInputFieldProps {
   control: Control<DraftSettingsFormValues>;
-  name: "gods_amount" | "titans_amount";
+  name: "gods_amount" | "titans_amount" | "troop_attachment_amount";
   labelKey: string;
 }
 

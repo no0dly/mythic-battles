@@ -58,6 +58,19 @@ const mockCards: Card[] = [
     created_at: "2024-01-01T00:00:00Z",
     updated_at: "2024-01-01T00:00:00Z",
   },
+  {
+    id: "5",
+    unit_name: "Spartan Shield",
+    unit_type: CARD_TYPES.TROOP_ATTACHMENT,
+    cost: 2,
+    amount_of_card_activations: 1,
+    strategic_value: 5,
+    talents: [],
+    class: "",
+    image_url: "/shield.jpg",
+    created_at: "2024-01-01T00:00:00Z",
+    updated_at: "2024-01-01T00:00:00Z",
+  },
 ];
 
 describe("getFilteredData", () => {
@@ -68,7 +81,7 @@ describe("getFilteredData", () => {
       DEFAULT_FILTER,
       DEFAULT_FILTER
     );
-    expect(result).toHaveLength(4);
+    expect(result).toHaveLength(5);
     expect(result).toEqual(mockCards);
   });
 
@@ -155,6 +168,18 @@ describe("getFilteredData", () => {
     expect(result).toHaveLength(0);
   });
 
+  it("should filter by troop_attachment type", () => {
+    const result = getFilteredData(
+      mockCards,
+      "",
+      CARD_TYPES.TROOP_ATTACHMENT,
+      DEFAULT_FILTER
+    );
+    expect(result).toHaveLength(1);
+    expect(result[0]?.unit_type).toBe(CARD_TYPES.TROOP_ATTACHMENT);
+    expect(result[0]?.unit_name).toBe("Spartan Shield");
+  });
+
   it("should return empty array when cost filter doesn't match", () => {
     const result = getFilteredData(mockCards, "", DEFAULT_FILTER, "10");
     expect(result).toHaveLength(0);
@@ -193,21 +218,21 @@ describe("getFilteredData", () => {
       DEFAULT_FILTER,
       DEFAULT_FILTER
     );
-    expect(result).toHaveLength(4);
+    expect(result).toHaveLength(5);
   });
 });
 
 describe("getUniqueCosts", () => {
   it("should return unique costs sorted in ascending order", () => {
     const result = getUniqueCosts(mockCards);
-    expect(result).toEqual([3, 4, 5]);
+    expect(result).toEqual([2, 3, 4, 5]);
   });
 
   it("should handle cards with duplicate costs", () => {
     const cardsWithDuplicates: Card[] = [
       ...mockCards,
       {
-        id: "5",
+        id: "6",
         unit_name: "Another Five Cost",
         unit_type: CARD_TYPES.GOD,
         cost: 5,
@@ -221,8 +246,8 @@ describe("getUniqueCosts", () => {
       },
     ];
     const result = getUniqueCosts(cardsWithDuplicates);
-    expect(result).toEqual([3, 4, 5]);
-    expect(result.length).toBe(3);
+    expect(result).toEqual([2, 3, 4, 5]);
+    expect(result.length).toBe(4);
   });
 
   it("should handle empty array", () => {

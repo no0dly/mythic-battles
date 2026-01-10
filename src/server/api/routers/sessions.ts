@@ -146,11 +146,12 @@ export const sessionsRouter = router({
         draft_size: z.number().min(1).default(DEFAULT_DRAFT_SETTINGS.draft_size),
         gods_amount: z.number().min(1).default(DEFAULT_DRAFT_SETTINGS.gods_amount),
         titans_amount: z.number().min(1).default(DEFAULT_DRAFT_SETTINGS.titans_amount),
+        troop_attachment_amount: z.number().min(1).default(DEFAULT_DRAFT_SETTINGS.troop_attachment_amount),
       })
     )
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
-      const { opponentId, user_allowed_points, draft_size, gods_amount, titans_amount } = input;
+      const { opponentId, user_allowed_points, draft_size, gods_amount, titans_amount, troop_attachment_amount } = input;
 
       // Track created records for rollback
       let createdSession: Session | null = null;
@@ -213,6 +214,7 @@ export const sessionsRouter = router({
               draft_size,
               gods_amount,
               titans_amount,
+              troop_attachment_amount,
             },
           } as never)
           .select()
@@ -238,6 +240,7 @@ export const sessionsRouter = router({
           draft_size,
           gods_amount,
           titans_amount,
+          troop_attachment_amount,
           player1_id: userId,
           player2_id: opponentId,
         });
