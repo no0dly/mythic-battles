@@ -8,6 +8,7 @@ import {
 } from "./helpers";
 import { MAX_DRAFT_ITERATIONS, SPECIAL_CASE_UNITS } from "./constants";
 import { DraftPoolConfig } from "@/types/draft-settings.types";
+import { CARD_TYPES } from "@/types/constants";
 
 type CardSelectionResult = {
   selectedIds: string[];
@@ -251,8 +252,10 @@ export function generateDraftPool(
   cards: Card[],
   config: DraftPoolConfig
 ): DraftPoolResult {
-  // Filter out 0 cost cards
-  const filteredCards = cards.filter((card) => card.cost > 0);
+  // Filter out 0 cost cards and art_of_war cards (they are handled separately)
+  const filteredCards = cards.filter(
+    (card) => card.cost > 0 && card.unit_type !== CARD_TYPES.ART_OF_WAR
+  );
 
   // Organize cards by type
   const cardsByType = organizeCardsByType(filteredCards);

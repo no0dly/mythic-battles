@@ -150,6 +150,7 @@ const translation = {
   showingCards: "Показано {{count}} из {{total}} карт",
   noCardsFoundMatchingYourFilters: "Карты, соответствующие вашим фильтрам, не найдены",
   errorLoadingCards: "Ошибка загрузки карт",
+  artOfWarCards: "Карты искусства войны",
   // Draft page
   draftNotFound: "Драфт не найден",
   draftDetails: "Детали драфта",
@@ -182,7 +183,6 @@ const translation = {
   // Draft history modal
   draftHistoryDetails: "Детальная история драфта",
   draftHistoryDescription: "Просмотр выборов, карт и финальных колод обоих игроков",
-  pickHistory: "История выборов",
   viewDetailedHistory: "Просмотреть детальную историю",
   totalCost: "Общая стоимость",
   cardsSelected: "карт выбрано",

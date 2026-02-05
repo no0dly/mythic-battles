@@ -108,7 +108,7 @@ export const DraftHistoryModal = ({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-2xl! max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl! max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <ClipboardList className="h-4.5 w-4.5 text-purple-600" />
@@ -126,7 +126,7 @@ export const DraftHistoryModal = ({
           ) : (
             <Tabs defaultValue="history" className="w-full">
               <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="history">{t("pickHistory")}</TabsTrigger>
+                <TabsTrigger value="history">{t("draftHistory")}</TabsTrigger>
                 <TabsTrigger value="player1">
                   {player1
                     ? formatDisplayName(player1.display_name, player1.email)

@@ -133,7 +133,7 @@ export const canPickCard = (
   // less points than the cheapest available God card, prevent the pick
   if (stats.godCards.length === 0 && card.unit_type !== CARD_TYPES.GOD) {
     const minGodCardCost = getMinGodCardCost(availableCards);
-    
+
     if (minGodCardCost !== null) {
       const pointsAfterPick = stats.remainingPoints - card.cost;
       if (pointsAfterPick < minGodCardCost) {
@@ -145,7 +145,7 @@ export const canPickCard = (
     }
   }
 
-  // Check 5: Hero, Troop, Titan - no limits
+  // Check 5: Hero, Troop, Titan, Art of War - no limits
   // Monster < 5 - no limits
 
   return { canPick: true };

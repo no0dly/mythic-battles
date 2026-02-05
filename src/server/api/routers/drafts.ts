@@ -8,6 +8,7 @@ import {
   DEFAULT_DRAFT_SETTINGS,
   GAME_STATUS,
   SESSION_STATUS,
+  CARD_TYPES,
 } from "@/types/constants";
 import { generateDraftPool } from "./drafts/index";
 import type { AppRouter } from "../root";
@@ -232,13 +233,27 @@ export const draftsRouter = router({
       });
 
       // Step 2: Create draft record with the generated pool
+      // Include art_of_war cards in the draft pool (they can be picked multiple times)
       const userId = ctx.session.user.id;
       const player1Id = input.player1_id || userId;
       const player2Id = input.player2_id || player1Id;
 
+      // Fetch all art_of_war cards to include in draft pool
+      const { data: artOfWarCards } = await ctx.supabase
+        .from("cards")
+        .select("id")
+        .eq("unit_type", CARD_TYPES.ART_OF_WAR);
+
+      const artOfWarCardIds = ((artOfWarCards || []) as Array<{ id: string }>).map((card) => card.id);
+
+      const allCardIds = [
+        ...poolResult.cardIds,
+        ...artOfWarCardIds,
+      ];
+
       const draft: Draft = await caller.drafts.createDraft({
         game_id: input.game_id,
-        draft_pool: poolResult.cardIds,
+        draft_pool: allCardIds,
         player1_id: player1Id,
         player2_id: player2Id,
       });
@@ -470,10 +485,10 @@ export const draftsRouter = router({
         });
       }
 
-      // Get card to check cost
+      // Get card to check cost and type
       const { data: card, error: cardError } = await ctx.supabase
         .from("cards")
-        .select("cost")
+        .select("cost, unit_type")
         .eq("id", input.card_id)
         .single();
 
@@ -484,7 +499,7 @@ export const draftsRouter = router({
         });
       }
 
-      const cardData = card as { cost: number };
+      const cardData = card as { cost: number; unit_type: string };
 
       // Get game to retrieve draft_settings with user_allowed_points
       const { data: game, error: gameError } = await ctx.supabase
@@ -547,13 +562,15 @@ export const draftsRouter = router({
         });
       }
 
-      // Check if card was already picked
-      const alreadyPicked = picks.some((pick) => pick.card_id === input.card_id);
-      if (alreadyPicked) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Card has already been picked",
-        });
+      // Check if card was already picked (art_of_war cards can be picked multiple times)
+      if (cardData.unit_type !== CARD_TYPES.ART_OF_WAR) {
+        const alreadyPicked = picks.some((pick) => pick.card_id === input.card_id);
+        if (alreadyPicked) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Card has already been picked",
+          });
+        }
       }
 
       // Get next pick number

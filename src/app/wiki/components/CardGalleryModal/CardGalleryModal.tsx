@@ -54,7 +54,7 @@ export default function CardGalleryModal({
           <span className="space-y-2">
             <span className="flex gap-1">
               <strong>{t("type")}:</strong>
-              <Badge variant={unitType}>{unitType}</Badge>
+              <Badge variant={unitType}>{t(`cardType.${unitType}`)}</Badge>
             </span>
             <span className="block">
               <strong>{t("class")}:</strong> {cardClass}

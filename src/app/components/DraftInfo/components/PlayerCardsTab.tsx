@@ -5,7 +5,10 @@ import { formatDisplayName } from "@/utils/users";
 import type { Card, UserProfile } from "@/types/database.types";
 import { PlayerAvatar } from "./PlayerAvatar";
 
-type UserData = Pick<UserProfile, "id" | "email" | "display_name" | "avatar_url">;
+type UserData = Pick<
+  UserProfile,
+  "id" | "email" | "display_name" | "avatar_url"
+>;
 
 interface PlayerCardsTabProps {
   user: UserData | undefined;
@@ -25,6 +28,10 @@ export const PlayerCardsTab = ({
   onCardClick,
 }: PlayerCardsTabProps) => {
   const { t } = useTranslation();
+  const totalStrategicValue = playerCards.reduce(
+    (sum, card) => sum + (card.strategic_value ?? 0),
+    0
+  );
 
   const displayName = user
     ? formatDisplayName(user.display_name, user.email)
@@ -37,7 +44,9 @@ export const PlayerCardsTab = ({
 
   return (
     <div className="space-y-4">
-      <div className={`flex items-center gap-3 rounded-lg border-2 ${colorClasses[borderColor]} p-4`}>
+      <div
+        className={`flex items-center gap-3 rounded-lg border-2 ${colorClasses[borderColor]} p-4`}
+      >
         {user && <PlayerAvatar {...user} />}
         <div>
           <div className={`font-semibold ${colorClasses[borderColor]}`}>
@@ -51,10 +60,18 @@ export const PlayerCardsTab = ({
 
       <div className="space-y-4">
         <div className="flex items-center justify-between rounded-lg bg-gradient-to-r from-purple-100 to-blue-100 px-4 py-3">
-          <span className="text-sm font-semibold text-gray-700">
-            {t("totalCost")}:
-          </span>
-          <span className="text-lg font-bold text-purple-700">{totalCost}</span>
+          <div className="flex flex-col gap-1 text-sm font-semibold text-gray-700">
+            <span>{t("totalCost")}:</span>
+            <span>{t("strategicValue")}:</span>
+          </div>
+          <div className="flex flex-col items-end gap-1">
+            <span className="text-lg font-bold text-purple-700">
+              {totalCost}
+            </span>
+            <span className="text-sm font-semibold text-purple-700">
+              {totalStrategicValue}
+            </span>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
@@ -79,7 +96,7 @@ export const PlayerCardsTab = ({
                 </h4>
                 <div className="flex items-center justify-between">
                   <Badge variant={card.unit_type} className="text-xs">
-                    {card.unit_type}
+                    {t(`cardType.${card.unit_type}`)}
                   </Badge>
                   <span className="text-sm font-bold text-purple-600">
                     {card.cost}
@@ -93,4 +110,3 @@ export const PlayerCardsTab = ({
     </div>
   );
 };
-
