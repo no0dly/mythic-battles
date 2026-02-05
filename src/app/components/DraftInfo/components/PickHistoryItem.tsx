@@ -5,7 +5,10 @@ import type { Card, UserProfile, DraftPick } from "@/types/database.types";
 import { PlayerAvatar } from "./PlayerAvatar";
 import { CardImage } from "./CardImage";
 
-type UserData = Pick<UserProfile, "id" | "email" | "display_name" | "avatar_url">;
+type UserData = Pick<
+  UserProfile,
+  "id" | "email" | "display_name" | "avatar_url"
+>;
 
 interface PickHistoryItemProps {
   pick: DraftPick;
@@ -46,9 +49,7 @@ export const PickHistoryItem = ({
         #{pick.pick_number}
       </div>
 
-      <div className="flex-shrink-0">
-        {user && <PlayerAvatar {...user} />}
-      </div>
+      <div className="flex-shrink-0">{user && <PlayerAvatar {...user} />}</div>
 
       <div className="min-w-0 flex-1">
         <div
@@ -75,7 +76,7 @@ export const PickHistoryItem = ({
           {card && (
             <>
               <Badge variant={card.unit_type} className="text-xs">
-                {card.unit_type}
+                {t(`cardType.${card.unit_type}`)}123
               </Badge>
               <span className="text-sm font-bold text-purple-600">
                 {t("cost")}: {card.cost}
@@ -87,4 +88,3 @@ export const PickHistoryItem = ({
     </div>
   );
 };
-

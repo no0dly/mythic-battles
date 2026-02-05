@@ -152,6 +152,7 @@ const translation = {
   showingCards: "Showing {{count}} of {{total}} cards",
   noCardsFoundMatchingYourFilters: "No cards found matching your filters",
   errorLoadingCards: "Error loading cards",
+  artOfWarCards: "Art of War Cards",
   // Draft page
   draftNotFound: "Draft not found",
   draftDetails: "Draft Details",
@@ -182,7 +183,6 @@ const translation = {
   // Draft history modal
   draftHistoryDetails: "Detailed Draft History",
   draftHistoryDescription: "View picks, cards, and final decks for both players",
-  pickHistory: "Pick History",
   viewDetailedHistory: "View Detailed History",
   totalCost: "Total Cost",
   cardsSelected: "cards selected",

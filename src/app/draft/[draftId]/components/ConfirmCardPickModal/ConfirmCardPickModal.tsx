@@ -118,7 +118,11 @@ export default function ConfirmCardPickModal({
                 ? "bg-red-600 hover:bg-red-700 cursor-not-allowed"
                 : "bg-green-600 hover:bg-green-700 cursor-pointer"
             }`}
-            aria-label={disabled ? t(restrictionReason || 'cannotPickCard') : t("pickCard")}
+            aria-label={
+              disabled
+                ? t(restrictionReason || "cannotPickCard")
+                : t("pickCard")
+            }
           >
             {disabled ? (
               <X className="h-3.5 w-3.5 text-white" />
@@ -160,7 +164,9 @@ export default function ConfirmCardPickModal({
                 )}
                 <div className="flex-1">
                   <h3 className="text-lg font-semibold">{card.unit_name}</h3>
-                  <Badge variant={card.unit_type}>{card.unit_type}</Badge>
+                  <Badge variant={card.unit_type}>
+                    {t(`cardType.${card.unit_type}`)}
+                  </Badge>
                   <div className="mt-2 flex gap-4">
                     <div>
                       <span className="text-xs text-muted-foreground">

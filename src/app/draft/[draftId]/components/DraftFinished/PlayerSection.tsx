@@ -40,6 +40,11 @@ export const PlayerSection = ({
   const { t } = useTranslation();
   const accentStyles = sectionAccentStyles[accent];
 
+  const totalStrategicValue = cards.reduce(
+    (sum, card) => sum + (card.strategic_value || 0),
+    0
+  );
+
   return (
     <div
       className={`rounded-2xl border-2 ${accentStyles.border} p-5 shadow-sm backdrop-blur`}
@@ -54,6 +59,9 @@ export const PlayerSection = ({
           </h3>
           <p className="text-sm text-gray-600">
             {cards.length} {t("picks")}
+          </p>
+          <p className="text-sm text-gray-600">
+            {t("strategicValue")}: {totalStrategicValue}
           </p>
         </div>
         <div

@@ -14,7 +14,7 @@ import useGetPickedCardsIDs from "./hooks/useGetPickedCardsIDs";
 import { api } from "@/trpc/client";
 import { canPickCard } from "@/utils/drafts/cardPickRestrictions";
 import { getPlayerCards } from "@/utils/drafts/helpers";
-import { DEFAULT_DRAFT_SETTINGS } from "@/types/constants";
+import { DEFAULT_DRAFT_SETTINGS, CARD_TYPES } from "@/types/constants";
 import { createCardIdMap } from "@/utils/cards/createCardIdMap";
 
 interface DraftCardGridProps {
@@ -59,7 +59,11 @@ export function DraftCardGrid({ cards, draft, user }: DraftCardGridProps) {
   );
 
   const isCardPicked = useCallback(
-    (cardId: string) => {
+    (cardId: string, cardType?: string) => {
+      // Art of war cards can be picked multiple times, so never mark them as "picked"
+      if (cardType === CARD_TYPES.ART_OF_WAR) {
+        return false;
+      }
       return pickedCardIds.has(cardId);
     },
     [pickedCardIds]
@@ -98,7 +102,7 @@ export function DraftCardGrid({ cards, draft, user }: DraftCardGridProps) {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
             {filteredCards.map((card) => {
-              const isPicked = isCardPicked(card.id);
+              const isPicked = isCardPicked(card.id, card.unit_type);
 
               // Check card pick restrictions
               const restrictions = canPickCard(

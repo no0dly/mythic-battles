@@ -10,7 +10,10 @@ interface CardPreviewDialogProps {
   onClose: () => void;
 }
 
-export const CardPreviewDialog = ({ card, onClose }: CardPreviewDialogProps) => {
+export const CardPreviewDialog = ({
+  card,
+  onClose,
+}: CardPreviewDialogProps) => {
   const { t } = useTranslation();
 
   return (
@@ -52,7 +55,7 @@ export const CardPreviewDialog = ({ card, onClose }: CardPreviewDialogProps) => 
                     </h3>
                     <div className="flex items-center gap-3">
                       <Badge variant={card.unit_type}>
-                        {card.unit_type}
+                        {t(`cardType.${card.unit_type}`)}
                       </Badge>
                       <span className="text-lg font-semibold text-purple-300">
                         {t("cost")}: {card.cost}
@@ -68,4 +71,3 @@ export const CardPreviewDialog = ({ card, onClose }: CardPreviewDialogProps) => 
     </Dialog>
   );
 };
-

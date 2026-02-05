@@ -140,7 +140,7 @@ export default function DraftFinished({ draft, cards }: DraftFinishedProps) {
           <section className="space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h3 className="text-lg font-semibold text-gray-900">
-                {t("pickHistory")}
+                {t("draftHistory")}
               </h3>
               <span className="text-sm text-gray-500">
                 {sortedPicks.length} {t("picks")}
