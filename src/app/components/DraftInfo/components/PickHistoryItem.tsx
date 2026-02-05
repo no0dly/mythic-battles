@@ -76,7 +76,7 @@ export const PickHistoryItem = ({
           {card && (
             <>
               <Badge variant={card.unit_type} className="text-xs">
-                {t(`cardType.${card.unit_type}`)}123
+                {t(`cardType.${card.unit_type}`)}
               </Badge>
               <span className="text-sm font-bold text-purple-600">
                 {t("cost")}: {card.cost}
