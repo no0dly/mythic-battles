@@ -519,20 +519,24 @@ export const draftsRouter = router({
       const userPicks = picks.filter((pick) => pick.player_id === userId);
       const userPickedCardIds = userPicks.map((pick) => pick.card_id);
 
-      // Get costs of picked cards
-      const { data: pickedCards, error: pickedCardsError } = await ctx.supabase
-        .from("cards")
-        .select("cost")
-        .in("id", userPickedCardIds.length > 0 ? userPickedCardIds : ["00000000-0000-0000-0000-000000000000"]);
+      // If user has no picks, they've spent 0 points - no need to query
+      let spentPoints = 0;
+      if (userPickedCardIds.length > 0) {
+        // Get costs of picked cards
+        const { data: pickedCards, error: pickedCardsError } = await ctx.supabase
+          .from("cards")
+          .select("cost")
+          .in("id", userPickedCardIds);
 
-      if (pickedCardsError) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch picked cards",
-        });
+        if (pickedCardsError) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to fetch picked cards",
+          });
+        }
+
+        spentPoints = (pickedCards as { cost: number }[] || []).reduce((sum, c) => sum + c.cost, 0);
       }
-
-      const spentPoints = (pickedCards as { cost: number }[] || []).reduce((sum, c) => sum + c.cost, 0);
       const remainingPoints = playerAllowedPoints - spentPoints;
 
       // Verify user has enough points
@@ -570,10 +574,39 @@ export const draftsRouter = router({
       };
 
       // Determine next turn (alternate between players)
-      const nextTurnUserId =
+      // But don't pass to opponent if they've reached max allowed points
+      const opponentId =
         draftData.current_turn_user_id === draftData.player1_id
           ? draftData.player2_id
           : draftData.player1_id;
+
+      // Calculate opponent's spent points to check if they've reached max
+      const opponentPicks = updatedPicks.filter((pick) => pick.player_id === opponentId);
+      const opponentPickedCardIds = opponentPicks.map((pick) => pick.card_id);
+
+      // If opponent has no picks, they've spent 0 points - no need to query
+      let opponentSpentPoints = 0;
+      if (opponentPickedCardIds.length > 0) {
+        // Get costs of opponent's picked cards
+        const { data: opponentPickedCards, error: opponentCardsError } = await ctx.supabase
+          .from("cards")
+          .select("cost")
+          .in("id", opponentPickedCardIds);
+
+        if (opponentCardsError) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to fetch opponent's picked cards",
+          });
+        }
+
+        opponentSpentPoints = (opponentPickedCards as { cost: number }[] || []).reduce((sum, c) => sum + c.cost, 0);
+      }
+      const opponentHasReachedMax = opponentSpentPoints >= playerAllowedPoints;
+
+      // If opponent has reached max points, keep turn with current player
+      // Otherwise, pass to opponent
+      const nextTurnUserId = opponentHasReachedMax ? userId : opponentId;
 
       // Update draft
       const { data: updatedDraft, error: updateError } = await ctx.supabase
