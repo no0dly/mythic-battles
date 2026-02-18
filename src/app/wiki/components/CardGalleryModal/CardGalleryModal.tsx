@@ -10,6 +10,11 @@ import Image from "next/image";
 import type { Card as CardType } from "@/types/database.types";
 import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface CardGalleryModalProps {
   isShown: boolean;
@@ -69,12 +74,28 @@ export default function CardGalleryModal({
               <strong>{t("activations")}:</strong> {activations}
             </span>
             {talents && talents.length > 0 && (
-              <div>
+              <div className="flex flex-row gap-2 items-center">
                 <strong>{t("talents")}:</strong>
-                <ul className="list-disc list-inside">
-                  {talents.map((talent, index) => (
-                    <li key={index}>{talent}</li>
-                  ))}
+                <ul className="flex flex-wrap gap-2">
+                  {talents.map((talent) => {
+                    return (
+                      <li key={talent}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Badge
+                              variant="secondary"
+                              className="cursor-help select-none"
+                            >
+                              {t(`talentTitles.${talent}`)}
+                            </Badge>
+                          </TooltipTrigger>
+                          <TooltipContent sideOffset={6} className="max-w-xs">
+                            {t(`talentEffects.${talent}`)}
+                          </TooltipContent>
+                        </Tooltip>
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
             )}
