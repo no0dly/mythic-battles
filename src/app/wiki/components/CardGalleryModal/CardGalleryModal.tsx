@@ -10,11 +10,7 @@ import Image from "next/image";
 import type { Card as CardType } from "@/types/database.types";
 import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { TalentBadges } from "@/components/TalentBadges";
 
 interface CardGalleryModalProps {
   isShown: boolean;
@@ -50,7 +46,7 @@ export default function CardGalleryModal({
             src={imageUrl}
             alt={name}
             loading="lazy"
-            className="object-contain p-4"
+            className="object-contain p-4 max-h-[50vh]"
             width={900}
             height={900}
           />
@@ -73,32 +69,7 @@ export default function CardGalleryModal({
             <span className="block">
               <strong>{t("activations")}:</strong> {activations}
             </span>
-            {talents && talents.length > 0 && (
-              <div className="flex flex-row gap-2 items-center">
-                <strong>{t("talents")}:</strong>
-                <ul className="flex flex-wrap gap-2">
-                  {talents.map((talent) => {
-                    return (
-                      <li key={talent}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Badge
-                              variant="secondary"
-                              className="cursor-help select-none"
-                            >
-                              {t(`talentTitles.${talent}`)}
-                            </Badge>
-                          </TooltipTrigger>
-                          <TooltipContent sideOffset={6} className="max-w-xs">
-                            {t(`talentEffects.${talent}`)}
-                          </TooltipContent>
-                        </Tooltip>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            )}
+            <TalentBadges talents={talents ?? []} />
           </span>
         </DialogDescription>
       </DialogContent>

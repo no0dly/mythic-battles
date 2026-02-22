@@ -1,0 +1,1 @@
+export { TalentBadges } from "./TalentBadges";

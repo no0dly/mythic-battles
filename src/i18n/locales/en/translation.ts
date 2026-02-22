@@ -299,9 +299,9 @@ const translation = {
   },
 
   talentEffects: {
-    archery: "missing",
-    berserk: "missing",
-    blessedByTheGods: "missing",
+    archery: "During the calculation of the effective offense value of a range 1+ normal attack, the unit with the Archer talent gains +1 offense.",
+    berserk: "the unit can use its 2 simple turn actions to perform 2 normal attack actions of range 0, unmodifiable by any power or any talent. At the end of the second attack action, the unit suffers 1 automatic wound.",
+    blessedByTheGods: "The unit never loses its talents and powers. During the enemy's turn and until it ends, the unit gains +1 defense if it discards a Kheper card.",
     archer:
       "During the calculation of the effective offense value of a range 1+ normal attack, the unit with the Archer talent gains +1 offense.",
     block:
@@ -314,15 +314,15 @@ const translation = {
       "During the calculation of the effective offense value of a range 0 normal attack, the unit with the Close Combat talent gains +1 offense until the end of their current activation.",
     closeProtection:
       "During the calculation of the effective defense value of a normal or area attack, if an allied unit is in the same area, the unit with the Close Protection talent gains +1 defense.",
-    curse: "missing",
+    curse: "The attacked unit may have 1 die of its choice re-rolled during the attacker's first assault.",
     forceOfNature:
       "Before selecting the target of a normal or an area attack, if the unit with the Force of Nature talent is in an area with at least one 3D element, they can remove one of these elements from the board to gain +1 offense and +1 range until the end of their current activation.",
     gemCollector:
       "During its activation, the unit can carry out a claim action from any visible area in their surroundings.",
-    godSlayer: "missing",
+    godSlayer: "Slayer is always linked to a unit type, such as «Monster Slayer».During the first assault, before discarding blank results, the unit may re- roll up to 2 dice against a target",
     guard:
       "After the choice of the target of a normal or an area attack by an enemy, if the unit with the Guard talent is in the same area as the targeted allied unit, they become the new target. This talent cannot be used against a retaliation or against terrain effects.",
-    heroSlayer: "missing",
+    heroSlayer: "Slayer is always linked to a unit type, such as «Monster Slayer».During the first assault, before discarding blank results, the unit may re- roll up to 2 dice against a target",
     initiative:
       "After the choice of the target of a range 0 normal attack, if the target is the unit with the Initiative talent, they can retaliate before the original attack is resolved. After the retaliation, if the attacker is further away from the target than their range, the action ends. If not, the attacker carries out the attack without the target retaliating again. If both the attacker and the target have this talent, the effect is ignored.",
     leader:
@@ -335,13 +335,13 @@ const translation = {
       "After having rolled the dice to resolve the first assault of a normal or area attack and before discarding the dice with blank results, if the target is a monster unit, the unit with the Monster Slayer talent can reroll up to 2 dice. The attack is then resolved as normal.",
     phalanx:
       "During the calculation of the effective offense and defense values of a normal or area attack, if an allied troop unit is in the same area, the unit with the Phalanx talent gains +1 offense and +1 defense.",
-    scout: "missing",
+    scout: "the unit can deploy without cost during the table setup step, as if it were a troop unit.",
     sneakAttack:
       "During the calculation of the effective offense value of a range 0 normal attack, if an allied unit is in the same area, the unit with the Sneak Attack talent gains +1 offense until the end of their current activation.",
-    terror: "missing",
+    terror: "An attacking unit performing a range  0 attack against a unit with the Terror talents suffers -1 offense.",
     torment:
       "During the calculation of the effective defense value of a range 0 normal attack carried out by a unit with the Torment talent, the targeted unit suffers -1 defense until the end of the attack.",
-    troopSlayer: "missing",
+    troopSlayer: "Slayer is always linked to a unit type, such as «Monster Slayer».During the first assault, before discarding blank results, the unit may re- roll up to 2 dice against a target",
   }
 } as const;
 
