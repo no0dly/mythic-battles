@@ -305,11 +305,11 @@ const translation = {
     archer:
       "During the calculation of the effective offense value of a range 1+ normal attack, the unit with the Archer talent gains +1 offense.",
     block:
-      "Enemy units in the same area as a unit with the Block talent cannot carry out walk or run actions. An enemy unit cannot claim a divine stone that is in the same area as a unit with the Block talent. A unit with the Block talent ignores these effects.",
+      "An enemy unit that is in the area of a blocker unit cannot carry out a walk, run, or ascend action. An enemy unit cannot claim a divine stone that is in the area of a unit with the Block talent, but may still absorb a divine stone if that blocked unit is a divinity. A unit with the Block talent ignores these effects.",
     bolster:
       "During the calculation of the effective offense and defense values of a normal or area attack, the allied troop units in the same area as the unit with the Bolster talent gain +1 offense and +1 defense.",
     climb:
-      "A unit with the Climb talent can walk into rock or cliff areas. The unit may cross escarpment boundaries and they ignore the effects of chain boundaries.",
+      "A unit with the Climb talent can walk into Rock or Cliff areas. The unit may cross escarpment boundaries. In a Rock area, the unit gains +1 defense against units who do not have the Climb talent.",
     closeCombat:
       "During the calculation of the effective offense value of a range 0 normal attack, the unit with the Close Combat talent gains +1 offense until the end of their current activation.",
     closeProtection:
