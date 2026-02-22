@@ -1,6 +1,5 @@
 "use client";
 import SessionsCard from "../SessionsCard";
-import UserInfoCard from "../UserInfoCard";
 import { useTranslation } from "react-i18next";
 import { ShimmerButton } from "@/components/ui/shimmer-button";
 import { UserStatistics } from "@/components/UserStatistics";
@@ -25,13 +24,6 @@ function LoggedContent() {
       </h2>
       <div className="w-full flex h-full flex-col md:flex-row gap-4 md:gap-6 justify-between flex-1 min-h-0">
         <div className="md:flex-shrink-0 md:w-80 space-y-4 md:space-y-6">
-          <div>
-            <h3 className="text-base sm:text-lg md:text-xl font-bold text-foreground mb-3 sm:mb-4 md:mb-6">
-              {t("userInfo")}
-            </h3>
-            <UserInfoCard />
-          </div>
-
           {user && (
             <div>
               <div className="flex items-center justify-between mb-3 sm:mb-4">
