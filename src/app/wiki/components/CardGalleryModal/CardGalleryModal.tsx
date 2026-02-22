@@ -10,6 +10,7 @@ import Image from "next/image";
 import type { Card as CardType } from "@/types/database.types";
 import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
+import { TalentBadges } from "@/components/TalentBadges";
 
 interface CardGalleryModalProps {
   isShown: boolean;
@@ -45,7 +46,7 @@ export default function CardGalleryModal({
             src={imageUrl}
             alt={name}
             loading="lazy"
-            className="object-contain p-4"
+            className="object-contain p-4 max-h-[50vh]"
             width={900}
             height={900}
           />
@@ -68,16 +69,7 @@ export default function CardGalleryModal({
             <span className="block">
               <strong>{t("activations")}:</strong> {activations}
             </span>
-            {talents && talents.length > 0 && (
-              <div>
-                <strong>{t("talents")}:</strong>
-                <ul className="list-disc list-inside">
-                  {talents.map((talent, index) => (
-                    <li key={index}>{talent}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
+            <TalentBadges talents={talents ?? []} />
           </span>
         </DialogDescription>
       </DialogContent>

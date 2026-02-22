@@ -264,6 +264,85 @@ const translation = {
   // Start Game Restrictions
   mustPickGodCard: "You must pick a God card before starting the game",
   mustUseAllPoints: "You must use all available points before starting the game",
+
+  class: "Class",
+  activations: "Activations",
+  talents: "Talents",
+
+  talentTitles: {
+    archer: "Archer",
+    archery: "Archery",
+    berserk: "Berserk",
+    blessedByTheGods: "Blessed by the Gods",
+    block: "Block",
+    bolster: "Bolster",
+    climb: "Climb",
+    closeCombat: "Close Combat",
+    closeProtection: "Close Protection",
+    curse: "Curse",
+    forceOfNature: "Force of Nature",
+    gemCollector: "Gem Collector",
+    godSlayer: "God Slayer",
+    guard: "Guard",
+    heroSlayer: "Hero Slayer",
+    initiative: "Initiative",
+    leader: "Leader",
+    mightyThrow: "Mighty Throw",
+    mobility: "Mobility",
+    monsterSlayer: "Monster Slayer",
+    phalanx: "Phalanx",
+    scout: "Scout",
+    sneakAttack: "Sneak Attack",
+    terror: "Terror",
+    torment: "Torment",
+    troopSlayer: "Troop Slayer",
+  },
+
+  talentEffects: {
+    archery: "During the calculation of the effective offense value of a range 1+ normal attack, the unit with the Archer talent gains +1 offense.",
+    berserk: "the unit can use its 2 simple turn actions to perform 2 normal attack actions of range 0, unmodifiable by any power or any talent. At the end of the second attack action, the unit suffers 1 automatic wound.",
+    blessedByTheGods: "The unit never loses its talents and powers. During the enemy's turn and until it ends, the unit gains +1 defense if it discards a Kheper card.",
+    archer:
+      "During the calculation of the effective offense value of a range 1+ normal attack, the unit with the Archer talent gains +1 offense.",
+    block:
+      "Enemy units in the same area as a unit with the Block talent cannot carry out walk or run actions. An enemy unit cannot claim a divine stone that is in the same area as a unit with the Block talent. A unit with the Block talent ignores these effects.",
+    bolster:
+      "During the calculation of the effective offense and defense values of a normal or area attack, the allied troop units in the same area as the unit with the Bolster talent gain +1 offense and +1 defense.",
+    climb:
+      "A unit with the Climb talent can walk into rock or cliff areas. The unit may cross escarpment boundaries and they ignore the effects of chain boundaries.",
+    closeCombat:
+      "During the calculation of the effective offense value of a range 0 normal attack, the unit with the Close Combat talent gains +1 offense until the end of their current activation.",
+    closeProtection:
+      "During the calculation of the effective defense value of a normal or area attack, if an allied unit is in the same area, the unit with the Close Protection talent gains +1 defense.",
+    curse: "The attacked unit may have 1 die of its choice re-rolled during the attacker's first assault.",
+    forceOfNature:
+      "Before selecting the target of a normal or an area attack, if the unit with the Force of Nature talent is in an area with at least one 3D element, they can remove one of these elements from the board to gain +1 offense and +1 range until the end of their current activation.",
+    gemCollector:
+      "During its activation, the unit can carry out a claim action from any visible area in their surroundings.",
+    godSlayer: "Slayer is always linked to a unit type, such as «Monster Slayer».During the first assault, before discarding blank results, the unit may re- roll up to 2 dice against a target",
+    guard:
+      "After the choice of the target of a normal or an area attack by an enemy, if the unit with the Guard talent is in the same area as the targeted allied unit, they become the new target. This talent cannot be used against a retaliation or against terrain effects.",
+    heroSlayer: "Slayer is always linked to a unit type, such as «Monster Slayer».During the first assault, before discarding blank results, the unit may re- roll up to 2 dice against a target",
+    initiative:
+      "After the choice of the target of a range 0 normal attack, if the target is the unit with the Initiative talent, they can retaliate before the original attack is resolved. After the retaliation, if the attacker is further away from the target than their range, the action ends. If not, the attacker carries out the attack without the target retaliating again. If both the attacker and the target have this talent, the effect is ignored.",
+    leader:
+      "At the end of their activation phase, the player of a unit with the Leader talent may search their deck for an activation card of a visible allied troop unit in their surroundings and add it to their hand after showing it to their opponent. If this troop unit belongs to another player on the same side, this player takes the corresponding activation card from that player’s deck. The chosen troop unit can then be immediately activated by discarding one of their activation cards. This activation counts towards the maximum number of unit activations per turn. This new activation does not require an AoW card to be discarded. If the unit chosen for this new activation does not belong to the active player, the player whose unit is using the Leader talent takes control of that unit until the end of their current turn.",
+    mightyThrow:
+      "After having rolled the dice to resolve the first assault of a normal or area attack and before discarding the dice with blank results, the unit with the Mighty Throw talent can throw the target unit one area. This area must not be full and must be a terrain type which allows the target to enter. In addition, the target can only cross boundaries which allow movement through it. The targeted unit drops any claimed divine stones before being thrown. The type of unit that can be thrown depends on the number of blank results obtained: 1 for a troop or a hero unit, 2 for a monster or a god unit, 3 for a titan unit. After having thrown the targeted unit, the attack is then resolved as normal even if the targeted unit is no longer at a distance less than or equal to the attacker’s range.",
+    mobility:
+      "A unit with the Mobility talent can walk even after having carried out an attack.",
+    monsterSlayer:
+      "After having rolled the dice to resolve the first assault of a normal or area attack and before discarding the dice with blank results, if the target is a monster unit, the unit with the Monster Slayer talent can reroll up to 2 dice. The attack is then resolved as normal.",
+    phalanx:
+      "During the calculation of the effective offense and defense values of a normal or area attack, if an allied troop unit is in the same area, the unit with the Phalanx talent gains +1 offense and +1 defense.",
+    scout: "the unit can deploy without cost during the table setup step, as if it were a troop unit.",
+    sneakAttack:
+      "During the calculation of the effective offense value of a range 0 normal attack, if an allied unit is in the same area, the unit with the Sneak Attack talent gains +1 offense until the end of their current activation.",
+    terror: "An attacking unit performing a range  0 attack against a unit with the Terror talents suffers -1 offense.",
+    torment:
+      "During the calculation of the effective defense value of a range 0 normal attack carried out by a unit with the Torment talent, the targeted unit suffers -1 defense until the end of the attack.",
+    troopSlayer: "Slayer is always linked to a unit type, such as «Monster Slayer».During the first assault, before discarding blank results, the unit may re- roll up to 2 dice against a target",
+  }
 } as const;
 
 export default translation;
