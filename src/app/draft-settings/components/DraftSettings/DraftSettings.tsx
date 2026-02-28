@@ -7,7 +7,11 @@ import { useFriends, useUserProfile } from "@/hooks";
 import { ShimmerButton } from "@/components/ui/shimmer-button";
 import { toast } from "sonner";
 import { Form } from "@/components/ui/form";
-import { SelectWithLoading, NumberInputField } from "@/components/FormFields";
+import {
+  SelectWithLoading,
+  NumberInputField,
+} from "@/components/FormFields";
+import { MultiSelectForOriginField } from "@/app/draft-settings/components/MultiSelectForOrigin/MultiselectForOrigin";
 import {
   DraftSettingsFormValues,
   getDraftSettingsSchema,
@@ -33,6 +37,7 @@ export default function DraftSettings() {
     resolver: zodResolver(getDraftSettingsSchema(t)),
     defaultValues: {
       opponentId: "",
+      origins: DEFAULT_DRAFT_SETTINGS.origins,
       user_allowed_points: DEFAULT_DRAFT_SETTINGS.user_allowed_points,
       draft_size: DEFAULT_DRAFT_SETTINGS.draft_size,
       gods_amount: DEFAULT_DRAFT_SETTINGS.gods_amount,
@@ -175,6 +180,12 @@ export default function DraftSettings() {
                 isLoading={isLoading || isLoadingSession}
                 emptyMessageKey="noFriendsYet"
                 disabled={!!sessionId}
+              />
+            </div>
+            <div className="max-w-[400px]">
+              <MultiSelectForOriginField
+                control={form.control}
+                labelKey="origin"
               />
             </div>
             <div className="max-w-[400px]">

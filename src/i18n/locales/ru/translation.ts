@@ -266,6 +266,11 @@ const translation = {
   mustUseAllPoints: "Необходимо использовать все доступные очки перед началом игры",
 
   class: "Класс",
+  origin: "Дополнение",
+  all: "Все",
+  noItemsFound: "Ничего не найдено",
+  allExpansions: "Все дополнения",
+  selectedCount: "{{count}} выбрано",
   activations: "Активации",
   talents: "Таланты",
 

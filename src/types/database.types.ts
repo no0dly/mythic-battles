@@ -101,6 +101,7 @@ export type DraftSettings = {
   gods_amount: number
   titans_amount: number
   troop_attachment_amount: number
+  origins: (CardOrigin | "all")[]
 }
 
 export type WinCondition = ValueOf<typeof WIN_CONDITION>;

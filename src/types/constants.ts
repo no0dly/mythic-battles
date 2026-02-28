@@ -1,4 +1,4 @@
-import { DraftSettings } from "./database.types";
+import type { CardOrigin, DraftSettings } from "./database.types";
 
 export const CARD_CLASS = {
   AQUATIC: 'aquatic',
@@ -21,6 +21,7 @@ export const CARD_ORIGIN = {
   HEP: 'HEP',
   HER: 'HER',
   ISF_COR: 'ISF_COR',
+  JARL: 'Jarl',
   JOR: 'JOR',
   JUD: 'JUD',
   KEE: 'KEE',
@@ -30,14 +31,49 @@ export const CARD_ORIGIN = {
   NID: 'NID',
   OED: 'OED',
   PAN: 'PAN',
+  POLEMARCH: 'Polemarch',
   POS: 'POS',
   RAG: 'RAG',
   RAG_COR: 'RAG_COR',
   RIS: 'RIS',
   SUR: 'SUR',
+  TJATI: 'Tjati',
   TRO: 'TRO',
   YMI: 'YMI',
 } as const;
+
+export const CARD_ORIGIN_FULL_NAME: Partial<Record<CardOrigin, string>> = {
+  ASG: "Asgard",
+  CHT: "Chthonian Wrath",
+  COR: "Core Box Pantheon",
+  CRT: "Corinthia",
+  DIO: "Dionysus",
+  DUA: "Duat",
+  ECH: "Echidna's Children",
+  ETE: "Eternal Cycle",
+  HEP: "Hephastus",
+  HER: "Hera",
+  ISF_COR: "Core Box Isfet",
+  JOR: "Jormungand",
+  JUD: "Judges of the Underworld",
+  Jarl: "Jarl",
+  KEE: "Keepers of the Soul",
+  KET: "Ketos",
+  KRA: "Kraken",
+  MAN: "Manticore",
+  NID: "Nidhogg",
+  OED: "Oedipus vs the Sphinx",
+  PAN: "Pandora's Box",
+  POS: "Poseidon",
+  Polemarch: "Polemarch",
+  RAG: "Ragnar Saga",
+  RAG_COR: "Core Box Ragnarok",
+  RIS: "Rise of the Titans",
+  SUR: "Surt",
+  Tjati: "Tjati",
+  TRO: "Heroes of the Trojan War",
+  YMI: "Ymir",
+};
 
 export const CARD_TYPES = {
   HERO: 'hero',
@@ -45,7 +81,6 @@ export const CARD_TYPES = {
   GOD: 'god',
   TITAN: 'titan',
   TROOP: 'troop',
-  JARL: 'jarl',
   ART_OF_WAR: 'art_of_war',
   TROOP_ATTACHMENT: 'troop_attachment',
 } as const;
@@ -89,12 +124,15 @@ export const FRIENDSHIP_STATUS = {
   BLOCKED: 'blocked',
 } as const;
 
+export const ALL_VALUE = "all" as const;
+
 export const DEFAULT_DRAFT_SETTINGS: DraftSettings = {
   user_allowed_points: 18,
   draft_size: 40,
   gods_amount: 4,
   titans_amount: 2,
   troop_attachment_amount: 4,
+  origins: [ALL_VALUE],
 } as const;
 
 export const WIN_CONDITION = {

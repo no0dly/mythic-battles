@@ -80,6 +80,15 @@ export function DraftStatusPanel({ draft, cards }: DraftStatusPanelProps) {
     return canStartGame(currentUserCards, userAllowedPoints);
   }, [currentUserCards, userAllowedPoints, user]);
 
+  const player1StrategicValue = player1Cards.reduce(
+    (sum, card) => sum + card.strategic_value,
+    0
+  );
+  const player2StrategicValue = player2Cards.reduce(
+    (sum, card) => sum + card.strategic_value,
+    0
+  );
+
   if (isLoading) {
     return <DraftStatusPanelSkeleton />;
   }
@@ -126,6 +135,10 @@ export function DraftStatusPanel({ draft, cards }: DraftStatusPanelProps) {
             )}
           </div>
         </div>
+        <p className="text-xs text-muted-foreground mt-1">
+          {t("strategicValue")}:{" "}
+          {player1StrategicValue}
+        </p>
       </div>
       <div className="mb-10">
         <div className="flex items-center justify-between mb-1">
@@ -159,6 +172,10 @@ export function DraftStatusPanel({ draft, cards }: DraftStatusPanelProps) {
             )}
           </div>
         </div>
+        <p className="text-xs text-muted-foreground mt-1">
+          {t("strategicValue")}:{" "}
+          {player2StrategicValue}
+        </p>
       </div>
 
       <DraftActionButtons

@@ -1,5 +1,6 @@
 import { z } from "zod";
-import type { DraftSettings } from "@/types/database.types";
+import { ALL_VALUE, CARD_ORIGIN, CARD_ORIGIN_FULL_NAME } from "@/types/constants";
+import type { CardOrigin, DraftSettings } from "@/types/database.types";
 
 /**
  * Draft settings form values (includes opponentId in addition to draft settings)
@@ -7,6 +8,7 @@ import type { DraftSettings } from "@/types/database.types";
  */
 export type DraftSettingsFormValues = DraftSettings & {
   opponentId: string;
+  origins: (CardOrigin | typeof ALL_VALUE)[];
 };
 
 export const DRAFT_SIZE_OPTIONS = [
@@ -21,6 +23,10 @@ export const USER_ALLOWED_POINTS_OPTIONS = [
   { value: "18", label: "18" },
 ] as const;
 
+export const ORIGIN_OPTIONS = Object.entries(CARD_ORIGIN_FULL_NAME).map(
+  ([value, label]) => ({ value, label })
+);
+
 export const getDraftSettingsSchema = (t: (key: string) => string) =>
   z.object({
     opponentId: z.string().min(1, t("requiredField")),
@@ -29,5 +35,8 @@ export const getDraftSettingsSchema = (t: (key: string) => string) =>
     gods_amount: z.number().min(2, t("requiredField")),
     titans_amount: z.number().min(0, t("requiredField")),
     troop_attachment_amount: z.number().min(0, t("requiredField")),
+    origins: z
+      .array(z.union([z.enum(Object.values(CARD_ORIGIN)), z.literal(ALL_VALUE)]))
+      .min(1, t("requiredField")),
   });
 

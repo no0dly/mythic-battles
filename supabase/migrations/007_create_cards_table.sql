@@ -8,10 +8,47 @@ create table public.cards (
   talents text[] null,
   class text null,
   image_url text null,
+  origin text null,
   created_at timestamp with time zone null default now(),
   updated_at timestamp with time zone null default now(),
   constraint cards_pkey primary key (id),
   constraint cards_unit_name_key unique (unit_name),
+  constraint cards_origin_check check (
+    origin = any (
+      array[
+        'ASG'::text,
+        'CHT'::text,
+        'COR'::text,
+        'CRT'::text,
+        'DIO'::text,
+        'DUA'::text,
+        'ECH'::text,
+        'ETE'::text,
+        'HEP'::text,
+        'HER'::text,
+        'ISF_COR'::text,
+        'Jarl'::text,
+        'JOR'::text,
+        'JUD'::text,
+        'KEE'::text,
+        'KET'::text,
+        'KRA'::text,
+        'MAN'::text,
+        'NID'::text,
+        'OED'::text,
+        'PAN'::text,
+        'Polemarch'::text,
+        'POS'::text,
+        'RAG'::text,
+        'RAG_COR'::text,
+        'RIS'::text,
+        'SUR'::text,
+        'Tjati'::text,
+        'TRO'::text,
+        'YMI'::text
+      ]
+    )
+  ),
   constraint cards_class_check check (
     (
       class = any (
