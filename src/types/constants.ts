@@ -1,5 +1,44 @@
 import { DraftSettings } from "./database.types";
 
+export const CARD_CLASS = {
+  AQUATIC: 'aquatic',
+  BOREAL: 'boreal',
+  FIREPROOF: 'fireproof',
+  FLYING: 'flying',
+  HUGE: 'huge',
+  TERRESTRIAL: 'terrestrial',
+} as const;
+
+export const CARD_ORIGIN = {
+  ASG: 'ASG',
+  CHT: 'CHT',
+  COR: 'COR',
+  CRT: 'CRT',
+  DIO: 'DIO',
+  DUA: 'DUA',
+  ECH: 'ECH',
+  ETE: 'ETE',
+  HEP: 'HEP',
+  HER: 'HER',
+  ISF_COR: 'ISF_COR',
+  JOR: 'JOR',
+  JUD: 'JUD',
+  KEE: 'KEE',
+  KET: 'KET',
+  KRA: 'KRA',
+  MAN: 'MAN',
+  NID: 'NID',
+  OED: 'OED',
+  PAN: 'PAN',
+  POS: 'POS',
+  RAG: 'RAG',
+  RAG_COR: 'RAG_COR',
+  RIS: 'RIS',
+  SUR: 'SUR',
+  TRO: 'TRO',
+  YMI: 'YMI',
+} as const;
+
 export const CARD_TYPES = {
   HERO: 'hero',
   MONSTER: 'monster',

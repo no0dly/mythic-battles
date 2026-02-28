@@ -52,6 +52,8 @@ const badgeVariants = cva(
         jarl: "bg-purple-600 text-white border-transparent",
         art_of_war: "bg-red-600 text-white border-transparent",
         troop_attachment: "bg-indigo-600 text-white border-transparent",
+        cardClass:
+          "bg-teal-500/20 text-teal-600 dark:text-teal-400 border-teal-500/30",
       },
     },
     defaultVariants: {

@@ -342,7 +342,25 @@ const translation = {
     torment:
       "During the calculation of the effective defense value of a range 0 normal attack carried out by a unit with the Torment talent, the targeted unit suffers -1 defense until the end of the attack.",
     troopSlayer: "Slayer is always linked to a unit type, such as «Monster Slayer».During the first assault, before discarding blank results, the unit may re- roll up to 2 dice against a target",
-  }
+  },
+
+  classTitles: {
+    terrestrial: "Terrestrial",
+    aquatic: "Aquatic",
+    fireproof: "Fireproof",
+    boreal: "Boreal",
+    flying: "Flying",
+    huge: "Huge",
+  },
+
+  classEffects: {
+    terrestrial: "No special effect.",
+    aquatic: "Aquatic units gain +1 movement for walk or run actions if they start in, and only enter, Aquatic areas during that action. Aquatic units ignore all Aquatic terrain effects (Water, etc.).",
+    fireproof: "Fireproof units ignore all Burning terrain effects.",
+    boreal: "Boreal units ignore all Polar terrain effects.",
+    flying: "Flying units can deploy on a Cliff or Rock area of their deployment zone. They move on the ground but can take flight via 2 additional complex actions — Fast Flight: enter up to movement +1 areas, ignore all terrain effects, cross walls and escarpments, unaffected by Block; cannot drop a divine stone. Aerial Attack: like a normal attack but ignores terrain effects of own area, gains +1 range, and obstacles are ignored for line of sight.",
+    huge: "A huge unit can never enter an area with an area capacity lower than 3 except during deployment. The area it occupies is always considered full, regardless of its area capacity. Talents and powers that could move this unit are ignored.",
+  },
 } as const;
 
 export default translation;

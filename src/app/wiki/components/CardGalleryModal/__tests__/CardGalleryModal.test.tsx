@@ -32,7 +32,8 @@ const mockCard: Card = {
   amount_of_card_activations: 1,
   strategic_value: 10,
   talents: [],
-  class: "god",
+  class: ["terrestrial"],
+  origin: null,
   image_url: "/globe.svg",
   created_at: "2024-01-01T00:00:00Z",
   updated_at: "2024-01-01T00:00:00Z",
@@ -64,7 +65,7 @@ describe("CardGalleryModal Component", () => {
     const costRow = screen.getByText(/cost:/i).parentElement;
 
     expect(typeRow?.textContent).toMatch(/god/i);
-    expect(classRow?.textContent).toMatch(/god/i);
+    expect(classRow?.textContent).toMatch(/terrestrial/i);
     expect(costRow?.textContent).toMatch(/5/i);
 
     const image = screen.getByAltText("Zeus");
@@ -82,7 +83,8 @@ describe("CardGalleryModal Component", () => {
       amount_of_card_activations: 1,
       strategic_value: 9,
       talents: [],
-      class: "god",
+      class: ["terrestrial"],
+      origin: null,
       image_url: "/logo.svg",
       created_at: "2024-01-01T00:00:00Z",
       updated_at: "2024-01-01T00:00:00Z",
@@ -128,7 +130,8 @@ describe("CardGalleryModal Component", () => {
       amount_of_card_activations: 1,
       strategic_value: 5,
       talents: [],
-      class: "",
+      class: [],
+      origin: null,
       image_url: "/shield.svg",
       created_at: "2024-01-01T00:00:00Z",
       updated_at: "2024-01-01T00:00:00Z",
