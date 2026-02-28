@@ -12,6 +12,7 @@ import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { TalentBadges } from "@/components/TalentBadges";
 import { ClassBadges } from "@/components/ClassBadges";
+import { OriginBadge } from "@/components/OriginBadge";
 
 interface CardGalleryModalProps {
   isShown: boolean;
@@ -31,6 +32,7 @@ export default function CardGalleryModal({
     cost,
     image_url: imageUrl,
     class: cardClass,
+    origin,
     talents,
     strategic_value: strategicValue,
     amount_of_card_activations: activations,
@@ -59,6 +61,7 @@ export default function CardGalleryModal({
               <Badge variant={unitType}>{t(`cardType.${unitType}`)}</Badge>
             </span>
             <ClassBadges classes={cardClass} />
+            <OriginBadge origin={origin} />
             <span className="block">
               <strong>{t("cost")}:</strong> {cost}
             </span>

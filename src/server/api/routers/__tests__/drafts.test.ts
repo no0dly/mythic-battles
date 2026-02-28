@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { draftsRouter } from "../drafts";
-import { DRAFT_STATUS, GAME_STATUS, SESSION_STATUS } from "@/types/constants";
-import type { Draft } from "@/types/database.types";
+import { ALL_VALUE, CARD_ORIGIN, CARD_TYPES, DRAFT_STATUS, GAME_STATUS, SESSION_STATUS } from "@/types/constants";
+import type { Card, Draft } from "@/types/database.types";
 
 const TEST_USER_ID = "00000000-0000-0000-0000-000000000001";
 const OTHER_USER_ID = "00000000-0000-0000-0000-000000000002";
@@ -152,6 +152,118 @@ const createFinishDraftContext = (
     },
   };
 };
+
+const makeCard = (
+  id: string,
+  type: string,
+  cost: number,
+  origin: string | null = null,
+): Card => ({
+  id,
+  unit_name: `Card ${id}`,
+  unit_type: type as Card["unit_type"],
+  cost,
+  amount_of_card_activations: 1,
+  strategic_value: 1,
+  talents: [],
+  class: [],
+  origin: origin as Card["origin"],
+  image_url: "",
+  created_at: "2024-01-01T00:00:00.000Z",
+  updated_at: "2024-01-01T00:00:00.000Z",
+});
+
+const createGeneratePoolContext = (cards: Card[]) => {
+  const from = vi.fn((table: string) => {
+    if (table === "cards") {
+      return { select: vi.fn(() => ({ data: cards, error: null })) };
+    }
+    throw new Error(`Unexpected table: ${table}`);
+  });
+
+  return {
+    ctx: {
+      supabase: { from },
+      session: { user: { id: TEST_USER_ID } },
+    },
+  };
+};
+
+describe("draftsRouter.generatePool", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("returns only cards matching the specified origin", async () => {
+    const asgMonster = makeCard("asg-1", CARD_TYPES.MONSTER, 1, CARD_ORIGIN.ASG);
+    const chtMonster = makeCard("cht-1", CARD_TYPES.MONSTER, 1, CARD_ORIGIN.CHT);
+    const { ctx } = createGeneratePoolContext([asgMonster, chtMonster]);
+    const caller = draftsRouter.createCaller(ctx as any);
+
+    const result = await caller.generatePool({
+      draft_size: 1,
+      gods_amount: 0,
+      titans_amount: 0,
+      troop_attachment_amount: 0,
+      origins: [CARD_ORIGIN.ASG],
+    });
+
+    expect(result.cardIds).toContain(asgMonster.id);
+    expect(result.cardIds).not.toContain(chtMonster.id);
+  });
+
+  it("returns cards from all origins when ALL_VALUE is provided", async () => {
+    const asgMonster = makeCard("asg-1", CARD_TYPES.MONSTER, 1, CARD_ORIGIN.ASG);
+    const chtMonster = makeCard("cht-1", CARD_TYPES.MONSTER, 1, CARD_ORIGIN.CHT);
+    const { ctx } = createGeneratePoolContext([asgMonster, chtMonster]);
+    const caller = draftsRouter.createCaller(ctx as any);
+
+    const result = await caller.generatePool({
+      draft_size: 2,
+      gods_amount: 0,
+      titans_amount: 0,
+      troop_attachment_amount: 0,
+      origins: [ALL_VALUE],
+    });
+
+    expect(result.cardIds).toContain(asgMonster.id);
+    expect(result.cardIds).toContain(chtMonster.id);
+  });
+
+  it("uses DEFAULT_DRAFT_SETTINGS.origins when origins is not provided", async () => {
+    const asgMonster = makeCard("asg-1", CARD_TYPES.MONSTER, 1, CARD_ORIGIN.ASG);
+    const chtMonster = makeCard("cht-1", CARD_TYPES.MONSTER, 1, CARD_ORIGIN.CHT);
+    const { ctx } = createGeneratePoolContext([asgMonster, chtMonster]);
+    const caller = draftsRouter.createCaller(ctx as any);
+
+    // No origins provided → defaults to [ALL_VALUE] → both cards are candidates
+    const result = await caller.generatePool({
+      draft_size: 2,
+      gods_amount: 0,
+      titans_amount: 0,
+      troop_attachment_amount: 0,
+    });
+
+    expect(result.cardIds).toContain(asgMonster.id);
+    expect(result.cardIds).toContain(chtMonster.id);
+  });
+
+  it("throws when no cards remain after origin filtering", async () => {
+    const asgMonster = makeCard("asg-1", CARD_TYPES.MONSTER, 1, CARD_ORIGIN.ASG);
+    const { ctx } = createGeneratePoolContext([asgMonster]);
+    const caller = draftsRouter.createCaller(ctx as any);
+
+    await expect(
+      caller.generatePool({
+        draft_size: 1,
+        gods_amount: 0,
+        titans_amount: 0,
+        troop_attachment_amount: 0,
+        origins: [CARD_ORIGIN.CHT],
+      }),
+    ).rejects.toThrow();
+  });
+});
 
 describe("draftsRouter.finishDraft", () => {
   beforeEach(() => {

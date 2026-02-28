@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { TalentBadges } from "@/components/TalentBadges";
 import { ClassBadges } from "@/components/ClassBadges";
+import { OriginBadge } from "@/components/OriginBadge";
 import type { Card } from "@/types/database.types";
 
 interface CardPreviewDialogProps {
@@ -64,6 +65,7 @@ export const CardPreviewDialog = ({
                     </div>
                   </div>
                   <ClassBadges classes={card.class} />
+                  <OriginBadge origin={card.origin} />
                   <TalentBadges talents={card.talents ?? []} />
                 </div>
               </div>

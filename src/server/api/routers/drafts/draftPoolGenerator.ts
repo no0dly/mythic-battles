@@ -8,7 +8,7 @@ import {
 } from "./helpers";
 import { MAX_DRAFT_ITERATIONS, SPECIAL_CASE_UNITS } from "./constants";
 import { DraftPoolConfig } from "@/types/draft-settings.types";
-import { CARD_TYPES } from "@/types/constants";
+import { ALL_VALUE, CARD_TYPES } from "@/types/constants";
 
 type CardSelectionResult = {
   selectedIds: string[];
@@ -16,6 +16,14 @@ type CardSelectionResult = {
 };
 
 type SpecialCaseHandler = (card: Card, remainingCards: Card[]) => Card[];
+
+/**
+ * Filter cards by allowed origins. When origins contains ALL_VALUE, all cards pass through.
+ */
+function filterByOrigins(cards: Card[], origins: DraftPoolConfig["origins"]): Card[] {
+  if (origins.includes(ALL_VALUE)) return cards;
+  return cards.filter((card) => card.origin !== null && origins.includes(card.origin));
+}
 
 /**
  * Generic function to select a fixed number of cards from a pool
@@ -257,8 +265,11 @@ export function generateDraftPool(
     (card) => card.cost > 0 && card.unit_type !== CARD_TYPES.ART_OF_WAR
   );
 
+  // Filter by selected origins (no-op when ALL_VALUE is included)
+  const originFilteredCards = filterByOrigins(filteredCards, config.origins);
+
   // Organize cards by type
-  const cardsByType = organizeCardsByType(filteredCards);
+  const cardsByType = organizeCardsByType(originFilteredCards);
 
   // Select titans (and handle special cases)
   const { selectedTitanIds, remainingMonsters } = selectTitans(

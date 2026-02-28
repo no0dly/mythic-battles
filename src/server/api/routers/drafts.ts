@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { router, publicProcedure, protectedProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
-import type { Draft, Card, DraftHistory, DraftSettings } from "@/types/database.types";
+import type { Draft, Card, DraftHistory, DraftSettings, CardOrigin } from "@/types/database.types";
 import { zUuid } from "../schemas";
 import {
   DRAFT_STATUS,
@@ -9,6 +9,8 @@ import {
   GAME_STATUS,
   SESSION_STATUS,
   CARD_TYPES,
+  CARD_ORIGIN,
+  ALL_VALUE,
 } from "@/types/constants";
 import { generateDraftPool } from "./drafts/index";
 import type { AppRouter } from "../root";
@@ -39,6 +41,9 @@ export const draftsRouter = router({
           .int()
           .nonnegative()
           .default(DEFAULT_DRAFT_SETTINGS.troop_attachment_amount),
+        origins: z
+          .array(z.union([z.enum(Object.values(CARD_ORIGIN) as [CardOrigin, ...CardOrigin[]]), z.literal(ALL_VALUE)]))
+          .default(DEFAULT_DRAFT_SETTINGS.origins),
         player1_id: zUuid.optional(),
       })
     )
@@ -68,6 +73,7 @@ export const draftsRouter = router({
         gods_amount: input.gods_amount,
         titans_amount: input.titans_amount,
         troop_attachment_amount: input.troop_attachment_amount,
+        origins: input.origins,
       };
 
       // Generate draft pool
@@ -215,6 +221,9 @@ export const draftsRouter = router({
           .int()
           .nonnegative()
           .default(DEFAULT_DRAFT_SETTINGS.troop_attachment_amount),
+        origins: z
+          .array(z.union([z.enum(Object.values(CARD_ORIGIN) as [CardOrigin, ...CardOrigin[]]), z.literal(ALL_VALUE)]))
+          .default(DEFAULT_DRAFT_SETTINGS.origins),
         player1_id: zUuid.optional(),
         player2_id: zUuid.optional(),
       })
@@ -230,6 +239,7 @@ export const draftsRouter = router({
         gods_amount: input.gods_amount,
         titans_amount: input.titans_amount,
         troop_attachment_amount: input.troop_attachment_amount,
+        origins: input.origins,
       });
 
       // Step 2: Create draft record with the generated pool

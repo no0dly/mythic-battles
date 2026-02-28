@@ -1,9 +1,9 @@
 import { z } from "zod";
 import { router, publicProcedure, protectedProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
-import type { Session, Game, Draft } from "@/types/database.types";
+import type { Session, Game, Draft, CardOrigin } from "@/types/database.types";
 import { zUuid } from "../schemas";
-import { SESSION_STATUS, GAME_STATUS, DEFAULT_DRAFT_SETTINGS } from "@/types/constants";
+import { SESSION_STATUS, GAME_STATUS, DEFAULT_DRAFT_SETTINGS, CARD_ORIGIN, ALL_VALUE } from "@/types/constants";
 import {
   fetchPlayersMap,
   enrichSessionWithPlayers,
@@ -147,11 +147,14 @@ export const sessionsRouter = router({
         gods_amount: z.number().min(2).default(DEFAULT_DRAFT_SETTINGS.gods_amount),
         titans_amount: z.number().min(0).default(DEFAULT_DRAFT_SETTINGS.titans_amount),
         troop_attachment_amount: z.number().min(0).default(DEFAULT_DRAFT_SETTINGS.troop_attachment_amount),
+        origins: z
+          .array(z.union([z.enum(Object.values(CARD_ORIGIN) as [CardOrigin, ...CardOrigin[]]), z.literal(ALL_VALUE)]))
+          .default(DEFAULT_DRAFT_SETTINGS.origins),
       })
     )
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
-      const { opponentId, user_allowed_points, draft_size, gods_amount, titans_amount, troop_attachment_amount } = input;
+      const { opponentId, user_allowed_points, draft_size, gods_amount, titans_amount, troop_attachment_amount, origins } = input;
 
       // Track created records for rollback
       let createdSession: Session | null = null;
@@ -215,6 +218,7 @@ export const sessionsRouter = router({
               gods_amount,
               titans_amount,
               troop_attachment_amount,
+              origins,
             },
           } as never)
           .select()
@@ -241,6 +245,7 @@ export const sessionsRouter = router({
           gods_amount,
           titans_amount,
           troop_attachment_amount,
+          origins,
           player1_id: userId,
           player2_id: opponentId,
         });

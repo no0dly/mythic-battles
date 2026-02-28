@@ -1,11 +1,11 @@
 import { z } from "zod";
 import { router, publicProcedure, protectedProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
-import type { Game, Draft, Session, Statistics, Json } from "@/types/database.types";
+import type { Game, Draft, Session, Statistics, Json, CardOrigin } from "@/types/database.types";
 import { zUuid } from "../schemas";
 import type { GameWithDraft, GameWithUserJoin } from "./games/types";
 import { parseDraftHistory } from "@/utils/drafts";
-import { GAME_STATUS, SESSION_STATUS } from "@/types/constants";
+import { GAME_STATUS, SESSION_STATUS, DEFAULT_DRAFT_SETTINGS, CARD_ORIGIN, ALL_VALUE } from "@/types/constants";
 import type { AppRouter } from "../root";
 
 export const gamesRouter = router({
@@ -429,16 +429,19 @@ export const gamesRouter = router({
     .input(
       z.object({
         sessionId: zUuid,
-        user_allowed_points: z.number().min(1).default(18),
-        draft_size: z.number().min(1).default(40),
-        gods_amount: z.number().min(2).default(4),
-        titans_amount: z.number().min(0).default(2),
-        troop_attachment_amount: z.number().min(0).default(4),
+        user_allowed_points: z.number().min(1).default(DEFAULT_DRAFT_SETTINGS.user_allowed_points),
+        draft_size: z.number().min(1).default(DEFAULT_DRAFT_SETTINGS.draft_size),
+        gods_amount: z.number().min(2).default(DEFAULT_DRAFT_SETTINGS.gods_amount),
+        titans_amount: z.number().min(0).default(DEFAULT_DRAFT_SETTINGS.titans_amount),
+        troop_attachment_amount: z.number().min(0).default(DEFAULT_DRAFT_SETTINGS.troop_attachment_amount),
+        origins: z
+          .array(z.union([z.enum(Object.values(CARD_ORIGIN) as [CardOrigin, ...CardOrigin[]]), z.literal(ALL_VALUE)]))
+          .default(DEFAULT_DRAFT_SETTINGS.origins),
       })
     )
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
-      const { sessionId, user_allowed_points, draft_size, gods_amount, titans_amount, troop_attachment_amount } = input;
+      const { sessionId, user_allowed_points, draft_size, gods_amount, titans_amount, troop_attachment_amount, origins } = input;
 
       // Track created records for cleanup on error
       let createdGame: Game | null = null;
@@ -507,6 +510,7 @@ export const gamesRouter = router({
               gods_amount,
               titans_amount,
               troop_attachment_amount,
+              origins,
             },
           } as never)
           .select()
@@ -532,6 +536,7 @@ export const gamesRouter = router({
           gods_amount,
           titans_amount,
           troop_attachment_amount,
+          origins,
           player1_id: sessionData.player1_id,
           player2_id: sessionData.player2_id,
         });

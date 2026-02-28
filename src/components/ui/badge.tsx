@@ -54,6 +54,8 @@ const badgeVariants = cva(
         troop_attachment: "bg-indigo-600 text-white border-transparent",
         cardClass:
           "bg-teal-500/20 text-teal-600 dark:text-teal-400 border-teal-500/30",
+        cardOrigin:
+          "bg-rose-500/20 text-rose-600 dark:text-rose-400 border-rose-500/30",
       },
     },
     defaultVariants: {

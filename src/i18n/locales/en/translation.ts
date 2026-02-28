@@ -266,6 +266,11 @@ const translation = {
   mustUseAllPoints: "You must use all available points before starting the game",
 
   class: "Class",
+  origin: "Origin",
+  all: "All",
+  noItemsFound: "No items found",
+  allExpansions: "All Expansions",
+  selectedCount: "{{count}} selected",
   activations: "Activations",
   talents: "Talents",
 
