@@ -1,0 +1,1 @@
+export { ClassBadges } from "./ClassBadges";

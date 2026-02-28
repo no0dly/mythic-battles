@@ -4,6 +4,7 @@ import { X } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { TalentBadges } from "@/components/TalentBadges";
+import { ClassBadges } from "@/components/ClassBadges";
 import type { Card } from "@/types/database.types";
 
 interface CardPreviewDialogProps {
@@ -62,6 +63,7 @@ export const CardPreviewDialog = ({
                       </span>
                     </div>
                   </div>
+                  <ClassBadges classes={card.class} />
                   <TalentBadges talents={card.talents ?? []} />
                 </div>
               </div>

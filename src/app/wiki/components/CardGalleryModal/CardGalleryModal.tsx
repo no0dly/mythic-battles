@@ -11,6 +11,7 @@ import type { Card as CardType } from "@/types/database.types";
 import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { TalentBadges } from "@/components/TalentBadges";
+import { ClassBadges } from "@/components/ClassBadges";
 
 interface CardGalleryModalProps {
   isShown: boolean;
@@ -57,9 +58,7 @@ export default function CardGalleryModal({
               <strong>{t("type")}:</strong>
               <Badge variant={unitType}>{t(`cardType.${unitType}`)}</Badge>
             </span>
-            <span className="block">
-              <strong>{t("class")}:</strong> {cardClass}
-            </span>
+            <ClassBadges classes={cardClass} />
             <span className="block">
               <strong>{t("cost")}:</strong> {cost}
             </span>

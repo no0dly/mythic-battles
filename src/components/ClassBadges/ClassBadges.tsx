@@ -8,21 +8,22 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import type { CardClass } from "@/types/database.types";
 
-interface TalentBadgesProps {
-  talents: string[];
+interface ClassBadgesProps {
+  classes: CardClass[];
   showLabel?: boolean;
   className?: string;
 }
 
-export function TalentBadges({
-  talents,
+export function ClassBadges({
+  classes,
   showLabel = true,
   className,
-}: TalentBadgesProps) {
+}: ClassBadgesProps) {
   const { t } = useTranslation();
 
-  if (!talents?.length) {
+  if (!classes?.length) {
     return null;
   }
 
@@ -34,20 +35,20 @@ export function TalentBadges({
       )}
     >
       {showLabel && (
-        <strong>{t("talents")}:</strong>
+        <strong>{t("class")}:</strong>
       )}
-      {talents.map((talent) => (
-        <Tooltip key={talent}>
+      {classes.map((cardClass) => (
+        <Tooltip key={cardClass}>
           <TooltipTrigger asChild>
             <Badge
-              variant="secondary"
+              variant="cardClass"
               className="cursor-help select-none"
             >
-              {t(`talentTitles.${talent}`)}
+              {t(`classTitles.${cardClass}`)}
             </Badge>
           </TooltipTrigger>
           <TooltipContent sideOffset={6} className="max-w-xs">
-            {t(`talentEffects.${talent}`)}
+            {t(`classEffects.${cardClass}`)}
           </TooltipContent>
         </Tooltip>
       ))}
