@@ -40,6 +40,7 @@ export const CARD_ORIGIN = {
   TJATI: 'Tjati',
   TRO: 'TRO',
   YMI: 'YMI',
+  THERMOPYLAE: 'Thermopylae',
 } as const;
 
 export const CARD_ORIGIN_FULL_NAME: Partial<Record<CardOrigin, string>> = {
@@ -73,6 +74,7 @@ export const CARD_ORIGIN_FULL_NAME: Partial<Record<CardOrigin, string>> = {
   Tjati: "Tjati",
   TRO: "Heroes of the Trojan War",
   YMI: "Ymir",
+  Thermopylae: "Thermopylae",
 };
 
 export const CARD_TYPES = {
@@ -133,6 +135,7 @@ export const DEFAULT_DRAFT_SETTINGS: DraftSettings = {
   titans_amount: 2,
   troop_attachment_amount: 4,
   origins: [ALL_VALUE],
+  maps: [ALL_VALUE],
 } as const;
 
 export const WIN_CONDITION = {

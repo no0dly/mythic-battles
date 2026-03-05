@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import type { Draft, Card as CardType } from "@/types/database.types";
 import { useDraftDetails } from "@/hooks";
 import { DraftActionButtons, DraftStatusPanelSkeleton } from "./components";
+import { MapSection } from "../MapSection/MapSection";
 import { api } from "@/trpc/client";
 import { canStartGame } from "@/utils/drafts";
 import { useUserProfile } from "@/hooks/useUserProfile";
@@ -177,6 +178,8 @@ export function DraftStatusPanel({ draft, cards }: DraftStatusPanelProps) {
           {player2StrategicValue}
         </p>
       </div>
+
+      <MapSection mapId={draft.map_id} />
 
       <DraftActionButtons
         draftId={draft.id}

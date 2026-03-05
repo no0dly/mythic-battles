@@ -267,6 +267,8 @@ const translation = {
 
   class: "Класс",
   origin: "Дополнение",
+  mapType: "Тип карты",
+  map: "Карта",
   all: "Все",
   noItemsFound: "Ничего не найдено",
   allExpansions: "Все дополнения",

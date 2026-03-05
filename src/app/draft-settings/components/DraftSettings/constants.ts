@@ -9,6 +9,7 @@ import type { CardOrigin, DraftSettings } from "@/types/database.types";
 export type DraftSettingsFormValues = DraftSettings & {
   opponentId: string;
   origins: (CardOrigin | typeof ALL_VALUE)[];
+  maps: (string | typeof ALL_VALUE)[];
 };
 
 export const DRAFT_SIZE_OPTIONS = [
@@ -38,5 +39,6 @@ export const getDraftSettingsSchema = (t: (key: string) => string) =>
     origins: z
       .array(z.union([z.enum(Object.values(CARD_ORIGIN)), z.literal(ALL_VALUE)]))
       .min(1, t("requiredField")),
+    maps: z.array(z.string()).min(1, t("requiredField")),
   });
 

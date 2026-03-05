@@ -18,6 +18,7 @@ interface DraftInfoProps {
     player1_id: string;
     player2_id: string;
     draft_total_cost: number;
+    map_id?: string | null;
   } | null;
   player1Name: string;
   player2Name: string;
@@ -113,6 +114,7 @@ export const DraftInfo = ({
         player1Id={draft.player1_id}
         player2Id={draft.player2_id}
         draftTotalCost={draft.draft_total_cost}
+        mapId={draft.map_id}
       />
     </div>
   );

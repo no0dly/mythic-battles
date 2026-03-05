@@ -13,6 +13,7 @@ import {
   PickHistoryItem,
 } from "@/app/components/DraftInfo/components";
 import { PlayerSection } from "./PlayerSection";
+import { MapSection } from "../MapSection/MapSection";
 
 type UserData = Pick<
   UserProfile,
@@ -136,6 +137,8 @@ export default function DraftFinished({ draft, cards }: DraftFinishedProps) {
               onCardClick={(card) => handleSetPreviewCard(card)}
             />
           </div>
+
+          <MapSection mapId={draft.map_id} />
 
           <section className="space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-2">

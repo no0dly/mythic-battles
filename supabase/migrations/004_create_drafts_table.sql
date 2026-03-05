@@ -10,6 +10,7 @@ create table public.drafts (
   created_at timestamp with time zone null default now(),
   updated_at timestamp with time zone null default now(),
   draft_pool uuid[] null default '{}'::uuid[],
+  map_id text null,
   constraint drafts_pkey primary key (id),
   constraint drafts_current_turn_user_id_fkey foreign KEY (current_turn_user_id) references users (id) on delete set null,
   constraint drafts_game_id_fkey foreign KEY (game_id) references games (id) on delete CASCADE,

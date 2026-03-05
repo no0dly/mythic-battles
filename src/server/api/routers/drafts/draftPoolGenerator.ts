@@ -1,4 +1,4 @@
-import type { Card } from "@/types/database.types";
+import type { Card, GameMap } from "@/types/database.types";
 import type { DraftPoolResult } from "./types";
 import {
   organizeCardsByType,
@@ -312,5 +312,31 @@ export function generateDraftPool(
     totalCost: finalSize,
     selectedCount: allSelectedIds.length,
   };
+}
+
+/**
+ * Select a random map based on the draft configuration.
+ * Filters by selected origins first, then by the maps selection.
+ * Returns null if no eligible maps remain after filtering.
+ */
+export function selectRandomMap(
+  maps: GameMap[],
+  config: Pick<DraftPoolConfig, "origins" | "maps">
+): GameMap | null {
+  let eligible = [...maps];
+
+  if (!config.origins.includes(ALL_VALUE)) {
+    eligible = eligible.filter((map) => config.origins.includes(map.origin));
+  }
+
+  if (!config.maps.includes(ALL_VALUE)) {
+    eligible = eligible.filter((map) =>
+      map.map_type?.some((t) => config.maps.includes(t))
+    );
+  }
+
+  if (eligible.length === 0) return null;
+
+  return eligible[Math.floor(Math.random() * eligible.length)];
 }
 
