@@ -93,6 +93,7 @@ export const GameItem = ({ game, session, index }: GameItemProps) => {
                     player1_id: game.draft.player1_id,
                     player2_id: game.draft.player2_id,
                     draft_total_cost: game.draft_settings?.draft_size,
+                    map_id: game.draft.map_id,
                   }
                 : null
             }

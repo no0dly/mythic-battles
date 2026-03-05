@@ -45,7 +45,8 @@ create table public.cards (
         'SUR'::text,
         'Tjati'::text,
         'TRO'::text,
-        'YMI'::text
+        'YMI'::text,
+        'Thermopylae'::text
       ]
     )
   ),

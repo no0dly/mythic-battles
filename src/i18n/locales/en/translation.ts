@@ -267,6 +267,8 @@ const translation = {
 
   class: "Class",
   origin: "Origin",
+  mapType: "Map Type",
+  map: "Map",
   all: "All",
   noItemsFound: "No items found",
   allExpansions: "All Expansions",

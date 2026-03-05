@@ -60,6 +60,14 @@ export type GameInvitation = {
 export type CardType = ValueOf<typeof CARD_TYPES>;
 export type CardClass = ValueOf<typeof CARD_CLASS>;
 export type CardOrigin = ValueOf<typeof CARD_ORIGIN>;
+export type GameMap = {
+  id: string
+  name: string
+  image_url: string
+  origin: CardOrigin
+  map_type: string[] | null
+  created_at: string
+}
 
 export type Card = {
   id: string
@@ -102,6 +110,7 @@ export type DraftSettings = {
   titans_amount: number
   troop_attachment_amount: number
   origins: (CardOrigin | "all")[]
+  maps: (string | "all")[]
 }
 
 export type WinCondition = ValueOf<typeof WIN_CONDITION>;
@@ -115,6 +124,7 @@ export type Game = {
   draft_id: string | null
   created_by: string
   draft_settings: DraftSettings
+  map_id: string | null
   created_at: string
   updated_at: string
   finished_at: string | null
@@ -155,6 +165,7 @@ export type Draft = {
   created_at: string
   updated_at: string
   draft_pool: string[]
+  map_id: string | null
 }
 
 export type Database = {
@@ -213,6 +224,11 @@ export type Database = {
         Insert: Omit<GameInvitation, 'id' | 'created_at' | 'updated_at' | 'responded_at'>
         Update: Partial<Omit<GameInvitation, 'id' | 'created_at' | 'updated_at'>>
       }
+      maps: {
+        Row: GameMap
+        Insert: Omit<GameMap, 'created_at'>
+        Update: Partial<Omit<GameMap, 'created_at'>>
+      }
     }
     Views: Record<string, never>
     Functions: Record<string, never>
@@ -251,3 +267,5 @@ export type DraftUpdate = Partial<Omit<Draft, 'id' | 'created_at' | 'updated_at'
 }
 export type GameInvitationInsert = Omit<GameInvitation, 'id' | 'created_at' | 'updated_at' | 'responded_at'>
 export type GameInvitationUpdate = Partial<Omit<GameInvitation, 'id' | 'created_at' | 'updated_at'>>
+export type GameMapInsert = Omit<GameMap, 'created_at'>
+export type GameMapUpdate = Partial<Omit<GameMap, 'created_at'>>

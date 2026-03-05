@@ -12,6 +12,7 @@ import {
   NumberInputField,
 } from "@/components/FormFields";
 import { MultiSelectForOriginField } from "@/app/draft-settings/components/MultiSelectForOrigin/MultiselectForOrigin";
+import { MultiSelectForMapTypeField } from "@/app/draft-settings/components/MultiselectForMapType/MultiselectForMapType";
 import {
   DraftSettingsFormValues,
   getDraftSettingsSchema,
@@ -38,6 +39,7 @@ export default function DraftSettings() {
     defaultValues: {
       opponentId: "",
       origins: DEFAULT_DRAFT_SETTINGS.origins,
+      maps: DEFAULT_DRAFT_SETTINGS.maps,
       user_allowed_points: DEFAULT_DRAFT_SETTINGS.user_allowed_points,
       draft_size: DEFAULT_DRAFT_SETTINGS.draft_size,
       gods_amount: DEFAULT_DRAFT_SETTINGS.gods_amount,
@@ -186,6 +188,12 @@ export default function DraftSettings() {
               <MultiSelectForOriginField
                 control={form.control}
                 labelKey="origin"
+              />
+            </div>
+            <div className="max-w-[400px]">
+              <MultiSelectForMapTypeField
+                control={form.control}
+                labelKey="mapType"
               />
             </div>
             <div className="max-w-[400px]">

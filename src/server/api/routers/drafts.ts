@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { router, publicProcedure, protectedProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
-import type { Draft, Card, DraftHistory, DraftSettings, CardOrigin } from "@/types/database.types";
+import type { Draft, Card, GameMap, DraftHistory, DraftSettings, CardOrigin } from "@/types/database.types";
 import { zUuid } from "../schemas";
 import {
   DRAFT_STATUS,
@@ -12,7 +12,7 @@ import {
   CARD_ORIGIN,
   ALL_VALUE,
 } from "@/types/constants";
-import { generateDraftPool } from "./drafts/index";
+import { generateDraftPool, selectRandomMap } from "./drafts/index";
 import type { AppRouter } from "../root";
 import { DraftPoolConfig } from "@/types/draft-settings.types";
 
@@ -74,6 +74,7 @@ export const draftsRouter = router({
         titans_amount: input.titans_amount,
         troop_attachment_amount: input.troop_attachment_amount,
         origins: input.origins,
+        maps: DEFAULT_DRAFT_SETTINGS.maps,
       };
 
       // Generate draft pool
@@ -224,6 +225,9 @@ export const draftsRouter = router({
         origins: z
           .array(z.union([z.enum(Object.values(CARD_ORIGIN) as [CardOrigin, ...CardOrigin[]]), z.literal(ALL_VALUE)]))
           .default(DEFAULT_DRAFT_SETTINGS.origins),
+        maps: z
+          .array(z.union([z.string(), z.literal(ALL_VALUE)]))
+          .default(DEFAULT_DRAFT_SETTINGS.maps),
         player1_id: zUuid.optional(),
         player2_id: zUuid.optional(),
       })
@@ -267,6 +271,27 @@ export const draftsRouter = router({
         player1_id: player1Id,
         player2_id: player2Id,
       });
+
+      // Step 3: Select a random map and attach it to the game
+      const { data: allMaps } = await ctx.supabase.from("maps").select("*");
+
+      const selectedMap = selectRandomMap((allMaps ?? []) as GameMap[], {
+        origins: input.origins,
+        maps: input.maps,
+      });
+
+      if (selectedMap) {
+        await Promise.all([
+          ctx.supabase
+            .from("games")
+            .update({ map_id: selectedMap.id } as never)
+            .eq("id", input.game_id),
+          ctx.supabase
+            .from("drafts")
+            .update({ map_id: selectedMap.id } as never)
+            .eq("id", draft.id),
+        ]);
+      }
 
       return draft;
     }),

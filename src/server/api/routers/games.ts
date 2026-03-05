@@ -437,11 +437,14 @@ export const gamesRouter = router({
         origins: z
           .array(z.union([z.enum(Object.values(CARD_ORIGIN) as [CardOrigin, ...CardOrigin[]]), z.literal(ALL_VALUE)]))
           .default(DEFAULT_DRAFT_SETTINGS.origins),
+        maps: z
+          .array(z.union([z.string(), z.literal(ALL_VALUE)]))
+          .default(DEFAULT_DRAFT_SETTINGS.maps),
       })
     )
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
-      const { sessionId, user_allowed_points, draft_size, gods_amount, titans_amount, troop_attachment_amount, origins } = input;
+      const { sessionId, user_allowed_points, draft_size, gods_amount, titans_amount, troop_attachment_amount, origins, maps } = input;
 
       // Track created records for cleanup on error
       let createdGame: Game | null = null;
@@ -511,6 +514,7 @@ export const gamesRouter = router({
               titans_amount,
               troop_attachment_amount,
               origins,
+              maps,
             },
           } as never)
           .select()
@@ -537,6 +541,7 @@ export const gamesRouter = router({
           titans_amount,
           troop_attachment_amount,
           origins,
+          maps,
           player1_id: sessionData.player1_id,
           player2_id: sessionData.player2_id,
         });

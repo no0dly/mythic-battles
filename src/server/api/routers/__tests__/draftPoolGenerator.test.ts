@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { generateDraftPool } from "../drafts/draftPoolGenerator";
-import type { Card } from "@/types/database.types";
+import { generateDraftPool, selectRandomMap } from "../drafts/draftPoolGenerator";
+import type { Card, GameMap } from "@/types/database.types";
 import { ALL_VALUE, CARD_ORIGIN, CARD_TYPES } from "@/types/constants";
 import type { DraftPoolConfig } from "@/types/draft-settings.types";
 
@@ -30,7 +30,21 @@ const BASE_CONFIG: DraftPoolConfig = {
   titans_amount: 0,
   troop_attachment_amount: 0,
   origins: [ALL_VALUE],
+  maps: [ALL_VALUE],
 };
+
+const makeMap = (
+  id: string,
+  origin: string,
+  map_type: string[] | null = null,
+): GameMap => ({
+  id,
+  name: `Map ${id}`,
+  image_url: "",
+  origin: origin as GameMap["origin"],
+  map_type,
+  created_at: "2024-01-01T00:00:00.000Z",
+});
 
 describe("generateDraftPool - origin filtering", () => {
   const asgMonster = makeCard("asg-1", CARD_TYPES.MONSTER, 1, CARD_ORIGIN.ASG);
@@ -145,5 +159,70 @@ describe("generateDraftPool - fixed card types", () => {
 
     expect(result.cardIds).toContain(asgGod.id);
     expect(result.cardIds).not.toContain(chtGod.id);
+  });
+});
+
+describe("selectRandomMap", () => {
+  const asgLand = makeMap("asg-land", CARD_ORIGIN.ASG, ["land"]);
+  const asgWater = makeMap("asg-water", CARD_ORIGIN.ASG, ["water"]);
+  const chtLand = makeMap("cht-land", CARD_ORIGIN.CHT, ["land"]);
+  const noType = makeMap("no-type", CARD_ORIGIN.ASG, null);
+
+  it("returns null when map list is empty", () => {
+    expect(selectRandomMap([], { origins: [ALL_VALUE], maps: [ALL_VALUE] })).toBeNull();
+  });
+
+  it("returns any map when both origins and maps are ALL_VALUE", () => {
+    const allMaps = [asgLand, asgWater, chtLand];
+    const result = selectRandomMap(allMaps, { origins: [ALL_VALUE], maps: [ALL_VALUE] });
+    expect(allMaps).toContain(result);
+  });
+
+  it("filters by origin when origins is not ALL_VALUE", () => {
+    const result = selectRandomMap([asgLand, chtLand], {
+      origins: [CARD_ORIGIN.ASG],
+      maps: [ALL_VALUE],
+    });
+    expect(result).toBe(asgLand);
+  });
+
+  it("filters by map_type when maps is not ALL_VALUE", () => {
+    const result = selectRandomMap([asgLand, asgWater], {
+      origins: [ALL_VALUE],
+      maps: ["land"],
+    });
+    expect(result).toBe(asgLand);
+  });
+
+  it("applies both origin and map_type filters together", () => {
+    const result = selectRandomMap([asgLand, asgWater, chtLand], {
+      origins: [CARD_ORIGIN.ASG],
+      maps: ["water"],
+    });
+    expect(result).toBe(asgWater);
+  });
+
+  it("returns null when no maps match after filtering", () => {
+    const result = selectRandomMap([asgLand], {
+      origins: [CARD_ORIGIN.CHT],
+      maps: [ALL_VALUE],
+    });
+    expect(result).toBeNull();
+  });
+
+  it("excludes maps with null map_type when a specific type is required", () => {
+    const result = selectRandomMap([noType, asgLand], {
+      origins: [ALL_VALUE],
+      maps: ["land"],
+    });
+    expect(result).toBe(asgLand);
+  });
+
+  it("returns null when map_type filter matches nothing", () => {
+    const result = selectRandomMap([asgLand, chtLand], {
+      origins: [ALL_VALUE],
+      maps: ["water"],
+    });
+    expect(result).toBeNull();
   });
 });

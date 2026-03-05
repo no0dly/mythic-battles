@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { DraftHistory, Card, UserProfile } from "@/types/database.types";
+import { MapSection } from "@/app/draft/[draftId]/components/MapSection/MapSection";
 import { api } from "@/trpc/client";
 import { sortPicksByNumber } from "@/utils/drafts";
 import { formatDisplayName } from "@/utils/users";
@@ -29,6 +30,7 @@ interface DraftHistoryModalProps {
   player1Id: string;
   player2Id: string;
   draftTotalCost: number;
+  mapId?: string | null;
 }
 
 type UserData = Pick<
@@ -42,6 +44,7 @@ export const DraftHistoryModal = ({
   draftHistory,
   player1Id,
   player2Id,
+  mapId,
 }: DraftHistoryModalProps) => {
   const { t } = useTranslation();
   const [previewCard, setPreviewCard] = useState<Card | null>(null);
@@ -118,6 +121,8 @@ export const DraftHistoryModal = ({
               {t("draftHistoryDescription")}
             </DialogDescription>
           </DialogHeader>
+
+          <MapSection mapId={mapId} />
 
           {loading ? (
             <div className="py-12">
