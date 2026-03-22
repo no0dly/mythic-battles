@@ -3,8 +3,8 @@
 import Image from "next/image";
 import { X } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "react-i18next";
+import { MapTypeBadges } from "@/components/MapTypeBadges";
 import type { GameMap } from "@/types/database.types";
 
 interface MapPreviewDialogProps {
@@ -45,18 +45,12 @@ export const MapPreviewDialog = ({ map, onClose }: MapPreviewDialogProps) => {
                 />
               </div>
 
-              <div className="flex items-center justify-between px-5 py-3 border-t">
+              <div className="flex flex-col gap-2 px-5 py-3 border-t">
                 <h3 className="text-xl font-semibold text-foreground">
                   {map.name}
                 </h3>
                 {map.map_type && map.map_type.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {map.map_type.map((type) => (
-                      <Badge key={type} variant="outline">
-                        {type}
-                      </Badge>
-                    ))}
-                  </div>
+                  <MapTypeBadges mapTypes={map.map_type} />
                 )}
               </div>
             </div>

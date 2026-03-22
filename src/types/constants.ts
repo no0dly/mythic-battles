@@ -87,6 +87,19 @@ export const CARD_TYPES = {
   TROOP_ATTACHMENT: 'troop_attachment',
 } as const;
 
+export const UNIT_TYPES = [
+  CARD_TYPES.HERO,
+  CARD_TYPES.MONSTER,
+  CARD_TYPES.GOD,
+  CARD_TYPES.TITAN,
+  CARD_TYPES.TROOP,
+] as const;
+
+export const HELPER_TYPES = [
+  CARD_TYPES.ART_OF_WAR,
+  CARD_TYPES.TROOP_ATTACHMENT,
+] as const;
+
 export const SESSION_STATUS = {
   AVAILABLE: 'available',
   INVITE_TO_DRAFT: 'inviteToDraft',
@@ -124,6 +137,31 @@ export const FRIENDSHIP_STATUS = {
   ACCEPTED: 'accepted',
   REJECTED: 'rejected',
   BLOCKED: 'blocked',
+} as const;
+
+export const MAP_TYPE = {
+  DIVINE_SOURCE: 'divineSource',
+  RUINS: 'ruins',
+  FOREST: 'forest',
+  BUILDING: 'building',
+  STAIRS: 'stairs',
+  BURNING: 'burning',
+  ROCK: 'rock',
+  STRUCTURE: 'structure',
+  HEIGHTS: 'heights',
+  SWAMP: 'swamp',
+  RIFT: 'rift',
+  CLIFF: 'cliff',
+  CAGE_WALLS: 'cageWalls',
+  CHAINS: 'chains',
+  CAGE: 'cage',
+  WATER: 'water',
+  STEPS: 'steps',
+  SACRED_WATERS: 'sacredWaters',
+  SOLAR: 'solar',
+  DIVINE_GROWTH: 'divineGrowth',
+  QUICKSAND: 'quicksand',
+  POLAR: 'polar',
 } as const;
 
 export const ALL_VALUE = "all" as const;

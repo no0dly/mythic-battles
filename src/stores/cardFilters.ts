@@ -3,14 +3,16 @@ import { useShallow } from "zustand/react/shallow";
 
 interface CardFiltersState {
   searchName: string;
-  selectedType: string;
-  selectedCost: string;
+  selectedTypes: string[];
+  selectedCosts: string[];
+  selectedMapTypes: string[];
 }
 
 interface CardFiltersActions {
   setSearchName: (value: string) => void;
-  setSelectedType: (value: string) => void;
-  setSelectedCost: (value: string) => void;
+  setSelectedTypes: (value: string[]) => void;
+  setSelectedCosts: (value: string[]) => void;
+  setSelectedMapTypes: (value: string[]) => void;
   clearFilters: () => void;
 }
 
@@ -20,16 +22,19 @@ export const DEFAULT_FILTER = "all"
 
 export const useCardFiltersStoreBase = create<CardFiltersStore>((set) => ({
   searchName: "",
-  selectedType: DEFAULT_FILTER,
-  selectedCost: DEFAULT_FILTER,
+  selectedTypes: [DEFAULT_FILTER],
+  selectedCosts: [DEFAULT_FILTER],
+  selectedMapTypes: [DEFAULT_FILTER],
   setSearchName: (value) => set({ searchName: value }),
-  setSelectedType: (value) => set({ selectedType: value }),
-  setSelectedCost: (value) => set({ selectedCost: value }),
+  setSelectedTypes: (value) => set({ selectedTypes: value }),
+  setSelectedCosts: (value) => set({ selectedCosts: value }),
+  setSelectedMapTypes: (value) => set({ selectedMapTypes: value }),
   clearFilters: () =>
     set({
       searchName: "",
-      selectedType: DEFAULT_FILTER,
-      selectedCost: DEFAULT_FILTER,
+      selectedTypes: [DEFAULT_FILTER],
+      selectedCosts: [DEFAULT_FILTER],
+      selectedMapTypes: [DEFAULT_FILTER],
     }),
 }));
 
@@ -39,17 +44,20 @@ export const useCardFiltersStore = <T,>(
 
 export const useSearchName = () =>
   useCardFiltersStore((state) => state.searchName);
-export const useSelectedType = () =>
-  useCardFiltersStore((state) => state.selectedType);
-export const useSelectedCost = () =>
-  useCardFiltersStore((state) => state.selectedCost);
+export const useSelectedTypes = () =>
+  useCardFiltersStore((state) => state.selectedTypes);
+export const useSelectedCosts = () =>
+  useCardFiltersStore((state) => state.selectedCosts);
+export const useSelectedMapTypes = () =>
+  useCardFiltersStore((state) => state.selectedMapTypes);
 
 export const useFilterActions = () =>
   useCardFiltersStoreBase(
     useShallow((state) => ({
       setSearchName: state.setSearchName,
-      setSelectedType: state.setSelectedType,
-      setSelectedCost: state.setSelectedCost,
+      setSelectedTypes: state.setSelectedTypes,
+      setSelectedCosts: state.setSelectedCosts,
+      setSelectedMapTypes: state.setSelectedMapTypes,
       clearFilters: state.clearFilters,
     }))
   );
@@ -58,8 +66,8 @@ export const useFilterValues = () =>
   useCardFiltersStoreBase(
     useShallow((state) => ({
       searchName: state.searchName,
-      selectedType: state.selectedType,
-      selectedCost: state.selectedCost,
+      selectedTypes: state.selectedTypes,
+      selectedCosts: state.selectedCosts,
+      selectedMapTypes: state.selectedMapTypes,
     }))
   );
-
