@@ -1,52 +1,33 @@
 "use client";
-import {
-  useSearchName,
-  useSelectedType,
-  useSelectedCost,
-  useFilterActions,
-  DEFAULT_FILTER,
-} from "@/stores/cardFilters";
-import { CARD_TYPES } from "@/types/constants";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Card as UICard } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { MultiSelect } from "@/components/ui/multi-select";
 import { useTranslation } from "react-i18next";
-import debounce from "debounce";
+import { useCardGalleryFilter } from "./hooks/useCardGalleryFilter";
 
 interface CardGalleryFilterProps {
   uniqueCosts: number[];
 }
 
-export default function CardGalleryFilter({
-  uniqueCosts,
-}: CardGalleryFilterProps) {
+export default function CardGalleryFilter({ uniqueCosts }: CardGalleryFilterProps) {
   const { t } = useTranslation();
-  const searchName = useSearchName();
-  const selectedType = useSelectedType();
-  const selectedCost = useSelectedCost();
-
-  const { setSearchName, setSelectedType, setSelectedCost, clearFilters } =
-    useFilterActions();
-
-  const hasActiveFilters =
-    !!searchName ||
-    selectedType !== DEFAULT_FILTER ||
-    selectedCost !== DEFAULT_FILTER;
-
-  const onInputChangeHandler = debounce(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setSearchName(e.target.value);
-    },
-    400
-  );
+  const {
+    mapsSelected,
+    hasActiveFilters,
+    onInputChangeHandler,
+    typeOptions,
+    costOptions,
+    mapTypeOptions,
+    multiSelectTypeValue,
+    multiSelectCostValue,
+    multiSelectMapTypeValue,
+    handleTypeChange,
+    handleCostChange,
+    handleMapTypeChange,
+    clearFilters,
+  } = useCardGalleryFilter(uniqueCosts);
 
   return (
     <UICard className="p-4">
@@ -56,39 +37,37 @@ export default function CardGalleryFilter({
           <Input id="search-name" type="text" onChange={onInputChangeHandler} />
         </div>
 
-        <div className="w-full sm:w-48 space-y-2">
-          <Label htmlFor="filter-type">{t("type")}</Label>
-          <Select value={selectedType} onValueChange={setSelectedType}>
-            <SelectTrigger id="filter-type" className="w-full">
-              <SelectValue placeholder={t("allTypes")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={DEFAULT_FILTER}>{t("allTypes")}</SelectItem>
-              {Object.values(CARD_TYPES).map((type) => (
-                <SelectItem key={type} value={type}>
-                  {t(`cardType.${type}`)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="w-full sm:w-80 space-y-2">
+          <Label>{t("type")}</Label>
+          <MultiSelect
+            options={typeOptions}
+            value={multiSelectTypeValue}
+            onValueChange={handleTypeChange}
+            placeholder={t("allTypes")}
+          />
         </div>
 
-        <div className="w-full sm:w-32 space-y-2">
-          <Label htmlFor="filter-cost">{t("cost")}</Label>
-          <Select value={selectedCost} onValueChange={setSelectedCost}>
-            <SelectTrigger id="filter-cost" className="w-full">
-              <SelectValue placeholder={t("allCosts")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={DEFAULT_FILTER}>{t("allCosts")}</SelectItem>
-              {uniqueCosts.map((cost) => (
-                <SelectItem key={cost} value={String(cost)}>
-                  {cost}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        {mapsSelected ? (
+          <div className="w-full sm:w-80 space-y-2">
+            <Label>{t("mapType")}</Label>
+            <MultiSelect
+              options={mapTypeOptions}
+              value={multiSelectMapTypeValue}
+              onValueChange={handleMapTypeChange}
+              placeholder={t("allMapTypes")}
+            />
+          </div>
+        ) : (
+          <div className="w-full sm:w-60 space-y-2">
+            <Label>{t("cost")}</Label>
+            <MultiSelect
+              options={costOptions}
+              value={multiSelectCostValue}
+              onValueChange={handleCostChange}
+              placeholder={t("allCosts")}
+            />
+          </div>
+        )}
 
         {hasActiveFilters && (
           <Button

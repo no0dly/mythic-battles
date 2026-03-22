@@ -1,223 +1,162 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import CardGalleryFilter from "../CardGalleryFilter";
-import { DEFAULT_FILTER } from "@/stores/cardFilters";
-import { CARD_TYPES } from "@/types/constants";
+import { MAPS_FILTER_VALUE } from "@/app/wiki/components/CardGallery/utils";
 
-// Mock the cardFilters store
-const mockStoreState = {
-  searchName: "",
-  selectedType: DEFAULT_FILTER,
-  selectedCost: DEFAULT_FILTER,
-  setSearchName: vi.fn(),
-  setSelectedType: vi.fn(),
-  setSelectedCost: vi.fn(),
+// ---------------------------------------------------------------------------
+// Mock the hook — component test only verifies rendering and wiring
+// ---------------------------------------------------------------------------
+const mockHook = {
+  mapsSelected: false,
+  hasActiveFilters: false,
+  onInputChangeHandler: vi.fn(),
+  typeOptions: [
+    { value: "hero", label: "Hero" },
+    { value: "maps", label: "Maps" },
+  ],
+  costOptions: [
+    { value: "3", label: "3" },
+    { value: "5", label: "5" },
+  ],
+  mapTypeOptions: [{ value: "ruins", label: "Ruins" }],
+  multiSelectTypeValue: [] as string[],
+  multiSelectCostValue: [] as string[],
+  multiSelectMapTypeValue: [] as string[],
+  handleTypeChange: vi.fn(),
+  handleCostChange: vi.fn(),
+  handleMapTypeChange: vi.fn(),
   clearFilters: vi.fn(),
 };
 
-vi.mock("@/stores/cardFilters", () => ({
-  DEFAULT_FILTER: "all",
-  useSearchName: () => mockStoreState.searchName,
-  useSelectedType: () => mockStoreState.selectedType,
-  useSelectedCost: () => mockStoreState.selectedCost,
-  useFilterActions: () => ({
-    setSearchName: mockStoreState.setSearchName,
-    setSelectedType: mockStoreState.setSelectedType,
-    setSelectedCost: mockStoreState.setSelectedCost,
-    clearFilters: mockStoreState.clearFilters,
-  }),
+vi.mock("../hooks/useCardGalleryFilter", () => ({
+  useCardGalleryFilter: () => mockHook,
 }));
 
-// Mock react-i18next
-const mockT = vi.fn((key: string) => key);
 vi.mock("react-i18next", () => ({
-  useTranslation: () => ({
-    t: mockT,
-  }),
+  useTranslation: () => ({ t: (key: string) => key }),
 }));
 
-// Mock debounce
-vi.mock("debounce", () => ({
-  default: (fn: any) => fn,
-}));
-
-// Mock UI components
 vi.mock("@/components/ui/input", () => ({
-  Input: ({ onChange, ...props }: any) => (
-    <input onChange={onChange} {...props} />
-  ),
+  Input: ({ onChange, ...props }: any) => <input onChange={onChange} {...props} />,
 }));
-
 vi.mock("@/components/ui/label", () => ({
-  Label: ({ children, ...props }: any) => <label {...props}>{children}</label>,
+  Label: ({ children, htmlFor }: any) => <label htmlFor={htmlFor}>{children}</label>,
 }));
-
 vi.mock("@/components/ui/button", () => ({
-  Button: ({ children, onClick, ...props }: any) => (
-    <button onClick={onClick} {...props}>
-      {children}
-    </button>
-  ),
+  Button: ({ children, onClick }: any) => <button onClick={onClick}>{children}</button>,
 }));
-
 vi.mock("@/components/ui/card", () => ({
-  Card: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+  Card: ({ children, className }: any) => <div className={className}>{children}</div>,
 }));
-
-vi.mock("@/components/ui/select", () => ({
-  Select: ({ children, value }: any) => (
-    <div data-testid="select" data-value={value}>
-      {children}
+vi.mock("@/components/ui/multi-select", () => ({
+  MultiSelect: ({ onValueChange, placeholder, options }: any) => (
+    <div data-testid="multi-select" data-placeholder={placeholder}>
+      {(options ?? []).map((opt: any) => (
+        <button key={opt.value} data-testid={`option-${opt.value}`} onClick={() => onValueChange([opt.value])}>
+          {opt.label}
+        </button>
+      ))}
     </div>
-  ),
-  SelectContent: ({ children }: any) => (
-    <div data-testid="select-content">{children}</div>
-  ),
-  SelectItem: ({ children, value, onClick }: any) => (
-    <div
-      data-testid="select-item"
-      data-value={value}
-      onClick={() => onClick?.({ target: { value } })}
-    >
-      {children}
-    </div>
-  ),
-  SelectTrigger: ({ children, ...props }: any) => (
-    <div data-testid="select-trigger" {...props}>
-      {children}
-    </div>
-  ),
-  SelectValue: ({ placeholder }: any) => (
-    <div data-testid="select-value">{placeholder}</div>
   ),
 }));
 
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+const renderFilter = (uniqueCosts: number[] = [3, 5]) =>
+  render(<CardGalleryFilter uniqueCosts={uniqueCosts} />);
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  mockHook.mapsSelected = false;
+  mockHook.hasActiveFilters = false;
+  mockHook.multiSelectTypeValue = [];
+  mockHook.multiSelectCostValue = [];
+  mockHook.multiSelectMapTypeValue = [];
+});
+
+// ---------------------------------------------------------------------------
+// Tests
+// ---------------------------------------------------------------------------
 describe("CardGalleryFilter", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    mockStoreState.searchName = "";
-    mockStoreState.selectedType = DEFAULT_FILTER;
-    mockStoreState.selectedCost = DEFAULT_FILTER;
-  });
+  describe("rendering", () => {
+    it("renders search input", () => {
+      renderFilter();
+      expect(screen.getByLabelText("searchByName")).toBeTruthy();
+    });
 
-  const renderFilter = (uniqueCosts: number[] = [3, 4, 5]) => {
-    return render(<CardGalleryFilter uniqueCosts={uniqueCosts} />);
-  };
+    it("renders two multi-selects when maps not selected", () => {
+      renderFilter();
+      expect(screen.getAllByTestId("multi-select")).toHaveLength(2);
+    });
 
-  it("renders all filter inputs", () => {
-    renderFilter();
+    it("renders two multi-selects when maps is selected", () => {
+      mockHook.mapsSelected = true;
+      renderFilter();
+      expect(screen.getAllByTestId("multi-select")).toHaveLength(2);
+    });
 
-    expect(screen.getByLabelText("searchByName")).toBeTruthy();
-    const selectTriggers = screen.getAllByTestId("select-trigger");
-    expect(selectTriggers.length).toBe(2); // One for type, one for cost
-    const selects = screen.getAllByTestId("select");
-    expect(selects.length).toBe(2); // One for type, one for cost
-  });
+    it("renders cost options when maps not selected", () => {
+      renderFilter();
+      expect(screen.getByTestId("option-3")).toBeTruthy();
+      expect(screen.getByTestId("option-5")).toBeTruthy();
+    });
 
-  it("renders search input with correct placeholder", () => {
-    renderFilter();
-    const searchInput = screen.getByLabelText(
-      "searchByName"
-    ) as HTMLInputElement;
-    expect(searchInput).toBeTruthy();
-    expect(searchInput.type).toBe("text");
-  });
-
-  it("calls setSearchName when search input changes", async () => {
-    renderFilter();
-    const searchInput = screen.getByLabelText(
-      "searchByName"
-    ) as HTMLInputElement;
-
-    fireEvent.change(searchInput, { target: { value: "zeus" } });
-
-    await waitFor(() => {
-      expect(mockStoreState.setSearchName).toHaveBeenCalledWith("zeus");
+    it("renders map type options instead of cost when maps is selected", () => {
+      mockHook.mapsSelected = true;
+      renderFilter();
+      expect(screen.getByTestId("option-ruins")).toBeTruthy();
+      expect(screen.queryByTestId("option-3")).toBeNull();
     });
   });
 
-  it("renders type select with all card types", () => {
-    renderFilter();
-    const selects = screen.getAllByTestId("select");
-    expect(selects.length).toBeGreaterThan(0);
+  describe("clear button", () => {
+    it("does not render clear button when no filters are active", () => {
+      renderFilter();
+      expect(screen.queryByText("clearFilters")).toBeNull();
+    });
+
+    it("renders clear button when filters are active", () => {
+      mockHook.hasActiveFilters = true;
+      renderFilter();
+      expect(screen.getByText("clearFilters")).toBeTruthy();
+    });
+
+    it("calls clearFilters when clear button is clicked", () => {
+      mockHook.hasActiveFilters = true;
+      renderFilter();
+      fireEvent.click(screen.getByText("clearFilters"));
+      expect(mockHook.clearFilters).toHaveBeenCalledOnce();
+    });
   });
 
-  it("calls setSelectedType when type is changed", () => {
-    renderFilter();
-    // Since Select is mocked, we verify the select is rendered
-    const selects = screen.getAllByTestId("select");
-    expect(selects.length).toBeGreaterThan(0);
-    // The actual onChange would be handled by the Select component
-    // This is tested through integration, but we verify the select is rendered
-  });
+  describe("handler wiring", () => {
+    it("calls onInputChangeHandler when search input changes", () => {
+      renderFilter();
+      fireEvent.change(screen.getByLabelText("searchByName"), {
+        target: { value: "zeus" },
+      });
+      expect(mockHook.onInputChangeHandler).toHaveBeenCalled();
+    });
 
-  it("renders cost select with unique costs", () => {
-    renderFilter([1, 2, 3, 4, 5]);
-    const costSelects = screen.getAllByTestId("select");
-    expect(costSelects.length).toBeGreaterThan(0);
-  });
+    it("calls handleTypeChange when a type option is clicked", () => {
+      renderFilter();
+      fireEvent.click(screen.getByTestId("option-hero"));
+      expect(mockHook.handleTypeChange).toHaveBeenCalledWith(["hero"]);
+    });
 
-  it("does not render clear button when no filters are active", () => {
-    renderFilter();
-    expect(screen.queryByText("clearFilters")).toBeNull();
-  });
+    it("calls handleCostChange when a cost option is clicked", () => {
+      renderFilter();
+      fireEvent.click(screen.getByTestId("option-3"));
+      expect(mockHook.handleCostChange).toHaveBeenCalledWith(["3"]);
+    });
 
-  it("renders clear button when search name is active", () => {
-    mockStoreState.searchName = "zeus";
-    renderFilter();
-    expect(screen.getByText("clearFilters")).toBeTruthy();
-  });
-
-  it("renders clear button when type filter is active", () => {
-    mockStoreState.selectedType = CARD_TYPES.GOD;
-    renderFilter();
-    const clearButtons = screen.getAllByText("clearFilters");
-    expect(clearButtons.length).toBeGreaterThan(0);
-  });
-
-  it("renders clear button when troop_attachment type filter is active", () => {
-    mockStoreState.selectedType = CARD_TYPES.TROOP_ATTACHMENT;
-    renderFilter();
-    const clearButtons = screen.getAllByText("clearFilters");
-    expect(clearButtons.length).toBeGreaterThan(0);
-  });
-
-  it("renders clear button when cost filter is active", () => {
-    mockStoreState.selectedCost = "5";
-    renderFilter();
-    const clearButtons = screen.getAllByText("clearFilters");
-    expect(clearButtons.length).toBeGreaterThan(0);
-  });
-
-  it("calls clearFilters when clear button is clicked", () => {
-    mockStoreState.searchName = "zeus";
-    renderFilter();
-
-    const clearButtons = screen.getAllByText("clearFilters");
-    expect(clearButtons.length).toBeGreaterThan(0);
-    fireEvent.click(clearButtons[0]!);
-
-    expect(mockStoreState.clearFilters).toHaveBeenCalled();
-  });
-
-  it("renders all card types in type select", () => {
-    renderFilter();
-    const selectContents = screen.getAllByTestId("select-content");
-    expect(selectContents.length).toBeGreaterThan(0);
-    // Verify that all card types are rendered (this would be in SelectContent)
-  });
-
-  it("renders all unique costs in cost select", () => {
-    const uniqueCosts = [1, 3, 5, 7];
-    renderFilter(uniqueCosts);
-    const costSelects = screen.getAllByTestId("select");
-    expect(costSelects.length).toBeGreaterThan(0);
-  });
-
-  it("handles empty unique costs array", () => {
-    renderFilter([]);
-    const costSelects = screen.getAllByTestId("select");
-    expect(costSelects.length).toBeGreaterThan(0);
+    it("calls handleMapTypeChange when a map type option is clicked", () => {
+      mockHook.mapsSelected = true;
+      renderFilter();
+      fireEvent.click(screen.getByTestId("option-ruins"));
+      expect(mockHook.handleMapTypeChange).toHaveBeenCalledWith(["ruins"]);
+    });
   });
 });

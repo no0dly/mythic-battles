@@ -56,6 +56,8 @@ const badgeVariants = cva(
           "bg-teal-500/20 text-teal-600 dark:text-teal-400 border-teal-500/30",
         cardOrigin:
           "bg-rose-500/20 text-rose-600 dark:text-rose-400 border-rose-500/30",
+        mapType:
+          "bg-amber-500/20 text-amber-700 dark:text-amber-400 border-amber-500/30",
       },
     },
     defaultVariants: {

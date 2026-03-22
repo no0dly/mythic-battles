@@ -8,7 +8,7 @@ import {
   getFilteredData,
   getUniqueCosts,
 } from "@/app/wiki/components/CardGallery/utils";
-import { useSelectedType, useSelectedCost } from "@/stores/cardFilters";
+import { useSelectedTypes, useSelectedCosts } from "@/stores/cardFilters";
 import type { Card, Draft, UserSubset } from "@/types/database.types";
 import useGetPickedCardsIDs from "./hooks/useGetPickedCardsIDs";
 import { api } from "@/trpc/client";
@@ -16,6 +16,7 @@ import { canPickCard } from "@/utils/drafts/cardPickRestrictions";
 import { getPlayerCards } from "@/utils/drafts/helpers";
 import { DEFAULT_DRAFT_SETTINGS, CARD_TYPES } from "@/types/constants";
 import { createCardIdMap } from "@/utils/cards/createCardIdMap";
+
 
 interface DraftCardGridProps {
   cards: Card[];
@@ -25,8 +26,8 @@ interface DraftCardGridProps {
 
 export function DraftCardGrid({ cards, draft, user }: DraftCardGridProps) {
   const { t } = useTranslation();
-  const selectedType = useSelectedType();
-  const selectedCost = useSelectedCost();
+  const selectedTypes = useSelectedTypes();
+  const selectedCosts = useSelectedCosts();
   const pickedCardIds = useGetPickedCardsIDs(draft);
 
   // Get game settings to get allowed points
@@ -42,8 +43,19 @@ export function DraftCardGrid({ cards, draft, user }: DraftCardGridProps) {
   const uniqueCosts = useMemo(() => getUniqueCosts(cards || []), [cards]);
 
   const filteredCards = useMemo(
-    () => getFilteredData(cards || [], "", selectedType, selectedCost),
-    [cards, selectedType, selectedCost]
+    () =>
+      getFilteredData(cards || [], "", selectedTypes, selectedCosts).sort(
+        (a, b) => {
+          const aIsAoW = a.unit_type === CARD_TYPES.ART_OF_WAR;
+          const bIsAoW = b.unit_type === CARD_TYPES.ART_OF_WAR;
+          if (aIsAoW !== bIsAoW) return aIsAoW ? 1 : -1;
+          return (
+            a.unit_type.localeCompare(b.unit_type) ||
+            a.unit_name.localeCompare(b.unit_name)
+          );
+        },
+      ),
+    [cards, selectedTypes, selectedCosts]
   );
 
   const cardMap = useMemo(() => createCardIdMap(cards), [cards]);

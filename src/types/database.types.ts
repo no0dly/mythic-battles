@@ -1,4 +1,4 @@
-import { CARD_CLASS, CARD_ORIGIN, CARD_TYPES, GAME_STATUS, SESSION_STATUS, DRAFT_STATUS, GAME_INVITATION_STATUS, FRIENDSHIP_STATUS, WIN_CONDITION } from "./constants"
+import { CARD_CLASS, CARD_ORIGIN, CARD_TYPES, GAME_STATUS, SESSION_STATUS, DRAFT_STATUS, GAME_INVITATION_STATUS, FRIENDSHIP_STATUS, WIN_CONDITION, MAP_TYPE } from "./constants"
 import { ValueOf } from "./interfaces"
 
 export type Json =
@@ -60,12 +60,13 @@ export type GameInvitation = {
 export type CardType = ValueOf<typeof CARD_TYPES>;
 export type CardClass = ValueOf<typeof CARD_CLASS>;
 export type CardOrigin = ValueOf<typeof CARD_ORIGIN>;
+export type MapType = ValueOf<typeof MAP_TYPE>;
 export type GameMap = {
   id: string
   name: string
   image_url: string
   origin: CardOrigin
-  map_type: string[] | null
+  map_type: MapType[] | null
   created_at: string
 }
 
