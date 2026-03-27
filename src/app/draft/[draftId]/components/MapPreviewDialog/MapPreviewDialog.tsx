@@ -41,7 +41,7 @@ export const MapPreviewDialog = ({ map, onClose }: MapPreviewDialogProps) => {
                   alt={map.name}
                   width={1200}
                   height={800}
-                  className="w-full h-auto rounded-t-lg"
+                  className="w-full h-auto max-h-[60vh] object-contain rounded-t-lg"
                 />
               </div>
 

@@ -1,10 +1,9 @@
-import { describe, it, expect, vi, afterEach } from "vitest";
+import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
 import CardGalleryModal from "../CardGalleryModal";
 import type { Card } from "@/types/database.types";
 import { CARD_TYPES } from "@/types/constants";
 
-// Mock next/image
 vi.mock("next/image", () => ({
   default: ({ src, alt, ...props }: { src: string; alt: string }) => (
     // eslint-disable-next-line @next/next/no-img-element
@@ -24,6 +23,18 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
+const mockGetById = vi.fn();
+
+vi.mock("@/trpc/client", () => ({
+  api: {
+    cards: {
+      getById: {
+        useQuery: () => mockGetById(),
+      },
+    },
+  },
+}));
+
 const mockCard: Card = {
   id: "550e8400-e29b-41d4-a716-446655440001",
   unit_name: "Zeus",
@@ -34,6 +45,7 @@ const mockCard: Card = {
   talents: [],
   class: ["terrestrial"],
   origin: null,
+  extra: null,
   image_url: "/globe.svg",
   created_at: "2024-01-01T00:00:00Z",
   updated_at: "2024-01-01T00:00:00Z",
@@ -42,6 +54,11 @@ const mockCard: Card = {
 describe("CardGalleryModal Component", () => {
   afterEach(() => {
     cleanup();
+    vi.clearAllMocks();
+  });
+
+  beforeEach(() => {
+    mockGetById.mockReturnValue({ data: undefined, isLoading: false });
   });
 
   it("renders modal with card information when selected", () => {
@@ -85,6 +102,7 @@ describe("CardGalleryModal Component", () => {
       talents: [],
       class: ["terrestrial"],
       origin: null,
+      extra: null,
       image_url: "/logo.svg",
       created_at: "2024-01-01T00:00:00Z",
       updated_at: "2024-01-01T00:00:00Z",
@@ -132,6 +150,7 @@ describe("CardGalleryModal Component", () => {
       talents: [],
       class: [],
       origin: null,
+      extra: null,
       image_url: "/shield.svg",
       created_at: "2024-01-01T00:00:00Z",
       updated_at: "2024-01-01T00:00:00Z",
@@ -156,5 +175,64 @@ describe("CardGalleryModal Component", () => {
 
     const costRow = screen.getByText(/cost:/i).parentElement;
     expect(costRow?.textContent).toMatch(/2/i);
+  });
+
+  it("shows companion tabs when card has a companion and companion is loaded", () => {
+    const companionCard: Card = {
+      id: "companion-001",
+      unit_name: "Giant Spiders",
+      unit_type: CARD_TYPES.MONSTER,
+      cost: 0,
+      amount_of_card_activations: 1,
+      strategic_value: 2,
+      talents: [],
+      class: [],
+      origin: null,
+      extra: { dependOn: "550e8400-e29b-41d4-a716-446655440010" },
+      image_url: "/spiders.svg",
+      created_at: "2024-01-01T00:00:00Z",
+      updated_at: "2024-01-01T00:00:00Z",
+    };
+
+    const parentCard: Card = {
+      ...mockCard,
+      id: "550e8400-e29b-41d4-a716-446655440010",
+      unit_name: "Arachne",
+      extra: { brings: "companion-001" },
+    };
+
+    mockGetById.mockReturnValue({ data: companionCard, isLoading: false });
+
+    render(
+      <CardGalleryModal
+        isShown
+        card={parentCard}
+        onCloseModal={vi.fn()}
+      />
+    );
+
+    expect(screen.getAllByText("Arachne").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Giant Spiders").length).toBeGreaterThan(0);
+  });
+
+  it("shows skeleton while companion is loading", () => {
+    const parentCard: Card = {
+      ...mockCard,
+      unit_name: "Arachne",
+      extra: { brings: "companion-001" },
+    };
+
+    mockGetById.mockReturnValue({ data: undefined, isLoading: true });
+
+    render(
+      <CardGalleryModal
+        isShown
+        card={parentCard}
+        onCloseModal={vi.fn()}
+      />
+    );
+
+    // When loading, the skeleton is shown instead of card details
+    expect(screen.queryByText(/type:/i)).toBeNull();
   });
 });

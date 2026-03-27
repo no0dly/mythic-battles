@@ -79,8 +79,8 @@ function DraftCardItem({
               {name} ({cost})
             </span>
             {!isPicked && isCurrentUserTurn && (
-              <ConfirmCardPickModal 
-                card={card} 
+              <ConfirmCardPickModal
+                card={card}
                 disabled={!canPickCard}
                 restrictionReason={restrictionReason}
               />

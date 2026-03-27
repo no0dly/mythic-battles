@@ -1,0 +1,63 @@
+"use client";
+import Image from "next/image";
+import type { Card as CardType } from "@/types/database.types";
+import { useTranslation } from "react-i18next";
+import { Badge } from "@/components/ui/badge";
+import { TalentBadges } from "@/components/TalentBadges";
+import { ClassBadges } from "@/components/ClassBadges";
+import { OriginBadge } from "@/components/OriginBadge";
+import { DialogDescription } from "@/components/ui/dialog";
+
+interface CardDetailsProps {
+  card: CardType;
+}
+
+export function CardDetails({ card }: CardDetailsProps) {
+  const { t } = useTranslation();
+  const {
+    unit_name: name,
+    unit_type: unitType,
+    cost,
+    image_url: imageUrl,
+    class: cardClass,
+    origin,
+    talents,
+    strategic_value: strategicValue,
+    amount_of_card_activations: activations,
+  } = card;
+
+  return (
+    <>
+      <div className="relative overflow-hidden rounded-md border bg-muted mt-2">
+        <Image
+          src={imageUrl}
+          alt={name}
+          loading="lazy"
+          className="object-contain p-4 max-h-[50vh]"
+          width={900}
+          height={900}
+        />
+      </div>
+      <DialogDescription className="mt-3">
+        <span className="space-y-2">
+          <span className="flex gap-1">
+            <strong>{t("type")}:</strong>
+            <Badge variant={unitType}>{t(`cardType.${unitType}`)}</Badge>
+          </span>
+          <ClassBadges classes={cardClass} />
+          <OriginBadge origin={origin} />
+          <span className="block">
+            <strong>{t("cost")}:</strong> {cost}
+          </span>
+          <span className="block">
+            <strong>{t("strategicValue")}:</strong> {strategicValue}
+          </span>
+          <span className="block">
+            <strong>{t("activations")}:</strong> {activations}
+          </span>
+          <TalentBadges talents={talents ?? []} />
+        </span>
+      </DialogDescription>
+    </>
+  );
+}

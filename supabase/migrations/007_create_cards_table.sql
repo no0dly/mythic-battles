@@ -9,6 +9,7 @@ create table public.cards (
   class text null,
   image_url text null,
   origin text null,
+  extra jsonb null,
   created_at timestamp with time zone null default now(),
   updated_at timestamp with time zone null default now(),
   constraint cards_pkey primary key (id),

@@ -1,0 +1,1 @@
+export { CardModalSkeleton } from "./CardModalSkeleton";

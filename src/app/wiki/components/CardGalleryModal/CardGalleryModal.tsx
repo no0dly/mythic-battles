@@ -2,17 +2,16 @@
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import Image from "next/image";
 import type { Card as CardType } from "@/types/database.types";
-import { useTranslation } from "react-i18next";
-import { Badge } from "@/components/ui/badge";
-import { TalentBadges } from "@/components/TalentBadges";
-import { ClassBadges } from "@/components/ClassBadges";
-import { OriginBadge } from "@/components/OriginBadge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Crown, Link2 } from "lucide-react";
+import { CardDetails } from "./components/CardDetails";
+import { CardModalSkeleton } from "@/components/skeletons";
+import { api } from "@/trpc/client";
+import { COMPANION_TABS } from "./constants";
 
 interface CardGalleryModalProps {
   isShown: boolean;
@@ -25,55 +24,50 @@ export default function CardGalleryModal({
   card,
   onCloseModal,
 }: CardGalleryModalProps) {
-  const { t } = useTranslation();
-  const {
-    unit_name: name,
-    unit_type: unitType,
-    cost,
-    image_url: imageUrl,
-    class: cardClass,
-    origin,
-    talents,
-    strategic_value: strategicValue,
-    amount_of_card_activations: activations,
-  } = card;
+  const companionId = card.extra?.brings ?? card.extra?.dependOn;
+  const isParent = !!card.extra?.brings;
+
+  const { data: companionCard, isLoading } = api.cards.getById.useQuery(
+    { id: companionId! },
+    { enabled: isShown && !!companionId }
+  );
+
+  const parentCard = isParent ? card : companionCard;
+  const childCard = isParent ? companionCard : card;
+  const defaultTab = isParent ? COMPANION_TABS.MAIN : COMPANION_TABS.COMPANION;
+  const showTabs = !!companionId && !!companionCard;
 
   return (
     <Dialog open={isShown} onOpenChange={onCloseModal}>
       <DialogContent className="max-w-3xl!" data-testid="card-modal">
         <DialogHeader>
-          <DialogTitle>{name}</DialogTitle>
+          <DialogTitle>{card.unit_name}</DialogTitle>
         </DialogHeader>
-        <div className="relative overflow-hidden rounded-md border bg-muted mt-2">
-          <Image
-            src={imageUrl}
-            alt={name}
-            loading="lazy"
-            className="object-contain p-4 max-h-[50vh]"
-            width={900}
-            height={900}
-          />
-        </div>
-        <DialogDescription className="mt-3">
-          <span className="space-y-2">
-            <span className="flex gap-1">
-              <strong>{t("type")}:</strong>
-              <Badge variant={unitType}>{t(`cardType.${unitType}`)}</Badge>
-            </span>
-            <ClassBadges classes={cardClass} />
-            <OriginBadge origin={origin} />
-            <span className="block">
-              <strong>{t("cost")}:</strong> {cost}
-            </span>
-            <span className="block">
-              <strong>{t("strategicValue")}:</strong> {strategicValue}
-            </span>
-            <span className="block">
-              <strong>{t("activations")}:</strong> {activations}
-            </span>
-            <TalentBadges talents={talents ?? []} />
-          </span>
-        </DialogDescription>
+
+        {isLoading ? (
+          <CardModalSkeleton />
+        ) : showTabs ? (
+          <Tabs defaultValue={defaultTab}>
+            <TabsList className="w-full">
+              <TabsTrigger value={COMPANION_TABS.MAIN} className="flex-1 gap-1.5">
+                <Crown className="h-3.5 w-3.5 shrink-0" />
+                {parentCard!.unit_name}
+              </TabsTrigger>
+              <TabsTrigger value={COMPANION_TABS.COMPANION} className="flex-1 gap-1.5">
+                <Link2 className="h-3.5 w-3.5 shrink-0" />
+                {childCard!.unit_name}
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value={COMPANION_TABS.MAIN}>
+              <CardDetails card={parentCard!} />
+            </TabsContent>
+            <TabsContent value={COMPANION_TABS.COMPANION}>
+              <CardDetails card={childCard!} />
+            </TabsContent>
+          </Tabs>
+        ) : (
+          <CardDetails card={card} />
+        )}
       </DialogContent>
     </Dialog>
   );

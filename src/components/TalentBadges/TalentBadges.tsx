@@ -27,22 +27,14 @@ export function TalentBadges({
   }
 
   return (
-    <div
-      className={cn(
-        "flex flex-row flex-wrap items-center gap-2",
-        className
-      )}
+    <span
+      className={cn("flex flex-row flex-wrap items-center gap-2", className)}
     >
-      {showLabel && (
-        <strong>{t("talents")}:</strong>
-      )}
+      {showLabel && <strong>{t("talents")}:</strong>}
       {talents.map((talent) => (
         <Tooltip key={talent}>
           <TooltipTrigger asChild>
-            <Badge
-              variant="secondary"
-              className="cursor-help select-none"
-            >
+            <Badge variant="secondary" className="cursor-help select-none">
               {t(`talentTitles.${talent}`)}
             </Badge>
           </TooltipTrigger>
@@ -51,6 +43,6 @@ export function TalentBadges({
           </TooltipContent>
         </Tooltip>
       ))}
-    </div>
+    </span>
   );
 }
