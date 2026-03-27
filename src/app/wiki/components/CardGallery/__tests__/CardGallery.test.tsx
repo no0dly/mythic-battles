@@ -16,7 +16,9 @@ const mockCards: Card[] = [
     amount_of_card_activations: 1,
     strategic_value: 10,
     talents: [],
-    class: "god",
+    class: [],
+    origin: null,
+    extra: null,
     image_url: "/globe.svg",
     created_at: "2024-01-01T00:00:00Z",
     updated_at: "2024-01-01T00:00:00Z",
@@ -29,7 +31,9 @@ const mockCards: Card[] = [
     amount_of_card_activations: 1,
     strategic_value: 9,
     talents: [],
-    class: "god",
+    class: [],
+    origin: null,
+    extra: null,
     image_url: "/logo.svg",
     created_at: "2024-01-01T00:00:00Z",
     updated_at: "2024-01-01T00:00:00Z",
@@ -43,6 +47,14 @@ vi.mock("@/trpc/client", () => ({
     cards: {
       list: {
         useQuery: () => mockUseQuery(),
+      },
+      getById: {
+        useQuery: () => ({ data: undefined, isLoading: false }),
+      },
+    },
+    maps: {
+      list: {
+        useQuery: () => ({ data: undefined, isLoading: false }),
       },
     },
   },
@@ -77,12 +89,13 @@ vi.mock("../CardGalleryItem", () => ({
 vi.mock("@/stores/cardFilters", () => ({
   DEFAULT_FILTER: "all",
   useSearchName: () => "",
-  useSelectedType: () => "all",
-  useSelectedCost: () => "all",
+  useSelectedTypes: () => [],
+  useSelectedCosts: () => [],
+  useSelectedMapTypes: () => [],
   useFilterActions: () => ({
     setSearchName: vi.fn(),
-    setSelectedType: vi.fn(),
-    setSelectedCost: vi.fn(),
+    setSelectedTypes: vi.fn(),
+    setSelectedCosts: vi.fn(),
     clearFilters: vi.fn(),
   }),
 }));

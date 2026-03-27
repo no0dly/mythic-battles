@@ -168,6 +168,7 @@ const makeCard = (
   talents: [],
   class: [],
   origin: origin as Card["origin"],
+  extra: null,
   image_url: "",
   created_at: "2024-01-01T00:00:00.000Z",
   updated_at: "2024-01-01T00:00:00.000Z",

@@ -27,6 +27,7 @@ import { createOptimisticDraftUpdate } from "@/utils/drafts/helpers";
 import type { Draft } from "@/types/database.types";
 import { Badge } from "@/components/ui/badge";
 import { CardPreviewDialog } from "@/app/components/DraftInfo/components";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface ConfirmCardPickModalProps {
   card: Card;
@@ -46,6 +47,12 @@ export default function ConfirmCardPickModal({
   const utils = api.useUtils();
   const [previewCard, setPreviewCard] = useState<Card | null>(null);
 
+  const companionId = card.extra?.brings;
+  const { data: companionCard, isLoading: isCompanionLoading } = api.cards.getById.useQuery(
+    { id: companionId! },
+    { enabled: isConfirmModalShown && !!companionId }
+  );
+
   const { mutate: mutatePickCard, isPending } = api.drafts.pickCard.useMutation(
     {
       onMutate: async (variables) => {
@@ -59,6 +66,7 @@ export default function ConfirmCardPickModal({
           const optimisticUpdate = createOptimisticDraftUpdate({
             draft,
             cardId: variables.card_id,
+            companionCardId: companionCard?.id,
             playerId: user.id,
           });
 
@@ -186,6 +194,18 @@ export default function ConfirmCardPickModal({
                 </div>
               </div>
             </div>
+
+            {companionId && (
+              isCompanionLoading
+                ? <Skeleton className="mt-3 h-9 w-full rounded-md" />
+                : companionCard && (
+                  <div className="mt-3 flex items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm dark:border-amber-800 dark:bg-amber-950">
+                    <span className="text-amber-800 dark:text-amber-200">
+                      {t("companionNotice", { name: companionCard.unit_name })}
+                    </span>
+                  </div>
+                )
+            )}
 
             <p className="mt-4 text-sm text-muted-foreground">
               {t("areYouSurePickCard")}

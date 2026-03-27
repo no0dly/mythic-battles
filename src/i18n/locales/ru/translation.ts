@@ -200,6 +200,7 @@ const translation = {
   picked: "Выбрано",
   noCardsAvailable: "Карты недоступны",
   cardPickedSuccessfully: "Карта успешно выбрана",
+  companionNotice: "Выбор этого юнита также добавит {{name}} в вашу армию бесплатно.",
   errorPickingCard: "Ошибка выбора карты",
   pleaseLogin: "Пожалуйста, войдите в систему",
   youAreFirstDrafting: "Вы выбираете первым ({{turn}} - {{points}})",

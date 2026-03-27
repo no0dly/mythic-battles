@@ -42,9 +42,11 @@ export function DraftCardGrid({ cards, draft, user }: DraftCardGridProps) {
 
   const uniqueCosts = useMemo(() => getUniqueCosts(cards || []), [cards]);
 
+  const cardMap = useMemo(() => createCardIdMap(cards), [cards]);
+
   const filteredCards = useMemo(
     () =>
-      getFilteredData(cards || [], "", selectedTypes, selectedCosts).sort(
+      getFilteredData(cards, "", selectedTypes, selectedCosts).sort(
         (a, b) => {
           const aIsAoW = a.unit_type === CARD_TYPES.ART_OF_WAR;
           const bIsAoW = b.unit_type === CARD_TYPES.ART_OF_WAR;
@@ -57,8 +59,6 @@ export function DraftCardGrid({ cards, draft, user }: DraftCardGridProps) {
       ),
     [cards, selectedTypes, selectedCosts]
   );
-
-  const cardMap = useMemo(() => createCardIdMap(cards), [cards]);
 
   const isCurrentUserTurn = useMemo(() => {
     return draft.current_turn_user_id === user.id;

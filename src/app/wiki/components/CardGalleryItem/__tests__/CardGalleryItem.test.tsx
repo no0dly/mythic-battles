@@ -18,6 +18,16 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
+vi.mock("@/trpc/client", () => ({
+  api: {
+    cards: {
+      getById: {
+        useQuery: () => ({ data: undefined, isLoading: false }),
+      },
+    },
+  },
+}));
+
 const mockCardItem: Card = {
   id: "550e8400-e29b-41d4-a716-446655440001",
   unit_name: "Zeus",
@@ -28,6 +38,7 @@ const mockCardItem: Card = {
   talents: [],
   class: ["terrestrial"],
   origin: null,
+  extra: null,
   image_url: "/globe.svg",
   created_at: "2024-01-01T00:00:00Z",
   updated_at: "2024-01-01T00:00:00Z",
@@ -99,6 +110,7 @@ describe("CardGalleryItem Component", () => {
       talents: [],
       class: [],
       origin: null,
+      extra: null,
       image_url: "/shield.svg",
       created_at: "2024-01-01T00:00:00Z",
       updated_at: "2024-01-01T00:00:00Z",

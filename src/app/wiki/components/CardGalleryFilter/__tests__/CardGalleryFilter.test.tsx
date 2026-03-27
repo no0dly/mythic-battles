@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import CardGalleryFilter from "../CardGalleryFilter";
 import { MAPS_FILTER_VALUE } from "@/app/wiki/components/CardGallery/utils";
 
@@ -74,6 +74,10 @@ beforeEach(() => {
   mockHook.multiSelectTypeValue = [];
   mockHook.multiSelectCostValue = [];
   mockHook.multiSelectMapTypeValue = [];
+});
+
+afterEach(() => {
+  cleanup();
 });
 
 // ---------------------------------------------------------------------------

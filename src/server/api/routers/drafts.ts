@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { router, publicProcedure, protectedProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
-import type { Draft, Card, GameMap, DraftHistory, DraftSettings, CardOrigin } from "@/types/database.types";
+import type { Draft, Card, GameMap, DraftHistory, DraftPick, DraftSettings, CardOrigin } from "@/types/database.types";
 import { zUuid } from "../schemas";
 import {
   DRAFT_STATUS,
@@ -260,9 +260,21 @@ export const draftsRouter = router({
 
       const artOfWarCardIds = ((artOfWarCards || []) as Array<{ id: string }>).map((card) => card.id);
 
+      // Fetch companion card IDs for pool cards that bring a companion
+      const { data: poolCardsWithCompanions } = await ctx.supabase
+        .from("cards")
+        .select("extra")
+        .in("id", poolResult.cardIds)
+        .not("extra", "is", null);
+
+      const companionCardIds = ((poolCardsWithCompanions || []) as Array<{ extra: { brings?: string } | null }>)
+        .map((card) => card.extra?.brings)
+        .filter((id): id is string => !!id);
+
       const allCardIds = [
         ...poolResult.cardIds,
         ...artOfWarCardIds,
+        ...companionCardIds,
       ];
 
       const draft: Draft = await caller.drafts.createDraft({
@@ -520,10 +532,10 @@ export const draftsRouter = router({
         });
       }
 
-      // Get card to check cost and type
+      // Get card to check cost, type, and companion relationship
       const { data: card, error: cardError } = await ctx.supabase
         .from("cards")
-        .select("cost, unit_type")
+        .select("cost, unit_type, extra")
         .eq("id", input.card_id)
         .single();
 
@@ -534,7 +546,7 @@ export const draftsRouter = router({
         });
       }
 
-      const cardData = card as { cost: number; unit_type: string };
+      const cardData = card as { cost: number; unit_type: string; extra: { brings?: string; dependOn?: string } | null };
 
       // Get game to retrieve draft_settings with user_allowed_points
       const { data: game, error: gameError } = await ctx.supabase
@@ -619,7 +631,20 @@ export const draftsRouter = router({
         timestamp: new Date().toISOString(),
       };
 
-      const updatedPicks = [...picks, newPick];
+      const updatedPicks: DraftPick[] = [...picks, newPick];
+
+      // Auto-add companion pick if this card brings a companion
+      const companionId = cardData.extra?.brings;
+      if (companionId) {
+        updatedPicks.push({
+          card_id: companionId,
+          player_id: userId,
+          pick_number: nextPickNumber + 1,
+          timestamp: new Date().toISOString(),
+          auto: true,
+        });
+      }
+
       const updatedHistory: DraftHistory = {
         picks: updatedPicks,
         ...(draftHistory?.initial_roll && { initial_roll: draftHistory.initial_roll }),
@@ -660,12 +685,19 @@ export const draftsRouter = router({
       // Otherwise, pass to opponent
       const nextTurnUserId = opponentHasReachedMax ? userId : opponentId;
 
+      // If a companion was auto-added, ensure it's in the draft pool
+      const updatedPool =
+        companionId && !draftData.draft_pool.includes(companionId)
+          ? [...draftData.draft_pool, companionId]
+          : draftData.draft_pool;
+
       // Update draft
       const { data: updatedDraft, error: updateError } = await ctx.supabase
         .from("drafts")
         .update({
           draft_history: updatedHistory,
           current_turn_user_id: nextTurnUserId,
+          draft_pool: updatedPool,
         } as never)
         .eq("id", input.draft_id)
         .select()

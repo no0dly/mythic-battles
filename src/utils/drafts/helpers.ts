@@ -209,6 +209,7 @@ export const getDraftState = (
 export const createOptimisticDraftUpdate = ({
   draft,
   cardId,
+  companionCardId,
   playerId,
   timestamp = new Date().toISOString(),
 }: OptimisticDraftUpdateInput): OptimisticDraftUpdateResult => {
@@ -224,6 +225,17 @@ export const createOptimisticDraftUpdate = ({
   }
 
   const updatedPicks = [...picks, newPick]
+
+  if (companionCardId) {
+    updatedPicks.push({
+      card_id: companionCardId,
+      player_id: playerId,
+      pick_number: nextPickNumber + 1,
+      timestamp,
+      auto: true,
+    })
+  }
+
   const updatedHistory: DraftHistory = {
     picks: updatedPicks,
     ...(draftHistory?.initial_roll && { initial_roll: draftHistory.initial_roll }),

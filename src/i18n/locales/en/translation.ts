@@ -189,6 +189,7 @@ const translation = {
   cardsSelected: "cards selected",
   unknownCard: "Unknown Card",
   cardPreview: "Card Preview",
+  companionNotice: "Selecting this unit will also add {{name}} to your army at no extra cost.",
   // Draft page status
   picking: "Picking",
   awaits: "Awaits",

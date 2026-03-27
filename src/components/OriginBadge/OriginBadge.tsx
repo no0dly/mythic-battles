@@ -29,13 +29,13 @@ export function OriginBadge({
   }
 
   return (
-    <div
+    <span
       className={cn("flex flex-row flex-wrap items-center gap-2", className)}
     >
       {showLabel && <strong>{t("origin")}:</strong>}
       <Badge variant="cardOrigin" className="select-none">
         {badgeText}
       </Badge>
-    </div>
+    </span>
   );
 }

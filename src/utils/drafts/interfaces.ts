@@ -12,6 +12,7 @@ export type DraftWithRelations = Draft & {
 export interface OptimisticDraftUpdateInput {
   draft: Draft
   cardId: string
+  companionCardId?: string
   playerId: string
   timestamp?: string
 }

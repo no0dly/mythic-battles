@@ -28,22 +28,14 @@ export function MapTypeBadges({
   }
 
   return (
-    <div
-      className={cn(
-        "flex flex-row flex-wrap items-center gap-2",
-        className
-      )}
+    <span
+      className={cn("flex flex-row flex-wrap items-center gap-2", className)}
     >
-      {showLabel && (
-        <strong>{t("mapType")}:</strong>
-      )}
+      {showLabel && <strong>{t("mapType")}:</strong>}
       {mapTypes.map((mapType) => (
         <Tooltip key={mapType}>
           <TooltipTrigger asChild>
-            <Badge
-              variant="mapType"
-              className="cursor-help select-none"
-            >
+            <Badge variant="mapType" className="cursor-help select-none">
               {t(`mapTypeTitles.${mapType}`)}
             </Badge>
           </TooltipTrigger>
@@ -52,6 +44,6 @@ export function MapTypeBadges({
           </TooltipContent>
         </Tooltip>
       ))}
-    </div>
+    </span>
   );
 }

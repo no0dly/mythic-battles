@@ -70,6 +70,11 @@ export type GameMap = {
   created_at: string
 }
 
+export type CardExtra = {
+  brings?: string    // UUID of companion unit this card brings
+  dependOn?: string  // UUID of parent unit this card depends on
+}
+
 export type Card = {
   id: string
   unit_name: string
@@ -81,6 +86,7 @@ export type Card = {
   class: CardClass[]
   origin: CardOrigin | null
   image_url: string
+  extra: CardExtra | null
   created_at: string
   updated_at: string
 }
@@ -139,6 +145,7 @@ export type DraftPick = {
   player_id: string
   pick_number: number
   timestamp: string
+  auto?: boolean  // true for companion units auto-added when parent is picked
 }
 
 export type DraftHistory = {
