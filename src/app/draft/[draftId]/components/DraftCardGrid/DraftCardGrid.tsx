@@ -13,7 +13,7 @@ import type { Card, Draft, UserSubset } from "@/types/database.types";
 import useGetPickedCardsIDs from "./hooks/useGetPickedCardsIDs";
 import { api } from "@/trpc/client";
 import { canPickCard } from "@/utils/drafts/cardPickRestrictions";
-import { getPlayerCards } from "@/utils/drafts/helpers";
+import { getPlayerCards, parseDraftHistory } from "@/utils/drafts/helpers";
 import { DEFAULT_DRAFT_SETTINGS, CARD_TYPES } from "@/types/constants";
 import { createCardIdMap } from "@/utils/cards/createCardIdMap";
 
@@ -43,6 +43,17 @@ export function DraftCardGrid({ cards, draft, user }: DraftCardGridProps) {
   const uniqueCosts = useMemo(() => getUniqueCosts(cards || []), [cards]);
 
   const cardMap = useMemo(() => createCardIdMap(cards), [cards]);
+
+  const userRemainingPoints = useMemo(() => {
+    const picks = parseDraftHistory(draft.draft_history)?.picks ?? [];
+    const userSpent = picks
+      .filter((p) => p.player_id === user.id)
+      .reduce((sum, pick) => {
+        if (pick.cost_override !== undefined) return sum + pick.cost_override;
+        return sum + (cardMap.get(pick.card_id)?.cost ?? 0);
+      }, 0);
+    return allowedPoints - userSpent;
+  }, [draft.draft_history, user.id, cardMap, allowedPoints]);
 
   const filteredCards = useMemo(
     () =>
@@ -120,8 +131,8 @@ export function DraftCardGrid({ cards, draft, user }: DraftCardGridProps) {
               const restrictions = canPickCard(
                 card,
                 playerCards,
-                allowedPoints,
-                cards // Available cards from draft pool
+                userRemainingPoints,
+                cards,
               );
 
               return (
@@ -132,6 +143,7 @@ export function DraftCardGrid({ cards, draft, user }: DraftCardGridProps) {
                   isCurrentUserTurn={isCurrentUserTurn}
                   canPickCard={restrictions.canPick}
                   restrictionReason={restrictions.reason}
+                  remainingPoints={userRemainingPoints}
                 />
               );
             })}

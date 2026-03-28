@@ -14,6 +14,8 @@ export interface OptimisticDraftUpdateInput {
   draft: Draft
   cardId: string
   companionCardId?: string
+  bringsWithCardId?: string
+  bringsWithCost?: number
   playerId: string
   timestamp?: string
 }

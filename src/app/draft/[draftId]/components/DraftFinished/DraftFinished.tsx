@@ -69,17 +69,23 @@ export default function DraftFinished({ draft, cards }: DraftFinishedProps) {
   const player2Cards: Card[] = [];
   let player1TotalCost = 0;
   let player2TotalCost = 0;
+  const costOverrides = new Map<string, number>();
 
   sortedPicks.forEach((pick) => {
     const card = cardsMap[pick.card_id];
     if (!card) return;
 
+    const effectiveCost = pick.cost_override ?? card.cost;
+    if (pick.cost_override !== undefined) {
+      costOverrides.set(pick.card_id, pick.cost_override);
+    }
+
     if (pick.player_id === draft.player1_id) {
       player1Cards.push(card);
-      player1TotalCost += card.cost;
+      player1TotalCost += effectiveCost;
     } else if (pick.player_id === draft.player2_id) {
       player2Cards.push(card);
-      player2TotalCost += card.cost;
+      player2TotalCost += effectiveCost;
     }
   });
 
@@ -126,6 +132,7 @@ export default function DraftFinished({ draft, cards }: DraftFinishedProps) {
               name={player1Name}
               cards={player1Cards}
               totalCost={player1TotalCost}
+              costOverrides={costOverrides}
               accent="blue"
               onCardClick={(card) => handleSetPreviewCard(card)}
             />
@@ -133,6 +140,7 @@ export default function DraftFinished({ draft, cards }: DraftFinishedProps) {
               name={player2Name}
               cards={player2Cards}
               totalCost={player2TotalCost}
+              costOverrides={costOverrides}
               accent="green"
               onCardClick={(card) => handleSetPreviewCard(card)}
             />

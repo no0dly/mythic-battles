@@ -14,6 +14,7 @@ interface PlayerCardsTabProps {
   user: UserData | undefined;
   playerCards: Card[];
   totalCost: number;
+  costOverrides: Map<string, number>;
   fallbackName: string;
   borderColor: "blue" | "green";
   onCardClick: (card: Card) => void;
@@ -23,6 +24,7 @@ export const PlayerCardsTab = ({
   user,
   playerCards,
   totalCost,
+  costOverrides,
   fallbackName,
   borderColor,
   onCardClick,
@@ -99,7 +101,9 @@ export const PlayerCardsTab = ({
                     {t(`cardType.${card.unit_type}`)}
                   </Badge>
                   <span className="text-sm font-bold text-purple-600">
-                    {card.cost}
+                    {costOverrides.has(card.id) ? (
+                      <>{costOverrides.get(card.id)} <span className="line-through text-gray-400 font-normal">({card.cost})</span></>
+                    ) : card.cost}
                   </span>
                 </div>
               </div>

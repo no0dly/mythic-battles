@@ -260,9 +260,10 @@ export function generateDraftPool(
   cards: Card[],
   config: DraftPoolConfig
 ): DraftPoolResult {
-  // Filter out 0 cost cards and art_of_war cards (they are handled separately)
+  // Filter out 0 cost cards, art_of_war cards (handled separately),
+  // and companion cards (dependOn set — added only when parent is picked)
   const filteredCards = cards.filter(
-    (card) => card.cost > 0 && card.unit_type !== CARD_TYPES.ART_OF_WAR
+    (card) => card.cost > 0 && card.unit_type !== CARD_TYPES.ART_OF_WAR && !card.extra?.dependOn
   );
 
   // Filter by selected origins (no-op when ALL_VALUE is included)

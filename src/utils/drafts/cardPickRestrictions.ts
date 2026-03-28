@@ -95,13 +95,13 @@ const getMinGodCardCost = (availableCards: Card[]): number | null => {
 export const canPickCard = (
   card: Card,
   playerCards: Card[],
-  allowedPoints: number,
-  availableCards: Card[]
+  remainingPoints: number,
+  availableCards: Card[],
 ): CardPickRestrictions => {
-  const stats = getPlayerCardStats(playerCards, allowedPoints);
+  const stats = getPlayerCardStats(playerCards, 0);
 
   // Check 1: Enough points
-  if (card.cost > stats.remainingPoints) {
+  if (card.cost > remainingPoints) {
     return {
       canPick: false,
       reason: 'notEnoughPoints',
@@ -135,7 +135,7 @@ export const canPickCard = (
     const minGodCardCost = getMinGodCardCost(availableCards);
 
     if (minGodCardCost !== null) {
-      const pointsAfterPick = stats.remainingPoints - card.cost;
+      const pointsAfterPick = remainingPoints - card.cost;
       if (pointsAfterPick < minGodCardCost) {
         return {
           canPick: false,
@@ -159,9 +159,9 @@ export const canPickCard = (
  */
 export const canStartGame = (
   playerCards: Card[],
-  allowedPoints: number
+  remainingPoints: number,
 ): CardPickRestrictions => {
-  const stats = getPlayerCardStats(playerCards, allowedPoints);
+  const stats = getPlayerCardStats(playerCards, 0);
 
   // Check 1: Must have a God card
   if (stats.godCards.length === 0) {
@@ -172,7 +172,7 @@ export const canStartGame = (
   }
 
   // Check 2: Must have 0 remaining points
-  if (stats.remainingPoints !== 0) {
+  if (remainingPoints !== 0) {
     return {
       canPick: false,
       reason: 'mustUseAllPoints',

@@ -205,15 +205,11 @@ export const draftResetRequestsRouter = router({
 
       const poolResult = generateDraftPool(cards, config);
 
-      const poolCardSet = new Set(poolResult.cardIds);
       const artOfWarCardIds = cards
         .filter((c) => c.unit_type === CARD_TYPES.ART_OF_WAR)
         .map((c) => c.id);
-      const companionCardIds = cards
-        .filter((c) => poolCardSet.has(c.id) && c.extra?.brings)
-        .map((c) => c.extra!.brings as string);
 
-      const allCardIds = [...poolResult.cardIds, ...artOfWarCardIds, ...companionCardIds];
+      const allCardIds = [...poolResult.cardIds, ...artOfWarCardIds];
 
       // New initiative rolls
       const player1Roll = Math.floor(Math.random() * 100) + 1;

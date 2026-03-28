@@ -79,7 +79,9 @@ export const PickHistoryItem = ({
                 {t(`cardType.${card.unit_type}`)}
               </Badge>
               <span className="text-sm font-bold text-purple-600">
-                {t("cost")}: {card.cost}
+                {t("cost")}: {pick.cost_override !== undefined ? (
+                  <>{pick.cost_override} <span className="line-through text-gray-400 font-normal">({card.cost})</span></>
+                ) : card.cost}
               </span>
             </>
           )}

@@ -24,6 +24,7 @@ interface DraftCardItemProps {
   isCurrentUserTurn: boolean;
   canPickCard?: boolean;
   restrictionReason?: string;
+  remainingPoints?: number;
 }
 
 function DraftCardItem({
@@ -32,6 +33,7 @@ function DraftCardItem({
   isCurrentUserTurn,
   canPickCard = true,
   restrictionReason,
+  remainingPoints,
 }: DraftCardItemProps) {
   const { t } = useTranslation();
   const {
@@ -83,6 +85,7 @@ function DraftCardItem({
                 card={card}
                 disabled={!canPickCard}
                 restrictionReason={restrictionReason}
+                remainingPoints={remainingPoints}
               />
             )}
             {!isPicked && !isCurrentUserTurn && (
@@ -138,6 +141,7 @@ export default memo(DraftCardItem, (prevProps, nextProps) => {
   if (prevProps.isCurrentUserTurn !== nextProps.isCurrentUserTurn) return false;
   if (prevProps.canPickCard !== nextProps.canPickCard) return false;
   if (prevProps.restrictionReason !== nextProps.restrictionReason) return false;
+  if (prevProps.remainingPoints !== nextProps.remainingPoints) return false;
   if (prevProps.card.id === nextProps.card.id) return true;
 
   return false;
