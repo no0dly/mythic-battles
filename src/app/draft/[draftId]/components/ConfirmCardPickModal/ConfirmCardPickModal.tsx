@@ -17,28 +17,32 @@ import {
 import { Button } from "@/components/ui/button";
 import type { Card } from "@/types/database.types";
 import { Check, X } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import Image from "next/image";
 import { toast } from "sonner";
 import { api } from "@/trpc/client";
 import { useParams } from "next/navigation";
 import { useUserProfile } from "@/hooks/useUserProfile";
-import { createOptimisticDraftUpdate } from "@/utils/drafts/helpers";
+import { createOptimisticDraftUpdate, parseDraftHistory } from "@/utils/drafts/helpers";
 import type { Draft } from "@/types/database.types";
 import { Badge } from "@/components/ui/badge";
 import { CardPreviewDialog } from "@/app/components/DraftInfo/components";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 
 interface ConfirmCardPickModalProps {
   card: Card;
   disabled?: boolean;
   restrictionReason?: string;
+  remainingPoints?: number;
 }
 
 export default function ConfirmCardPickModal({
   card,
   disabled = false,
   restrictionReason,
+  remainingPoints = 0,
 }: ConfirmCardPickModalProps) {
   const { t } = useTranslation();
   const { draftId } = useParams<{ draftId: string }>();
@@ -52,6 +56,25 @@ export default function ConfirmCardPickModal({
     { id: companionId! },
     { enabled: isConfirmModalShown && !!companionId }
   );
+
+  const bringsWithData = card.extra?.bringsWith;
+  const { data: bringsWithCard, isLoading: isBringsWithLoading } = api.cards.getById.useQuery(
+    { id: bringsWithData?.id ?? "" },
+    { enabled: isConfirmModalShown && !!bringsWithData }
+  );
+
+  // Derive picked card IDs for the current user to check if bringsWith is already picked
+  const pickedCardIds = useMemo(() => {
+    const draft = utils.drafts.getById.getData({ id: draftId });
+    const picks = parseDraftHistory(draft?.draft_history)?.picks ?? [];
+    return new Set(picks.map((p) => p.card_id));
+  }, [utils, draftId, isConfirmModalShown]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const isBringsWithAlreadyPicked = !!bringsWithData && pickedCardIds.has(bringsWithData.id);
+  const hasSufficientPointsForBringsWith =
+    !!bringsWithData && remainingPoints - card.cost >= bringsWithData.cost;
+
+  const [includeBringsWith, setIncludeBringsWith] = useState(true);
 
   const { mutate: mutatePickCard, isPending } = api.drafts.pickCard.useMutation(
     {
@@ -67,6 +90,8 @@ export default function ConfirmCardPickModal({
             draft,
             cardId: variables.card_id,
             companionCardId: companionCard?.id,
+            bringsWithCardId: variables.bringsWith?.card_id,
+            bringsWithCost: variables.bringsWith?.cost,
             playerId: user.id,
           });
 
@@ -106,6 +131,9 @@ export default function ConfirmCardPickModal({
     mutatePickCard({
       draft_id: draftId,
       card_id: card.id,
+      ...(includeBringsWith && bringsWithData && hasSufficientPointsForBringsWith && !isBringsWithAlreadyPicked
+        ? { bringsWith: { card_id: bringsWithData.id, cost: bringsWithData.cost } }
+        : {}),
     });
   };
 
@@ -203,6 +231,35 @@ export default function ConfirmCardPickModal({
                     <span className="text-amber-800 dark:text-amber-200">
                       {t("companionNotice", { name: companionCard.unit_name })}
                     </span>
+                  </div>
+                )
+            )}
+
+            {bringsWithData && (
+              isBringsWithLoading
+                ? <Skeleton className="mt-3 h-10 w-full rounded-md" />
+                : bringsWithCard && (
+                  <div className="mt-3 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 dark:border-blue-800 dark:bg-blue-950">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className={`flex items-center gap-2 ${isBringsWithAlreadyPicked || !hasSufficientPointsForBringsWith ? "opacity-50" : ""}`}>
+                          <Checkbox
+                            id="brings-with-checkbox"
+                            checked={includeBringsWith && !isBringsWithAlreadyPicked && hasSufficientPointsForBringsWith}
+                            onCheckedChange={(checked: boolean) => setIncludeBringsWith(checked)}
+                            disabled={isBringsWithAlreadyPicked || !hasSufficientPointsForBringsWith}
+                          />
+                          <Label htmlFor="brings-with-checkbox" className="text-sm text-blue-800 dark:text-blue-200 cursor-pointer">
+                            {t("bringsWithCheckboxLabel", { name: bringsWithCard.unit_name, cost: bringsWithData.cost })}
+                          </Label>
+                        </div>
+                      </TooltipTrigger>
+                      {(isBringsWithAlreadyPicked || !hasSufficientPointsForBringsWith) && (
+                        <TooltipContent>
+                          <p>{t(isBringsWithAlreadyPicked ? "bringsWithAlreadyPicked" : "bringsWithNotEnoughPoints")}</p>
+                        </TooltipContent>
+                      )}
+                    </Tooltip>
                   </div>
                 )
             )}

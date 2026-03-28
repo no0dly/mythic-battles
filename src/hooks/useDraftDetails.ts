@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import type { Draft, Card as CardType, UserSubset } from "@/types/database.types";
+import type { Draft, Card as CardType, UserSubset, DraftPick } from "@/types/database.types";
 import {
   parseDraftHistory,
   getPlayerCards,
@@ -22,7 +22,7 @@ interface UseDraftDetailsReturn {
   player1Name: string;
   player2Name: string;
   draftHistory: ReturnType<typeof parseDraftHistory>;
-  picks: Array<{ card_id: string; player_id: string; pick_number: number; timestamp: string }>;
+  picks: DraftPick[];
   initialRoll: ReturnType<typeof parseInitialRoll>;
   firstUserRoll: number;
   secondUserRoll: number;
@@ -92,15 +92,27 @@ export function useDraftDetails({
     [initialRoll]
   );
 
-  // Calculate remaining points for each player
+  // Calculate remaining points using picks directly so cost_override is respected
   const player1Spent = useMemo(
-    () => player1Cards.reduce((sum, card) => sum + card.cost, 0),
-    [player1Cards]
+    () =>
+      picks
+        .filter((p) => p.player_id === draft.player1_id)
+        .reduce((sum, pick) => {
+          if (pick.cost_override !== undefined) return sum + pick.cost_override;
+          return sum + (cardMap.get(pick.card_id)?.cost ?? 0);
+        }, 0),
+    [picks, draft.player1_id, cardMap]
   );
 
   const player2Spent = useMemo(
-    () => player2Cards.reduce((sum, card) => sum + card.cost, 0),
-    [player2Cards]
+    () =>
+      picks
+        .filter((p) => p.player_id === draft.player2_id)
+        .reduce((sum, pick) => {
+          if (pick.cost_override !== undefined) return sum + pick.cost_override;
+          return sum + (cardMap.get(pick.card_id)?.cost ?? 0);
+        }, 0),
+    [picks, draft.player2_id, cardMap]
   );
 
   const player1Remaining = useMemo(

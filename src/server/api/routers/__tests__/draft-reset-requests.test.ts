@@ -402,6 +402,75 @@ describe("draftResetRequestsRouter.acceptReset", () => {
     expect(ctx.supabase.from).toHaveBeenCalledWith("maps");
   });
 
+  it("does not pre-add companion cards (dependOn) to the pool after reset", async () => {
+    const godCard = { ...makeCard("god-1"), unit_type: CARD_TYPES.GOD, cost: 6, extra: { brings: "companion-1" } } as Card;
+    const companionCard = { ...makeCard("companion-1"), cost: 0, extra: { dependOn: "god-1" } } as Card;
+    const monsterCard = makeCard("monster-1");
+
+    let capturedDraftPool: string[] | null = null;
+
+    const request = createResetRequest();
+    let draftsCallCount = 0;
+    let gamesCallCount = 0;
+
+    const from = vi.fn((table: string) => {
+      switch (table) {
+        case "draft_reset_requests": {
+          const single = vi.fn(() => ({ data: request, error: null }));
+          const eq = vi.fn(() => ({ single }));
+          const select = vi.fn(() => ({ eq }));
+          return { select, update: vi.fn(() => ({ eq: vi.fn(() => ({})) })) };
+        }
+        case "drafts": {
+          draftsCallCount++;
+          if (draftsCallCount === 1) {
+            const single = vi.fn(() => ({
+              data: { player1_id: TEST_USER_ID, player2_id: OTHER_USER_ID, game_id: TEST_GAME_ID },
+              error: null,
+            }));
+            const eq = vi.fn(() => ({ single }));
+            const select = vi.fn(() => ({ eq }));
+            return { select };
+          }
+          const update = vi.fn((data: any) => {
+            capturedDraftPool = data.draft_pool;
+            return { eq: vi.fn(() => ({})) };
+          });
+          return { update };
+        }
+        case "games": {
+          gamesCallCount++;
+          if (gamesCallCount === 1) {
+            const single = vi.fn(() => ({
+              data: { draft_settings: DRAFT_SETTINGS },
+              error: null,
+            }));
+            const eq = vi.fn(() => ({ single }));
+            const select = vi.fn(() => ({ eq }));
+            return { select };
+          }
+          return { update: vi.fn(() => ({ eq: vi.fn(() => ({})) })) };
+        }
+        case "cards":
+          return { select: vi.fn(() => ({ data: [godCard, companionCard, monsterCard], error: null })) };
+        case "maps":
+          return { select: vi.fn(() => ({ data: [], error: null })) };
+        default:
+          throw new Error(`Unexpected table: ${table}`);
+      }
+    });
+
+    const ctx = { supabase: { from }, session: { user: { id: OTHER_USER_ID } } };
+    const caller = draftResetRequestsRouter.createCaller(ctx as any);
+
+    await caller.acceptReset({ reset_request_id: TEST_REQUEST_ID });
+
+    expect(capturedDraftPool).not.toBeNull();
+    // gods_amount is 0 in DRAFT_SETTINGS so god-1 is not in the pool,
+    // but companion-1 (dependOn) must never be pre-added regardless
+    expect(capturedDraftPool).not.toContain("companion-1");
+  });
+
   it("throws NOT_FOUND when reset request does not exist", async () => {
     const { ctx } = createAcceptResetContext({
       request: null,

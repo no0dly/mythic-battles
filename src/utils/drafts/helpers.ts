@@ -210,6 +210,8 @@ export const createOptimisticDraftUpdate = ({
   draft,
   cardId,
   companionCardId,
+  bringsWithCardId,
+  bringsWithCost,
   playerId,
   timestamp = new Date().toISOString(),
 }: OptimisticDraftUpdateInput): OptimisticDraftUpdateResult => {
@@ -230,9 +232,19 @@ export const createOptimisticDraftUpdate = ({
     updatedPicks.push({
       card_id: companionCardId,
       player_id: playerId,
-      pick_number: nextPickNumber + 1,
+      pick_number: updatedPicks.length + 1,
       timestamp,
       auto: true,
+    })
+  }
+
+  if (bringsWithCardId && bringsWithCost !== undefined) {
+    updatedPicks.push({
+      card_id: bringsWithCardId,
+      player_id: playerId,
+      pick_number: updatedPicks.length + 1,
+      timestamp,
+      cost_override: bringsWithCost,
     })
   }
 

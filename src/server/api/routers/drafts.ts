@@ -261,21 +261,9 @@ export const draftsRouter = router({
 
       const artOfWarCardIds = ((artOfWarCards || []) as Array<{ id: string }>).map((card) => card.id);
 
-      // Fetch companion card IDs for pool cards that bring a companion
-      const { data: poolCardsWithCompanions } = await ctx.supabase
-        .from("cards")
-        .select("extra")
-        .in("id", poolResult.cardIds)
-        .not("extra", "is", null);
-
-      const companionCardIds = ((poolCardsWithCompanions || []) as Array<{ extra: { brings?: string } | null }>)
-        .map((card) => card.extra?.brings)
-        .filter((id): id is string => !!id);
-
       const allCardIds = [
         ...poolResult.cardIds,
         ...artOfWarCardIds,
-        ...companionCardIds,
       ];
 
       const draft: Draft = await caller.drafts.createDraft({
@@ -468,6 +456,10 @@ export const draftsRouter = router({
       z.object({
         draft_id: zUuid,
         card_id: zUuid,
+        bringsWith: z.object({
+          card_id: zUuid,
+          cost: z.number().int().nonnegative(),
+        }).optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -592,17 +584,18 @@ export const draftsRouter = router({
       const picks = draftHistory?.picks || [];
 
       // Calculate spent points for current user
+      // Picks with cost_override use that value; others look up the card cost from DB
       const userPicks = picks.filter((pick) => pick.player_id === userId);
-      const userPickedCardIds = userPicks.map((pick) => pick.card_id);
+      const picksWithOverride = userPicks.filter((p) => p.cost_override !== undefined);
+      const picksNeedingLookup = userPicks.filter((p) => p.cost_override === undefined);
 
-      // If user has no picks, they've spent 0 points - no need to query
-      let spentPoints = 0;
-      if (userPickedCardIds.length > 0) {
-        // Get costs of picked cards
+      let spentPoints = picksWithOverride.reduce((sum, p) => sum + p.cost_override!, 0);
+
+      if (picksNeedingLookup.length > 0) {
         const { data: pickedCards, error: pickedCardsError } = await ctx.supabase
           .from("cards")
           .select("cost")
-          .in("id", userPickedCardIds);
+          .in("id", picksNeedingLookup.map((p) => p.card_id));
 
         if (pickedCardsError) {
           throw new TRPCError({
@@ -611,7 +604,7 @@ export const draftsRouter = router({
           });
         }
 
-        spentPoints = (pickedCards as { cost: number }[] || []).reduce((sum, c) => sum + c.cost, 0);
+        spentPoints += (pickedCards as { cost: number }[] || []).reduce((sum, c) => sum + c.cost, 0);
       }
       const remainingPoints = playerAllowedPoints - spentPoints;
 
@@ -653,9 +646,38 @@ export const draftsRouter = router({
         updatedPicks.push({
           card_id: companionId,
           player_id: userId,
-          pick_number: nextPickNumber + 1,
+          pick_number: updatedPicks.length + 1,
           timestamp: new Date().toISOString(),
           auto: true,
+        });
+      }
+
+      // Add optional bringsWith pick if user opted in
+      if (input.bringsWith) {
+        const { card_id: bwCardId, cost: bwCost } = input.bringsWith;
+
+        const alreadyPicked = picks.some((p) => p.card_id === bwCardId && p.player_id === userId);
+        if (alreadyPicked) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Brought unit has already been picked",
+          });
+        }
+
+        const remainingAfterParent = remainingPoints - cardData.cost;
+        if (bwCost > remainingAfterParent) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Not enough points to add the brought unit",
+          });
+        }
+
+        updatedPicks.push({
+          card_id: bwCardId,
+          player_id: userId,
+          pick_number: updatedPicks.length + 1,
+          timestamp: new Date().toISOString(),
+          cost_override: bwCost,
         });
       }
 
@@ -673,16 +695,16 @@ export const draftsRouter = router({
 
       // Calculate opponent's spent points to check if they've reached max
       const opponentPicks = updatedPicks.filter((pick) => pick.player_id === opponentId);
-      const opponentPickedCardIds = opponentPicks.map((pick) => pick.card_id);
 
-      // If opponent has no picks, they've spent 0 points - no need to query
-      let opponentSpentPoints = 0;
-      if (opponentPickedCardIds.length > 0) {
-        // Get costs of opponent's picked cards
+      const opponentPicksWithOverride = opponentPicks.filter((p) => p.cost_override !== undefined);
+      const opponentPicksNeedingLookup = opponentPicks.filter((p) => p.cost_override === undefined);
+      let opponentSpentPoints = opponentPicksWithOverride.reduce((sum, p) => sum + p.cost_override!, 0);
+
+      if (opponentPicksNeedingLookup.length > 0) {
         const { data: opponentPickedCards, error: opponentCardsError } = await ctx.supabase
           .from("cards")
           .select("cost")
-          .in("id", opponentPickedCardIds);
+          .in("id", opponentPicksNeedingLookup.map((p) => p.card_id));
 
         if (opponentCardsError) {
           throw new TRPCError({
@@ -691,7 +713,7 @@ export const draftsRouter = router({
           });
         }
 
-        opponentSpentPoints = (opponentPickedCards as { cost: number }[] || []).reduce((sum, c) => sum + c.cost, 0);
+        opponentSpentPoints += (opponentPickedCards as { cost: number }[] || []).reduce((sum, c) => sum + c.cost, 0);
       }
       const opponentHasReachedMax = opponentSpentPoints >= playerAllowedPoints;
 
@@ -699,11 +721,14 @@ export const draftsRouter = router({
       // Otherwise, pass to opponent
       const nextTurnUserId = opponentHasReachedMax ? userId : opponentId;
 
-      // If a companion was auto-added, ensure it's in the draft pool
-      const updatedPool =
-        companionId && !draftData.draft_pool.includes(companionId)
-          ? [...draftData.draft_pool, companionId]
-          : draftData.draft_pool;
+      // Ensure companion and bringsWith cards are in the draft pool
+      let updatedPool = draftData.draft_pool;
+      if (companionId && !updatedPool.includes(companionId)) {
+        updatedPool = [...updatedPool, companionId];
+      }
+      if (input.bringsWith && !updatedPool.includes(input.bringsWith.card_id)) {
+        updatedPool = [...updatedPool, input.bringsWith.card_id];
+      }
 
       // Update draft
       const { data: updatedDraft, error: updateError } = await ctx.supabase

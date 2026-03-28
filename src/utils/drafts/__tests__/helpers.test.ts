@@ -107,6 +107,54 @@ describe("createOptimisticDraftUpdate", () => {
     expect(result.draft_history.picks).toHaveLength(2);
     expect(result.draft_history.picks[1].pick_number).toBe(2);
   });
+
+  it("adds a bringsWith pick with cost_override when provided", () => {
+    const result = createOptimisticDraftUpdate({
+      draft: makeDraft(),
+      cardId: "parent-card",
+      bringsWithCardId: "bw-card",
+      bringsWithCost: 2,
+      playerId: "player-1",
+    });
+
+    expect(result.draft_history.picks).toHaveLength(2);
+    expect(result.draft_history.picks[1]).toMatchObject({
+      card_id: "bw-card",
+      player_id: "player-1",
+      pick_number: 2,
+      cost_override: 2,
+    });
+    expect(result.draft_history.picks[1].auto).toBeUndefined();
+  });
+
+  it("assigns sequential pick numbers when companion and bringsWith are both present", () => {
+    const result = createOptimisticDraftUpdate({
+      draft: makeDraft(),
+      cardId: "parent-card",
+      companionCardId: "companion-card",
+      bringsWithCardId: "bw-card",
+      bringsWithCost: 1,
+      playerId: "player-1",
+    });
+
+    expect(result.draft_history.picks).toHaveLength(3);
+    expect(result.draft_history.picks[0].pick_number).toBe(1);
+    expect(result.draft_history.picks[1].pick_number).toBe(2);
+    expect(result.draft_history.picks[2].pick_number).toBe(3);
+    expect(result.draft_history.picks[1].auto).toBe(true);
+    expect(result.draft_history.picks[2].cost_override).toBe(1);
+  });
+
+  it("does not add bringsWith pick when bringsWithCardId is omitted", () => {
+    const result = createOptimisticDraftUpdate({
+      draft: makeDraft(),
+      cardId: "parent-card",
+      playerId: "player-1",
+    });
+
+    expect(result.draft_history.picks).toHaveLength(1);
+    expect(result.draft_history.picks[0].cost_override).toBeUndefined();
+  });
 });
 
 describe("getPlayerCards", () => {

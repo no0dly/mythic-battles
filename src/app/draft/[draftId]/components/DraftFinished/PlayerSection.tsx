@@ -26,6 +26,7 @@ interface PlayerSectionProps {
   name: string;
   cards: Card[];
   totalCost: number;
+  costOverrides: Map<string, number>;
   accent: PlayerSectionColor;
   onCardClick: (card: Card) => void;
 }
@@ -34,6 +35,7 @@ export const PlayerSection = ({
   name,
   cards,
   totalCost,
+  costOverrides,
   accent,
   onCardClick,
 }: PlayerSectionProps) => {
@@ -98,7 +100,9 @@ export const PlayerSection = ({
                         {card.unit_name}
                       </p>
                       <span className="text-sm font-bold text-purple-600">
-                        {t("cost")}: {card.cost}
+                        {t("cost")}: {costOverrides.has(card.id) ? (
+                          <>{costOverrides.get(card.id)} <span className="line-through text-gray-400 font-normal">({card.cost})</span></>
+                        ) : card.cost}
                       </span>
                     </div>
                     <p className="text-xs text-gray-500">

@@ -24,8 +24,8 @@ export default function CardGalleryModal({
   card,
   onCloseModal,
 }: CardGalleryModalProps) {
-  const companionId = card.extra?.brings ?? card.extra?.dependOn;
-  const isParent = !!card.extra?.brings;
+  const companionId = card.extra?.brings ?? card.extra?.dependOn ?? card.extra?.bringsWith?.id;
+  const isParent = !!card.extra?.brings || !!card.extra?.bringsWith;
 
   const { data: companionCard, isLoading } = api.cards.getById.useQuery(
     { id: companionId! },

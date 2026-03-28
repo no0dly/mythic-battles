@@ -9,6 +9,7 @@ const makeCard = (
   type: string,
   cost: number,
   origin: string | null = null,
+  extra: Card["extra"] = null,
 ): Card => ({
   id,
   unit_name: `Card ${id}`,
@@ -19,6 +20,7 @@ const makeCard = (
   talents: [],
   class: [],
   origin: origin as Card["origin"],
+  extra,
   image_url: "",
   created_at: "2024-01-01T00:00:00.000Z",
   updated_at: "2024-01-01T00:00:00.000Z",
@@ -42,7 +44,7 @@ const makeMap = (
   name: `Map ${id}`,
   image_url: "",
   origin: origin as GameMap["origin"],
-  map_type,
+  map_type: map_type as GameMap["map_type"],
   created_at: "2024-01-01T00:00:00.000Z",
 });
 
@@ -127,6 +129,53 @@ describe("generateDraftPool - origin filtering", () => {
         origins: [CARD_ORIGIN.CHT],
       }),
     ).toThrow();
+  });
+});
+
+describe("generateDraftPool - companion/dependent card exclusion", () => {
+  it("excludes 0-cost companion cards from the pool", () => {
+    const parent = makeCard("parent-1", CARD_TYPES.MONSTER, 1, CARD_ORIGIN.ASG);
+    const companion = makeCard("companion-1", CARD_TYPES.MONSTER, 0, CARD_ORIGIN.ASG);
+
+    const result = generateDraftPool([parent, companion], {
+      ...BASE_CONFIG,
+      draft_size: 1,
+    });
+
+    expect(result.cardIds).toContain(parent.id);
+    expect(result.cardIds).not.toContain(companion.id);
+  });
+
+  it("excludes companion cards with dependOn set even if cost > 0", () => {
+    const parent = makeCard("parent-1", CARD_TYPES.GOD, 6, CARD_ORIGIN.ASG, { brings: "companion-1" });
+    const companion = makeCard("companion-1", CARD_TYPES.TROOP, 3, CARD_ORIGIN.ASG, { dependOn: "parent-1" });
+    const other = makeCard("other-1", CARD_TYPES.MONSTER, 3, CARD_ORIGIN.ASG);
+
+    const result = generateDraftPool([parent, companion, other], {
+      ...BASE_CONFIG,
+      gods_amount: 1,
+      draft_size: 3,
+    });
+
+    expect(result.cardIds).toContain(parent.id);
+    expect(result.cardIds).not.toContain(companion.id);
+    expect(result.cardIds).toContain(other.id);
+  });
+
+  it("includes parent cards that have bringsWith in the pool", () => {
+    const parent = makeCard("parent-1", CARD_TYPES.GOD, 6, CARD_ORIGIN.ASG, { bringsWith: { id: "optional-1", cost: 2 } });
+    const optional = makeCard("optional-1", CARD_TYPES.TROOP, 3, CARD_ORIGIN.ASG);
+
+    const result = generateDraftPool([parent, optional], {
+      ...BASE_CONFIG,
+      gods_amount: 1,
+      draft_size: 3,
+    });
+
+    // Parent with bringsWith is a normal pool card — must be included
+    expect(result.cardIds).toContain(parent.id);
+    // bringsWith target is also a normal pool card (no dependOn), eligible for random selection
+    expect(result.cardIds).toContain(optional.id);
   });
 });
 

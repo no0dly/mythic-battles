@@ -85,8 +85,9 @@ export type GameMap = {
 }
 
 export type CardExtra = {
-  brings?: string    // UUID of companion unit this card brings
+  brings?: string    // UUID of companion unit this card brings (free, auto-added)
   dependOn?: string  // UUID of parent unit this card depends on
+  bringsWith?: { id: string; cost: number }  // optional unit brought at a modified cost
 }
 
 export type Card = {
@@ -159,7 +160,8 @@ export type DraftPick = {
   player_id: string
   pick_number: number
   timestamp: string
-  auto?: boolean  // true for companion units auto-added when parent is picked
+  auto?: boolean           // true for companion units auto-added when parent is picked
+  cost_override?: number   // overridden cost for special-case units brought at modified cost
 }
 
 export type DraftHistory = {

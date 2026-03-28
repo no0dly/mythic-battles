@@ -65,6 +65,7 @@ export function DraftStatusPanel({ draft, cards }: DraftStatusPanelProps) {
     draftRound,
     player1Status,
     player2Status,
+    picks,
   } = useDraftDetails({
     draft,
     cards,
@@ -78,10 +79,23 @@ export function DraftStatusPanel({ draft, cards }: DraftStatusPanelProps) {
     return user.id === player1Id ? player1Cards : player2Cards;
   }, [user, player1Id, player1Cards, player2Cards]);
 
+  const currentUserRemaining = user?.id === player1Id ? player1Remaining : player2Remaining;
+
   const { canPick, reason } = useMemo(() => {
     if (!user || !userAllowedPoints) return { canPick: true };
-    return canStartGame(currentUserCards, userAllowedPoints);
-  }, [currentUserCards, userAllowedPoints, user]);
+    return canStartGame(currentUserCards, currentUserRemaining);
+  }, [currentUserCards, currentUserRemaining, user, userAllowedPoints]);
+
+  // Map card_id → overridden cost for picks that have cost_override
+  const costOverrideMap = useMemo(
+    () =>
+      new Map(
+        picks
+          .filter((p) => p.cost_override !== undefined)
+          .map((p) => [p.card_id, p.cost_override!])
+      ),
+    [picks]
+  );
 
   const player1StrategicValue = player1Cards.reduce(
     (sum, card) => sum + card.strategic_value,
@@ -133,7 +147,7 @@ export function DraftStatusPanel({ draft, cards }: DraftStatusPanelProps) {
               player1Cards.map((card, index) => (
                 <p key={card.id} className="text-xs">
                   {index + 1} {card.unit_name} -{" "}
-                  {t(`cardType.${card.unit_type}`)}, {card.cost}
+                  {t(`cardType.${card.unit_type}`)}, {costOverrideMap.get(card.id) ?? card.cost}
                 </p>
               ))
             )}
@@ -170,7 +184,7 @@ export function DraftStatusPanel({ draft, cards }: DraftStatusPanelProps) {
               player2Cards.map((card, index) => (
                 <p key={card.id} className="text-xs">
                   {index + 1} {card.unit_name} -{" "}
-                  {t(`cardType.${card.unit_type}`)}, {card.cost}
+                  {t(`cardType.${card.unit_type}`)}, {costOverrideMap.get(card.id) ?? card.cost}
                 </p>
               ))
             )}

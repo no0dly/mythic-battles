@@ -190,6 +190,10 @@ const translation = {
   unknownCard: "Unknown Card",
   cardPreview: "Card Preview",
   companionNotice: "Selecting this unit will also add {{name}} to your army at no extra cost.",
+  bringsWithNotice: "You can also bring {{name}} for {{cost}} pts.",
+  bringsWithCheckboxLabel: "Add {{name}} ({{cost}} pts)",
+  bringsWithNotEnoughPoints: "Not enough points to bring this unit",
+  bringsWithAlreadyPicked: "This unit is already in your army",
   // Draft page status
   picking: "Picking",
   awaits: "Awaits",
