@@ -424,6 +424,18 @@ const translation = {
     flying: "Flying units can deploy on a Cliff or Rock area of their deployment zone. They move on the ground but can take flight via 2 additional complex actions — Fast Flight: enter up to movement +1 areas, ignore all terrain effects, cross walls and escarpments, unaffected by Block; cannot drop a divine stone. Aerial Attack: like a normal attack but ignores terrain effects of own area, gains +1 range, and obstacles are ignored for line of sight.",
     huge: "A huge unit can never enter an area with an area capacity lower than 3 except during deployment. The area it occupies is always considered full, regardless of its area capacity. Talents and powers that could move this unit are ignored.",
   },
+  resetRequestedTitle: "Reset Requested",
+  resetRequestedDescription: "Waiting for your opponent to accept the reset.",
+  resetRequestReceivedTitle: "Opponent Requested a Reset",
+  resetRequestReceivedDescription: "Your opponent wants to reset the draft and start over.",
+  acceptReset: "Accept Reset",
+  cancelReset: "Cancel Reset",
+  resetAccepted: "Draft reset accepted. Starting over!",
+  resetCancelled: "Reset request cancelled.",
+  errorAcceptingReset: "Failed to accept reset",
+  errorCancellingReset: "Failed to cancel reset",
+  opponentRequestedReset: "Your opponent requested a draft reset",
+  opponentRequestedResetFrom: "{{player}} requested a draft reset",
 } as const;
 
 export default translation;

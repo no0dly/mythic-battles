@@ -7,6 +7,7 @@ import { gamesRouter } from "./routers/games";
 import { draftsRouter } from "./routers/drafts";
 import { gameInvitationsRouter } from "./routers/game-invitations";
 import { mapsRouter } from "./routers/maps";
+import { draftResetRequestsRouter } from "./routers/draft-reset-requests";
 
 export const appRouter = router({
   cards: cardsRouter,
@@ -17,6 +18,7 @@ export const appRouter = router({
   drafts: draftsRouter,
   gameInvitations: gameInvitationsRouter,
   maps: mapsRouter,
+  draftResetRequests: draftResetRequestsRouter,
 });
 
 export type AppRouter = typeof appRouter;

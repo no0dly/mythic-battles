@@ -144,8 +144,8 @@ export const getDraftState = (
 ): DraftState => {
   if (!draft || !userId) return DRAFT_STATE.LOADING
 
-  // Если драфт в процессе, показать основной интерфейс
-  if (draft.draft_status === DRAFT_STATUS.DRAFT) {
+  // Если драфт в процессе (включая состояние запроса на сброс), показать основной интерфейс
+  if (draft.draft_status === DRAFT_STATUS.DRAFT || draft.draft_status === DRAFT_STATUS.RESET_REQUESTED) {
     const gameStatus = draft.game?.status
     const invitation = draft.invitation
 

@@ -113,21 +113,29 @@ const createFinishDraftContext = (
     lastSessionUpdatePayload = payload;
   });
 
+  const resetRequestUpdateChain = (() => {
+    const eq2 = vi.fn(() => ({}));
+    const eq1 = vi.fn(() => ({ eq: eq2 }));
+    const update = vi.fn(() => ({ eq: eq1 }));
+    return { update };
+  })();
+
+  let draftsCallCount = 0;
   const from = vi.fn((table: string) => {
     switch (table) {
-      case "drafts":
-        return {
-          select: draftSelectChain.select,
-          update: draftUpdateChain.update,
-        };
+      case "drafts": {
+        draftsCallCount++;
+        if (draftsCallCount === 1) {
+          return { select: draftSelectChain.select };
+        }
+        return { update: draftUpdateChain.update };
+      }
       case "games":
-        return {
-          update: gameUpdateChain.update,
-        };
+        return { update: gameUpdateChain.update };
       case "sessions":
-        return {
-          update: sessionUpdateChain.update,
-        };
+        return { update: sessionUpdateChain.update };
+      case "draft_reset_requests":
+        return resetRequestUpdateChain;
       default:
         throw new Error(`Unexpected table ${table}`);
     }
@@ -300,6 +308,15 @@ describe("draftsRouter.finishDraft", () => {
     await expect(
       caller.finishDraft({ draft_id: TEST_DRAFT_ID }),
     ).rejects.toThrow("Failed to start session after finishing draft");
+  });
+
+  it("expires any pending reset request before finishing", async () => {
+    const { ctx } = createFinishDraftContext();
+    const caller = draftsRouter.createCaller(ctx as any);
+
+    await caller.finishDraft({ draft_id: TEST_DRAFT_ID });
+
+    expect(ctx.supabase.from).toHaveBeenCalledWith("draft_reset_requests");
   });
 });
 

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { router, publicProcedure, protectedProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
-import type { Draft, Card, GameMap, DraftHistory, DraftPick, DraftSettings, CardOrigin } from "@/types/database.types";
+import type { Draft, Card, GameMap, DraftHistory, DraftPick, DraftSettings, CardOrigin, DraftResetRequest } from "@/types/database.types";
 import { zUuid } from "../schemas";
 import {
   DRAFT_STATUS,
@@ -11,6 +11,7 @@ import {
   CARD_TYPES,
   CARD_ORIGIN,
   ALL_VALUE,
+  DRAFT_RESET_REQUEST_STATUS,
 } from "@/types/constants";
 import { generateDraftPool, selectRandomMap } from "./drafts/index";
 import type { AppRouter } from "../root";
@@ -362,11 +363,24 @@ export const draftsRouter = router({
         invitation = latestInvitation;
       }
 
+      // Fetch pending reset request
+      const { data: resetRequest } = await ctx.supabase
+        .from("draft_reset_requests")
+        .select("*")
+        .eq("draft_id", draftData.id)
+        .eq("status", DRAFT_RESET_REQUEST_STATUS.PENDING)
+        .maybeSingle();
+
       return {
         ...draftData,
         game: game || undefined,
         invitation: invitation || undefined,
-      } as Draft & { game?: import("@/types/database.types").Game; invitation?: import("@/types/database.types").GameInvitation };
+        resetRequest: (resetRequest as unknown as DraftResetRequest) || undefined,
+      } as Draft & {
+        game?: import("@/types/database.types").Game;
+        invitation?: import("@/types/database.types").GameInvitation;
+        resetRequest?: DraftResetRequest;
+      };
     }),
 
   // Get drafts by array of IDs
@@ -768,6 +782,16 @@ export const draftsRouter = router({
         });
       }
 
+      // Expire any pending reset request before finishing
+      await ctx.supabase
+        .from("draft_reset_requests")
+        .update({
+          status: DRAFT_RESET_REQUEST_STATUS.EXPIRED,
+          responded_at: new Date().toISOString(),
+        } as never)
+        .eq("draft_id", input.draft_id)
+        .eq("status", DRAFT_RESET_REQUEST_STATUS.PENDING);
+
       // Update draft status to finished
       const { data: updatedDraft, error: updateError } = await ctx.supabase
         .from("drafts")
@@ -825,71 +849,6 @@ export const draftsRouter = router({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to start session after finishing draft",
           cause: sessionUpdateError,
-        });
-      }
-
-      return updatedDraft as Draft;
-    }),
-
-  // Request draft reset
-  requestReset: protectedProcedure
-    .input(
-      z.object({
-        draft_id: zUuid,
-      })
-    )
-    .mutation(async ({ ctx, input }) => {
-      const userId = ctx.session.user.id;
-
-      // Verify draft exists and user is a participant
-      const { data: draft, error: draftError } = await ctx.supabase
-        .from("drafts")
-        .select("player1_id, player2_id, draft_status")
-        .eq("id", input.draft_id)
-        .single();
-
-      if (draftError || !draft) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Draft not found",
-        });
-      }
-
-      const draftData = draft as {
-        player1_id: string;
-        player2_id: string;
-        draft_status: string;
-      };
-
-      // Verify user is a participant
-      if (draftData.player1_id !== userId && draftData.player2_id !== userId) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "You are not a participant in this draft",
-        });
-      }
-
-      // Verify draft is in draft status
-      if (draftData.draft_status !== DRAFT_STATUS.DRAFT) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Draft is not in draft status",
-        });
-      }
-
-      // Update draft status to resetRequested
-      const { data: updatedDraft, error: updateError } = await ctx.supabase
-        .from("drafts")
-        .update({ draft_status: DRAFT_STATUS.RESET_REQUESTED } as never)
-        .eq("id", input.draft_id)
-        .select()
-        .single();
-
-      if (updateError || !updatedDraft) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to request draft reset",
-          cause: updateError,
         });
       }
 

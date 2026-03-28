@@ -53,7 +53,6 @@ function Loader({ width = 100, height = 100, style, local }: Props) {
           margin: "initial",
           display: "block",
           shapeRendering: "auto",
-          background: "rgb(255, 255, 255)",
         }}
         preserveAspectRatio="xMidYMid"
         width={200}
