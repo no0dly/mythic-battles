@@ -132,6 +132,13 @@ export const GAME_INVITATION_STATUS = {
   EXPIRED: 'expired',
 } as const;
 
+export const DRAFT_RESET_REQUEST_STATUS = {
+  PENDING: 'pending',
+  ACCEPTED: 'accepted',
+  CANCELLED: 'cancelled',
+  EXPIRED: 'expired',
+} as const;
+
 export const FRIENDSHIP_STATUS = {
   PENDING: 'pending',
   ACCEPTED: 'accepted',

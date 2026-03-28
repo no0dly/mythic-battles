@@ -15,17 +15,17 @@ import { api } from "@/trpc/client";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { formatDisplayName } from "@/utils/users";
 import { createClient } from "@/lib/supabase/client";
-import type { GameInvitation, Draft } from "@/types/database.types";
+import type { GameInvitation, Draft, DraftResetRequest } from "@/types/database.types";
 import { toast } from "sonner";
 
 interface NotificationItem {
   id: string;
-  type: "invitation" | "active_draft";
+  type: "invitation" | "active_draft" | "reset_request";
   title: string;
   description: string;
   action?: () => void;
   timestamp: Date;
-  data: GameInvitation | Draft;
+  data: GameInvitation | Draft | DraftResetRequest;
 }
 
 export const NotificationsBell = () => {
@@ -61,6 +61,17 @@ export const NotificationsBell = () => {
   const { data: inviters } = api.users.getUsersByIds.useQuery(
     { userIds: [...new Set(inviterIds)] },
     { enabled: inviterIds.length > 0 }
+  );
+
+  // Получить pending reset requests где текущий пользователь - opponent
+  const { data: pendingResetRequests, refetch: refetchResetRequests } =
+    api.draftResetRequests.getMyPendingAsOpponent.useQuery(undefined, { enabled: !!user });
+
+  // Получить информацию об инициаторах reset request
+  const resetRequesterIds = pendingResetRequests?.map((r) => r.requester_id) || [];
+  const { data: resetRequesters } = api.users.getUsersByIds.useQuery(
+    { userIds: [...new Set(resetRequesterIds)] },
+    { enabled: resetRequesterIds.length > 0 }
   );
 
   // Мутации для приглашений
@@ -170,11 +181,42 @@ export const NotificationsBell = () => {
       )
       .subscribe();
 
+    // Подписка на новые reset requests где текущий пользователь - opponent
+    const resetRequestsChannel = supabase
+      .channel("notifications-reset-requests")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "draft_reset_requests",
+          filter: `opponent_id=eq.${user.id}`,
+        },
+        () => {
+          void refetchResetRequests();
+          toast.info(t("opponentRequestedReset"));
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "draft_reset_requests",
+          filter: `opponent_id=eq.${user.id}`,
+        },
+        () => {
+          void refetchResetRequests();
+        }
+      )
+      .subscribe();
+
     return () => {
       void supabase.removeChannel(invitationsChannel);
       void supabase.removeChannel(draftsChannel);
+      void supabase.removeChannel(resetRequestsChannel);
     };
-  }, [user, supabase, refetchInvitations, refetchDrafts, t]);
+  }, [user, supabase, refetchInvitations, refetchDrafts, refetchResetRequests, t]);
 
   // Формирование списка уведомлений
   const notifications: NotificationItem[] = [];
@@ -212,6 +254,27 @@ export const NotificationsBell = () => {
       },
       timestamp: new Date(invitation.created_at),
       data: invitation,
+    });
+  });
+
+  // Добавить pending reset requests (где текущий пользователь - opponent)
+  pendingResetRequests?.forEach((resetRequest) => {
+    const requester = resetRequesters?.find((p) => p.id === resetRequest.requester_id);
+    const requesterName = requester
+      ? formatDisplayName(requester.display_name, requester.email)
+      : t("unknownPlayer");
+
+    notifications.push({
+      id: resetRequest.id,
+      type: "reset_request",
+      title: t("draftResetRequest"),
+      description: t("opponentRequestedResetFrom", { player: requesterName }),
+      action: () => {
+        router.push(`/draft/${resetRequest.draft_id}`);
+        setIsOpen(false);
+      },
+      timestamp: new Date(resetRequest.created_at),
+      data: resetRequest,
     });
   });
 
@@ -313,7 +376,7 @@ export const NotificationsBell = () => {
                           </Button>
                         </div>
                       )}
-                      {notification.type === "active_draft" && (
+                      {(notification.type === "active_draft" || notification.type === "reset_request") && (
                         <Button size="sm" onClick={notification.action}>
                           {t("goToDraft")}
                         </Button>

@@ -100,11 +100,11 @@ export const useDraftRealtime = ({
           // Проверяем, относится ли изменение к нашей игре
           const newRecord = payload.new as { game_id?: string } | undefined;
           const oldRecord = payload.old as { game_id?: string } | undefined;
-          
+
           // Для INSERT и UPDATE проверяем payload.new
           // Для DELETE проверяем payload.old
           const relatedGameId = newRecord?.game_id || oldRecord?.game_id;
-          
+
           if (relatedGameId === gameId) {
             console.log("Game invitation changed for our game:", payload);
             void utils.drafts.getById.invalidate({ id: draftId });
@@ -117,6 +117,32 @@ export const useDraftRealtime = ({
       void supabase.removeChannel(invitationsChannel);
     };
   }, [gameId, draftId, enabled, supabase, utils]);
+
+  // Подписка на изменения запросов на сброс драфта
+  useEffect(() => {
+    if (!draftId || !enabled) return;
+
+    const resetChannel = supabase
+      .channel(`draft-reset-requests-${draftId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "draft_reset_requests",
+          filter: `draft_id=eq.${draftId}`,
+        },
+        (payload) => {
+          console.log("Draft reset request changed:", payload);
+          void utils.drafts.getById.invalidate({ id: draftId });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(resetChannel);
+    };
+  }, [draftId, enabled, supabase, utils]);
 
   return { isConnected };
 };

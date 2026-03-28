@@ -1,4 +1,4 @@
-import { CARD_CLASS, CARD_ORIGIN, CARD_TYPES, GAME_STATUS, SESSION_STATUS, DRAFT_STATUS, GAME_INVITATION_STATUS, FRIENDSHIP_STATUS, WIN_CONDITION, MAP_TYPE } from "./constants"
+import { CARD_CLASS, CARD_ORIGIN, CARD_TYPES, GAME_STATUS, SESSION_STATUS, DRAFT_STATUS, GAME_INVITATION_STATUS, DRAFT_RESET_REQUEST_STATUS, FRIENDSHIP_STATUS, WIN_CONDITION, MAP_TYPE } from "./constants"
 import { ValueOf } from "./interfaces"
 
 export type Json =
@@ -50,6 +50,20 @@ export type GameInvitation = {
   invitee_id: string
   status: GameInvitationStatus
   message: string | null
+  created_at: string
+  updated_at: string
+  responded_at: string | null
+}
+
+export type DraftResetRequestStatus = ValueOf<typeof DRAFT_RESET_REQUEST_STATUS>
+
+export type DraftResetRequest = {
+  id: string
+  draft_id: string
+  game_id: string
+  requester_id: string
+  opponent_id: string
+  status: DraftResetRequestStatus
   created_at: string
   updated_at: string
   responded_at: string | null
@@ -232,6 +246,11 @@ export type Database = {
         Insert: Omit<GameInvitation, 'id' | 'created_at' | 'updated_at' | 'responded_at'>
         Update: Partial<Omit<GameInvitation, 'id' | 'created_at' | 'updated_at'>>
       }
+      draft_reset_requests: {
+        Row: DraftResetRequest
+        Insert: Omit<DraftResetRequest, 'id' | 'created_at' | 'updated_at' | 'responded_at'>
+        Update: Partial<Omit<DraftResetRequest, 'id' | 'created_at' | 'updated_at'>>
+      }
       maps: {
         Row: GameMap
         Insert: Omit<GameMap, 'created_at'>
@@ -275,5 +294,7 @@ export type DraftUpdate = Partial<Omit<Draft, 'id' | 'created_at' | 'updated_at'
 }
 export type GameInvitationInsert = Omit<GameInvitation, 'id' | 'created_at' | 'updated_at' | 'responded_at'>
 export type GameInvitationUpdate = Partial<Omit<GameInvitation, 'id' | 'created_at' | 'updated_at'>>
+export type DraftResetRequestInsert = Omit<DraftResetRequest, 'id' | 'created_at' | 'updated_at' | 'responded_at'>
+export type DraftResetRequestUpdate = Partial<Omit<DraftResetRequest, 'id' | 'created_at' | 'updated_at'>>
 export type GameMapInsert = Omit<GameMap, 'created_at'>
 export type GameMapUpdate = Partial<Omit<GameMap, 'created_at'>>

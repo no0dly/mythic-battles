@@ -2,7 +2,8 @@
 
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import type { Draft, Card as CardType } from "@/types/database.types";
+import type { Card as CardType } from "@/types/database.types";
+import type { DraftWithRelations } from "@/utils/drafts/interfaces";
 import { useDraftDetails } from "@/hooks";
 import { DraftActionButtons, DraftStatusPanelSkeleton } from "./components";
 import { MapSection } from "../MapSection/MapSection";
@@ -11,7 +12,7 @@ import { canStartGame } from "@/utils/drafts";
 import { useUserProfile } from "@/hooks/useUserProfile";
 
 interface DraftStatusPanelProps {
-  draft: Draft;
+  draft: DraftWithRelations;
   cards: CardType[] | undefined;
 }
 
@@ -22,6 +23,7 @@ export function DraftStatusPanel({ draft, cards }: DraftStatusPanelProps) {
     game_id: gameId,
     player1_id: player1Id,
     player2_id: player2Id,
+    resetRequest,
   } = draft;
 
   const playerIds = [player1Id, player2Id];
@@ -32,7 +34,7 @@ export function DraftStatusPanel({ draft, cards }: DraftStatusPanelProps) {
         userIds: playerIds,
       },
       {
-        enabled: !!draft && playerIds.length === 2,
+        enabled: playerIds.length === 2,
       }
     );
 
@@ -104,6 +106,7 @@ export function DraftStatusPanel({ draft, cards }: DraftStatusPanelProps) {
           {t("draftRound")} {draftRound}
         </p>
       </div>
+
       <div className="mb-10">
         <div className="flex items-center justify-between mb-1">
           <h4 className="font-semibold text-sm">
@@ -183,8 +186,10 @@ export function DraftStatusPanel({ draft, cards }: DraftStatusPanelProps) {
 
       <DraftActionButtons
         draftId={draft.id}
+        draftStatus={draft.draft_status}
         canStartGame={canPick}
         startGameRestrictionReason={reason}
+        resetRequest={resetRequest}
       />
     </div>
   );
