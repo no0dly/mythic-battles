@@ -37,20 +37,23 @@ const FriendsList = () => {
     <>
       <Button
         variant="ghost"
-        className="flex justify-between items-center group/item w-full h-auto p-0 hover:bg-transparent cursor-pointer"
+        className="flex justify-start items-center group/item w-full h-auto p-0 hover:bg-transparent cursor-pointer"
         onClick={handleOpenModal}
       >
-        <span className="text-foreground/70 font-medium underline decoration-foreground/70 underline-offset-4 transition-all duration-200 group-hover/item:no-underline">
+        <span className="text-base sm:text-lg md:text-xl font-bold text-foreground">
           {t("friends")}
         </span>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-0">
           {hasIncoming && (
-            <Badge variant="notification" className="h-6 w-6 p-0 text-[10px] font-bold">
+            <Badge
+              variant="notification"
+              className="h-6 w-6 p-0 text-[10px] font-bold"
+            >
               {pendingRequests.length}
             </Badge>
           )}
-          <span className="font-semibold text-foreground">
-            {isLoading ? "..." : friends.length}
+          <span className="sm:text-lg md:text-xl font-bold text-foreground">
+            {isLoading ? "..." : `(${friends.length})`}
           </span>
         </div>
       </Button>
@@ -63,7 +66,10 @@ const FriendsList = () => {
           </DialogHeader>
 
           <div className="flex flex-col flex-1 min-h-0">
-            <Tabs defaultValue={TAB_VALUES.FRIENDS} className="flex flex-col flex-1 min-h-0">
+            <Tabs
+              defaultValue={TAB_VALUES.FRIENDS}
+              className="flex flex-col flex-1 min-h-0"
+            >
               <TabsList className="grid w-full grid-cols-3 mb-3">
                 <TabsTrigger value={TAB_VALUES.FRIENDS}>
                   {t("friends")}
