@@ -13,10 +13,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  ForgotPasswordFormValues,
-  forgotPasswordSchema,
-} from "./constants";
+import { ForgotPasswordFormValues, forgotPasswordSchema } from "./constants";
 import Link from "next/link";
 
 export default function ForgotPasswordPage() {
@@ -37,7 +34,8 @@ export default function ForgotPasswordPage() {
     }
   };
 
-  const isSuccess = form.formState.isSubmitSuccessful && !form.formState.errors.email;
+  const isSuccess =
+    form.formState.isSubmitSuccessful && !form.formState.errors.email;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
@@ -47,7 +45,7 @@ export default function ForgotPasswordPage() {
             Forgot password
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
-            Enter your email and we'll send you a reset link.
+            Enter your email and we will send you a reset link.
           </p>
         </div>
 
@@ -57,7 +55,10 @@ export default function ForgotPasswordPage() {
           </div>
         ) : (
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+            <form
+              onSubmit={form.handleSubmit(handleSubmit)}
+              className="space-y-4"
+            >
               <FormField
                 control={form.control}
                 name="email"

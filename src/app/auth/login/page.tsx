@@ -1,11 +1,11 @@
-'use client'
+"use client";
 
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -13,62 +13,62 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form'
-import { Input } from '@/components/ui/input'
-import { LoginFormValues, loginSchema } from './constants'
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { LoginFormValues, loginSchema } from "./constants";
 
 export default function LoginPage() {
-  const supabase = createClient()
-  const router = useRouter()
+  const supabase = createClient();
+  const router = useRouter();
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: '', password: '' },
-  })
+    defaultValues: { email: "", password: "" },
+  });
 
   const handleSignIn = async (values: LoginFormValues) => {
     const { error } = await supabase.auth.signInWithPassword({
       email: values.email,
       password: values.password,
-    })
+    });
 
     if (error) {
-      form.setError('root', { message: error.message })
-      return
+      form.setError("root", { message: error.message });
+      return;
     }
 
-    router.push('/')
-  }
+    router.push("/");
+  };
 
   const handleSignUp = async (values: LoginFormValues) => {
     const { error } = await supabase.auth.signUp({
       email: values.email,
       password: values.password,
-    })
+    });
 
     if (error) {
-      form.setError('root', { message: error.message })
-      return
+      form.setError("root", { message: error.message });
+      return;
     }
 
-    form.setError('root', { message: '' })
+    form.setError("root", { message: "" });
     // show success via isSignUpSuccess flag below
-  }
+  };
 
   const handleGoogleLogin = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
+      provider: "google",
       options: {
         redirectTo: `${window.location.origin}/auth/callback`,
       },
-    })
+    });
 
     if (error) {
-      form.setError('root', { message: error.message })
+      form.setError("root", { message: error.message });
     }
-  }
+  };
 
-  const rootError = form.formState.errors.root?.message
+  const rootError = form.formState.errors.root?.message;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
@@ -83,7 +83,10 @@ export default function LoginPage() {
         </div>
 
         <Form {...form}>
-          <form className="space-y-4">
+          <form
+            className="space-y-4"
+            onSubmit={form.handleSubmit(handleSignIn)}
+          >
             <FormField
               control={form.control}
               name="email"
@@ -112,7 +115,7 @@ export default function LoginPage() {
                     <FormLabel>Password</FormLabel>
                     <Link
                       href="/auth/forgot-password"
-                      className="text-sm text-blue-600 hover:underline dark:text-blue-400"
+                      className="text-sm text-black hover:underline dark:text-white"
                     >
                       Forgot password?
                     </Link>
@@ -131,18 +134,22 @@ export default function LoginPage() {
             />
 
             {rootError !== undefined && (
-              <p className={`text-sm p-3 rounded-lg ${
-                rootError === ''
-                  ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                  : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-              }`}>
-                {rootError === '' ? 'Check your email for confirmation!' : rootError}
+              <p
+                className={`text-sm p-3 rounded-lg ${
+                  rootError === ""
+                    ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                    : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                }`}
+              >
+                {rootError === ""
+                  ? "Check your email for confirmation!"
+                  : rootError}
               </p>
             )}
 
             <div className="flex gap-3">
               <Button
-                type="button"
+                type="submit"
                 className="flex-1"
                 disabled={form.formState.isSubmitting}
                 onClick={form.handleSubmit(handleSignIn)}
@@ -165,7 +172,9 @@ export default function LoginPage() {
                 <div className="w-full border-t border-gray-300 dark:border-gray-600" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white dark:bg-gray-800 text-gray-500">or</span>
+                <span className="px-2 bg-white dark:bg-gray-800 text-gray-500">
+                  or
+                </span>
               </div>
             </div>
 
@@ -200,5 +209,5 @@ export default function LoginPage() {
         </Form>
       </div>
     </div>
-  )
+  );
 }
