@@ -67,6 +67,8 @@ export function DraftStatusPanel({ draft, cards }: DraftStatusPanelProps) {
     player1Status,
     player2Status,
     picks,
+    player1Side,
+    player2Side,
   } = useDraftDetails({
     draft,
     cards,
@@ -162,10 +164,10 @@ export function DraftStatusPanel({ draft, cards }: DraftStatusPanelProps) {
             )}
           </div>
         </div>
-        <p className="text-xs text-muted-foreground mt-1">
-          {t("strategicValue")}:{" "}
-          {player1StrategicValue}
-        </p>
+        <div className="flex justify-between text-xs text-muted-foreground mt-1">
+          <span>{t("strategicValue")}: {player1StrategicValue}</span>
+          {player1Side && <span>{t("side")}: {player1Side}</span>}
+        </div>
       </div>
       <div className="mb-10">
         <div className="flex items-center justify-between mb-1">
@@ -199,10 +201,10 @@ export function DraftStatusPanel({ draft, cards }: DraftStatusPanelProps) {
             )}
           </div>
         </div>
-        <p className="text-xs text-muted-foreground mt-1">
-          {t("strategicValue")}:{" "}
-          {player2StrategicValue}
-        </p>
+        <div className="flex justify-between text-xs text-muted-foreground mt-1">
+          <span>{t("strategicValue")}: {player2StrategicValue}</span>
+          {player2Side && <span>{t("side")}: {player2Side}</span>}
+        </div>
       </div>
 
       <MapSection mapId={draft.map_id} />

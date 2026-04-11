@@ -4,6 +4,7 @@ create table public.drafts (
   player1_id uuid not null,
   player2_id uuid not null,
   initial_roll jsonb null default '[]'::jsonb,
+  players_setup jsonb null,
   draft_status text not null default 'rollForTurn'::text,
   draft_history jsonb null default '{"picks": []}'::jsonb,
   current_turn_user_id uuid null,

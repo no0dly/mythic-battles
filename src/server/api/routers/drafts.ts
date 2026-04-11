@@ -152,12 +152,20 @@ export const draftsRouter = router({
       const firstTurnUserId =
         player2Roll > player1Roll ? player2Id : player1Id;
 
+      // Randomly assign sides A and B to players
+      const player1SideA = Math.random() < 0.5;
+      const playersSetup = [
+        { userID: player1Id, side: player1SideA ? 'A' : 'B' },
+        { userID: player2Id, side: player1SideA ? 'B' : 'A' },
+      ];
+
       // Create draft record with generated pool
       const draftInsert = {
         game_id: input.game_id,
         player1_id: player1Id,
         player2_id: player2Id,
         initial_roll: initialRoll,
+        players_setup: playersSetup,
         draft_status: DRAFT_STATUS.DRAFT,
         draft_pool: input.draft_pool,
         draft_history: [],

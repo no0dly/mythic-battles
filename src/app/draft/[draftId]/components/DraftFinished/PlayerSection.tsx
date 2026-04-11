@@ -1,6 +1,6 @@
 "use client";
 
-import type { Card } from "@/types/database.types";
+import type { Card, PlayerDeploymentSide } from "@/types/database.types";
 import { CardImage } from "@/app/components/DraftInfo/components";
 import { useTranslation } from "react-i18next";
 
@@ -28,6 +28,7 @@ interface PlayerSectionProps {
   totalCost: number;
   costOverrides: Map<string, number>;
   accent: PlayerSectionColor;
+  side: PlayerDeploymentSide | null;
   onCardClick: (card: Card) => void;
 }
 
@@ -37,6 +38,7 @@ export const PlayerSection = ({
   totalCost,
   costOverrides,
   accent,
+  side,
   onCardClick,
 }: PlayerSectionProps) => {
   const { t } = useTranslation();
@@ -44,7 +46,7 @@ export const PlayerSection = ({
 
   const totalStrategicValue = cards.reduce(
     (sum, card) => sum + (card.strategic_value || 0),
-    0
+    0,
   );
 
   return (
@@ -58,13 +60,21 @@ export const PlayerSection = ({
           </p>
           <h3 className={`text-xl font-semibold ${accentStyles.title}`}>
             {name}
+            {side && (
+              <span className="text-sm text-gray-600">
+                {" "}
+                ({t("side")} {side})
+              </span>
+            )}
           </h3>
           <p className="text-sm text-gray-600">
             {cards.length} {t("picks")}
           </p>
-          <p className="text-sm text-gray-600">
-            {t("strategicValue")}: {totalStrategicValue}
-          </p>
+          <div className="flex items-center gap-4 text-sm text-gray-600">
+            <span>
+              {t("strategicValue")}: {totalStrategicValue}
+            </span>
+          </div>
         </div>
         <div
           className={`rounded-xl px-4 py-2 text-sm font-semibold ${accentStyles.badge}`}
@@ -100,9 +110,17 @@ export const PlayerSection = ({
                         {card.unit_name}
                       </p>
                       <span className="text-sm font-bold text-purple-600">
-                        {t("cost")}: {costOverrides.has(card.id) ? (
-                          <>{costOverrides.get(card.id)} <span className="line-through text-gray-400 font-normal">({card.cost})</span></>
-                        ) : card.cost}
+                        {t("cost")}:{" "}
+                        {costOverrides.has(card.id) ? (
+                          <>
+                            {costOverrides.get(card.id)}{" "}
+                            <span className="line-through text-gray-400 font-normal">
+                              ({card.cost})
+                            </span>
+                          </>
+                        ) : (
+                          card.cost
+                        )}
                       </span>
                     </div>
                     <p className="text-xs text-gray-500">

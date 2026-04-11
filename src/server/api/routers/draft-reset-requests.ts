@@ -220,6 +220,13 @@ export const draftResetRequestsRouter = router({
       ];
       const firstTurnUserId = player2Roll > player1Roll ? draftData.player2_id : draftData.player1_id;
 
+      // Re-randomize sides on reset
+      const player1SideA = Math.random() < 0.5;
+      const playersSetup = [
+        { userID: draftData.player1_id, side: player1SideA ? 'A' : 'B' },
+        { userID: draftData.player2_id, side: player1SideA ? 'B' : 'A' },
+      ];
+
       // Fetch maps and select new one
       const { data: allMaps } = await ctx.supabase.from("maps").select("*");
       const selectedMap = selectRandomMap((allMaps ?? []) as GameMap[], { origins, maps: settings.maps });
@@ -239,6 +246,7 @@ export const draftResetRequestsRouter = router({
           .update({
             draft_pool: allCardIds,
             initial_roll: initialRoll,
+            players_setup: playersSetup,
             draft_history: { picks: [] },
             draft_status: DRAFT_STATUS.DRAFT,
             current_turn_user_id: firstTurnUserId,
