@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { router, publicProcedure, protectedProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
-import type { Draft, Card, GameMap, DraftHistory, DraftPick, DraftSettings, CardOrigin, DraftResetRequest } from "@/types/database.types";
+import type { Draft, Card, GameMap, DraftHistory, DraftPick, DraftSettings, CardOrigin, DraftResetRequest, DraftReadyCheck } from "@/types/database.types";
 import { zUuid } from "../schemas";
 import {
   DRAFT_STATUS,
@@ -12,6 +12,7 @@ import {
   CARD_ORIGIN,
   ALL_VALUE,
   DRAFT_RESET_REQUEST_STATUS,
+  DRAFT_READY_CHECK_STATUS,
 } from "@/types/constants";
 import { generateDraftPool, selectRandomMap } from "./drafts/index";
 import type { AppRouter } from "../root";
@@ -359,15 +360,25 @@ export const draftsRouter = router({
         .eq("status", DRAFT_RESET_REQUEST_STATUS.PENDING)
         .maybeSingle();
 
+      // Fetch pending ready check
+      const { data: readyCheck } = await ctx.supabase
+        .from("draft_ready_checks")
+        .select("*")
+        .eq("draft_id", draftData.id)
+        .eq("status", DRAFT_READY_CHECK_STATUS.PENDING)
+        .maybeSingle();
+
       return {
         ...draftData,
         game: game || undefined,
         invitation: invitation || undefined,
         resetRequest: (resetRequest as unknown as DraftResetRequest) || undefined,
+        readyCheck: (readyCheck as unknown as DraftReadyCheck) || undefined,
       } as Draft & {
         game?: import("@/types/database.types").Game;
         invitation?: import("@/types/database.types").GameInvitation;
         resetRequest?: DraftResetRequest;
+        readyCheck?: DraftReadyCheck;
       };
     }),
 
@@ -816,6 +827,13 @@ export const draftsRouter = router({
         } as never)
         .eq("draft_id", input.draft_id)
         .eq("status", DRAFT_RESET_REQUEST_STATUS.PENDING);
+
+      // Expire any pending ready check before finishing
+      await ctx.supabase
+        .from("draft_ready_checks")
+        .update({ status: DRAFT_READY_CHECK_STATUS.EXPIRED } as never)
+        .eq("draft_id", input.draft_id)
+        .eq("status", DRAFT_READY_CHECK_STATUS.PENDING);
 
       // Update draft status to finished
       const { data: updatedDraft, error: updateError } = await ctx.supabase

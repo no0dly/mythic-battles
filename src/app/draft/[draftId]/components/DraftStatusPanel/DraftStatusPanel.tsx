@@ -24,6 +24,7 @@ export function DraftStatusPanel({ draft, cards }: DraftStatusPanelProps) {
     player1_id: player1Id,
     player2_id: player2Id,
     resetRequest,
+    readyCheck,
   } = draft;
 
   const playerIds = [player1Id, player2Id];
@@ -86,6 +87,14 @@ export function DraftStatusPanel({ draft, cards }: DraftStatusPanelProps) {
     return canStartGame(currentUserCards, currentUserRemaining);
   }, [currentUserCards, currentUserRemaining, user, userAllowedPoints]);
 
+  const isPlayer1Ready =
+    readyCheck?.first_player_id === player1Id || readyCheck?.second_player_id === player1Id;
+  const isPlayer2Ready =
+    readyCheck?.first_player_id === player2Id || readyCheck?.second_player_id === player2Id;
+
+  const player1DisplayStatus = isPlayer1Ready ? t("readyConfirmed") : player1Status;
+  const player2DisplayStatus = isPlayer2Ready ? t("readyConfirmed") : player2Status;
+
   // Map card_id → overridden cost for picks that have cost_override
   const costOverrideMap = useMemo(
     () =>
@@ -124,7 +133,7 @@ export function DraftStatusPanel({ draft, cards }: DraftStatusPanelProps) {
       <div className="mb-10">
         <div className="flex items-center justify-between mb-1">
           <h4 className="font-semibold text-sm">
-            {player1Name} {player1Status}
+            {player1Name} {player1DisplayStatus}
           </h4>
           <p className="text-xs text-muted-foreground">
             {t("availablePoints")} ({player1Remaining})
@@ -132,8 +141,8 @@ export function DraftStatusPanel({ draft, cards }: DraftStatusPanelProps) {
         </div>
         <div
           className={`border-2 rounded-lg p-2 h-[20vh] flex flex-col ${
-            isPlayer1Turn ? "border-green-500" : "border-gray-300"
-          }`}
+            isPlayer1Turn && player1Remaining > 0 ? "border-green-500" : "border-gray-300"
+          } ${isPlayer1Ready ? "bg-green-500/10" : ""}`}
         >
           <p className="text-xs font-semibold mb-1 flex-shrink-0">
             {t("pickedCards")}
@@ -161,7 +170,7 @@ export function DraftStatusPanel({ draft, cards }: DraftStatusPanelProps) {
       <div className="mb-10">
         <div className="flex items-center justify-between mb-1">
           <h4 className="font-semibold text-sm">
-            {player2Name} {player2Status}
+            {player2Name} {player2DisplayStatus}
           </h4>
           <p className="text-xs text-muted-foreground">
             {t("availablePoints")} ({player2Remaining})
@@ -169,8 +178,8 @@ export function DraftStatusPanel({ draft, cards }: DraftStatusPanelProps) {
         </div>
         <div
           className={`border-2 rounded-lg p-2 h-[20vh] flex flex-col ${
-            isPlayer2Turn ? "border-green-500" : "border-gray-300"
-          }`}
+            isPlayer2Turn && player2Remaining > 0 ? "border-green-500" : "border-gray-300"
+          } ${isPlayer2Ready ? "bg-green-500/10" : ""}`}
         >
           <p className="text-xs font-semibold mb-1 flex-shrink-0">
             {t("pickedCards")}
@@ -204,6 +213,7 @@ export function DraftStatusPanel({ draft, cards }: DraftStatusPanelProps) {
         canStartGame={canPick}
         startGameRestrictionReason={reason}
         resetRequest={resetRequest}
+        readyCheck={readyCheck}
       />
     </div>
   );

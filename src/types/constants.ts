@@ -139,6 +139,11 @@ export const DRAFT_RESET_REQUEST_STATUS = {
   EXPIRED: 'expired',
 } as const;
 
+export const DRAFT_READY_CHECK_STATUS = {
+  PENDING: 'pending',
+  EXPIRED: 'expired',
+} as const;
+
 export const FRIENDSHIP_STATUS = {
   PENDING: 'pending',
   ACCEPTED: 'accepted',

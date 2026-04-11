@@ -1,6 +1,6 @@
 import { ValueOf } from "@/types/interfaces";
 import { DRAFT_STATE } from "./constants";
-import { Draft, DraftHistory, Game, GameInvitation, DraftResetRequest } from "@/types/database.types";
+import { Draft, DraftHistory, Game, GameInvitation, DraftResetRequest, DraftReadyCheck } from "@/types/database.types";
 
 export type DraftState = ValueOf<typeof DRAFT_STATE>;
 
@@ -8,6 +8,7 @@ export type DraftWithRelations = Draft & {
   game?: Game
   invitation?: GameInvitation
   resetRequest?: DraftResetRequest
+  readyCheck?: DraftReadyCheck
 }
 
 export interface OptimisticDraftUpdateInput {

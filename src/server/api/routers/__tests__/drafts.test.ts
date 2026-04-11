@@ -136,6 +136,8 @@ const createFinishDraftContext = (
         return { update: sessionUpdateChain.update };
       case "draft_reset_requests":
         return resetRequestUpdateChain;
+      case "draft_ready_checks":
+        return resetRequestUpdateChain; // same shape: update().eq().eq()
       default:
         throw new Error(`Unexpected table ${table}`);
     }
