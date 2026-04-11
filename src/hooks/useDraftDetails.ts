@@ -1,6 +1,12 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import type { Draft, Card as CardType, UserSubset, DraftPick } from "@/types/database.types";
+import type {
+  Draft,
+  Card as CardType,
+  UserSubset,
+  DraftPick,
+  PlayerDeploymentSide,
+} from "@/types/database.types";
 import {
   parseDraftHistory,
   getPlayerCards,
@@ -36,6 +42,8 @@ interface UseDraftDetailsReturn {
   draftRound: number;
   player1Status: string;
   player2Status: string;
+  player1Side: PlayerDeploymentSide | null;
+  player2Side: PlayerDeploymentSide | null;
 }
 
 export function useDraftDetails({
@@ -156,6 +164,16 @@ export function useDraftDetails({
     [isPlayer2Turn, player2Remaining, t]
   );
 
+  const player1Side = useMemo(
+    () => draft.players_setup?.find((s) => s.userID === draft.player1_id)?.side ?? null,
+    [draft.players_setup, draft.player1_id]
+  );
+
+  const player2Side = useMemo(
+    () => draft.players_setup?.find((s) => s.userID === draft.player2_id)?.side ?? null,
+    [draft.players_setup, draft.player2_id]
+  );
+
   return {
     player1Cards,
     player2Cards,
@@ -175,7 +193,9 @@ export function useDraftDetails({
     turnNumber,
     draftRound,
     player1Status,
-    player2Status
+    player2Status,
+    player1Side,
+    player2Side,
   };
 }
 
