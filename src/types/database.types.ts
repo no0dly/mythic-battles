@@ -1,4 +1,4 @@
-import { CARD_CLASS, CARD_ORIGIN, CARD_TYPES, GAME_STATUS, SESSION_STATUS, DRAFT_STATUS, GAME_INVITATION_STATUS, DRAFT_RESET_REQUEST_STATUS, FRIENDSHIP_STATUS, WIN_CONDITION, MAP_TYPE } from "./constants"
+import { CARD_CLASS, CARD_ORIGIN, CARD_TYPES, GAME_STATUS, SESSION_STATUS, DRAFT_STATUS, GAME_INVITATION_STATUS, DRAFT_RESET_REQUEST_STATUS, DRAFT_READY_CHECK_STATUS, FRIENDSHIP_STATUS, WIN_CONDITION, MAP_TYPE } from "./constants"
 import { ValueOf } from "./interfaces"
 
 export type Json =
@@ -67,6 +67,19 @@ export type DraftResetRequest = {
   created_at: string
   updated_at: string
   responded_at: string | null
+}
+
+export type DraftReadyCheckStatus = ValueOf<typeof DRAFT_READY_CHECK_STATUS>
+
+export type DraftReadyCheck = {
+  id: string
+  draft_id: string
+  game_id: string
+  first_player_id: string
+  second_player_id: string | null
+  status: DraftReadyCheckStatus
+  created_at: string
+  updated_at: string
 }
 
 
@@ -253,6 +266,11 @@ export type Database = {
         Insert: Omit<DraftResetRequest, 'id' | 'created_at' | 'updated_at' | 'responded_at'>
         Update: Partial<Omit<DraftResetRequest, 'id' | 'created_at' | 'updated_at'>>
       }
+      draft_ready_checks: {
+        Row: DraftReadyCheck
+        Insert: DraftReadyCheckInsert
+        Update: DraftReadyCheckUpdate
+      }
       maps: {
         Row: GameMap
         Insert: Omit<GameMap, 'created_at'>
@@ -298,5 +316,7 @@ export type GameInvitationInsert = Omit<GameInvitation, 'id' | 'created_at' | 'u
 export type GameInvitationUpdate = Partial<Omit<GameInvitation, 'id' | 'created_at' | 'updated_at'>>
 export type DraftResetRequestInsert = Omit<DraftResetRequest, 'id' | 'created_at' | 'updated_at' | 'responded_at'>
 export type DraftResetRequestUpdate = Partial<Omit<DraftResetRequest, 'id' | 'created_at' | 'updated_at'>>
+export type DraftReadyCheckInsert = Omit<DraftReadyCheck, 'id' | 'created_at' | 'updated_at'>
+export type DraftReadyCheckUpdate = Partial<Omit<DraftReadyCheck, 'id' | 'created_at' | 'updated_at'>>
 export type GameMapInsert = Omit<GameMap, 'created_at'>
 export type GameMapUpdate = Partial<Omit<GameMap, 'created_at'>>

@@ -144,6 +144,32 @@ export const useDraftRealtime = ({
     };
   }, [draftId, enabled, supabase, utils]);
 
+  // Подписка на изменения ready check
+  useEffect(() => {
+    if (!draftId || !enabled) return;
+
+    const readyChannel = supabase
+      .channel(`draft-ready-checks-${draftId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "draft_ready_checks",
+          filter: `draft_id=eq.${draftId}`,
+        },
+        (payload) => {
+          console.log("Draft ready check changed:", payload);
+          void utils.drafts.getById.invalidate({ id: draftId });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(readyChannel);
+    };
+  }, [draftId, enabled, supabase, utils]);
+
   return { isConnected };
 };
 

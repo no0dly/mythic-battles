@@ -449,6 +449,12 @@ const translation = {
   errorCancellingReset: "Не удалось отменить запрос",
   opponentRequestedReset: "Противник запросил сброс драфта",
   opponentRequestedResetFrom: "{{player}} запросил сброс драфта",
+  getReady: "Готов к игре",
+  readyConfirmed: "Готов",
+  readyMarked: "Вы готовы! Ожидаем противника.",
+  readyCancelled: "Готовность отменена.",
+  errorMarkingReady: "Не удалось отметить готовность.",
+  errorCancellingReady: "Не удалось отменить готовность.",
 } as const;
 
 export default translation;

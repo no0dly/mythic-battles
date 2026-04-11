@@ -145,15 +145,15 @@ export function useDraftDetails({
     [turnNumber]
   );
 
-  // Determine player status
+  // Determine player status — empty when player has spent all their points
   const player1Status = useMemo(
-    () => (isPlayer1Turn ? t("picking") : t("awaits")),
-    [isPlayer1Turn, t]
+    () => (player1Remaining === 0 ? "" : isPlayer1Turn ? t("picking") : t("awaits")),
+    [isPlayer1Turn, player1Remaining, t]
   );
 
   const player2Status = useMemo(
-    () => (isPlayer2Turn ? t("picking") : t("awaits")),
-    [isPlayer2Turn, t]
+    () => (player2Remaining === 0 ? "" : isPlayer2Turn ? t("picking") : t("awaits")),
+    [isPlayer2Turn, player2Remaining, t]
   );
 
   return {

@@ -440,6 +440,12 @@ const translation = {
   errorCancellingReset: "Failed to cancel reset",
   opponentRequestedReset: "Your opponent requested a draft reset",
   opponentRequestedResetFrom: "{{player}} requested a draft reset",
+  getReady: "Get ready",
+  readyConfirmed: "Ready",
+  readyMarked: "You are ready! Waiting for your opponent.",
+  readyCancelled: "Ready cancelled.",
+  errorMarkingReady: "Failed to mark as ready.",
+  errorCancellingReady: "Failed to cancel ready.",
 } as const;
 
 export default translation;
