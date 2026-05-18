@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { generateDraftPool, selectRandomMap } from "../drafts/draftPoolGenerator";
+import {
+  generateDraftPool,
+  selectRandomMap,
+  selectRandomMapSide,
+} from "../drafts/draftPoolGenerator";
 import type { Card, GameMap } from "@/types/database.types";
 import { ALL_VALUE, CARD_ORIGIN, CARD_TYPES } from "@/types/constants";
 import type { DraftPoolConfig } from "@/types/draft-settings.types";
@@ -273,5 +277,16 @@ describe("selectRandomMap", () => {
       maps: ["water"],
     });
     expect(result).toBeNull();
+  });
+});
+
+describe("selectRandomMapSide", () => {
+  it("returns A or B", () => {
+    const sides = new Set(
+      Array.from({ length: 20 }, () => selectRandomMapSide()),
+    );
+    expect(sides.has("A")).toBe(true);
+    expect(sides.has("B")).toBe(true);
+    expect([...sides].every((s) => s === "A" || s === "B")).toBe(true);
   });
 });

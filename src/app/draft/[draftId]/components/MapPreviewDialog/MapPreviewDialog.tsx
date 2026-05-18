@@ -5,15 +5,20 @@ import { X, ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useTranslation } from "react-i18next";
 import { MapTypeBadges } from "@/components/MapTypeBadges";
-import type { GameMap } from "@/types/database.types";
+import type { GameMap, MapSide } from "@/types/database.types";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 
 interface MapPreviewDialogProps {
   map: GameMap | null;
+  mapSide?: MapSide | null;
   onClose: () => void;
 }
 
-export const MapPreviewDialog = ({ map, onClose }: MapPreviewDialogProps) => {
+export const MapPreviewDialog = ({
+  map,
+  mapSide,
+  onClose,
+}: MapPreviewDialogProps) => {
   const { t } = useTranslation();
   return (
     <Dialog open={!!map} onOpenChange={onClose}>
@@ -85,9 +90,16 @@ export const MapPreviewDialog = ({ map, onClose }: MapPreviewDialogProps) => {
                     </div>
 
                     <div className="flex flex-col gap-2 px-5 py-3 border-t">
-                      <h3 className="text-xl font-semibold text-foreground">
-                        {map.name}
-                      </h3>
+                      <div className="flex items-center justify-between gap-2">
+                        <h3 className="text-xl font-semibold text-foreground">
+                          {map.name}
+                        </h3>
+                        {mapSide && (
+                          <span className="shrink-0 text-sm font-semibold text-muted-foreground">
+                            {t("mapSide")}: {mapSide}
+                          </span>
+                        )}
+                      </div>
                       {map.map_type && map.map_type.length > 0 && (
                         <MapTypeBadges mapTypes={map.map_type} />
                       )}

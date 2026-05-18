@@ -14,7 +14,7 @@ import type {
   DraftHistory,
   Card,
   UserProfile,
-  PlayerSetup,
+  MapSide,
 } from "@/types/database.types";
 import { MapSection } from "@/app/draft/[draftId]/components/MapSection/MapSection";
 import { api } from "@/trpc/client";
@@ -36,7 +36,7 @@ interface DraftHistoryModalProps {
   player2Id: string;
   draftTotalCost: number;
   mapId?: string | null;
-  playersSetup?: PlayerSetup[] | null;
+  mapSide?: MapSide | null;
 }
 
 type UserData = Pick<
@@ -51,7 +51,7 @@ export const DraftHistoryModal = ({
   player1Id,
   player2Id,
   mapId,
-  playersSetup,
+  mapSide,
 }: DraftHistoryModalProps) => {
   const { t } = useTranslation();
   const [previewCard, setPreviewCard] = useState<Card | null>(null);
@@ -120,11 +120,6 @@ export const DraftHistoryModal = ({
   const player1 = users[player1Id];
   const player2 = users[player2Id];
 
-  const player1Side =
-    playersSetup?.find((s) => s.userID === player1Id)?.side ?? null;
-  const player2Side =
-    playersSetup?.find((s) => s.userID === player2Id)?.side ?? null;
-
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -139,7 +134,7 @@ export const DraftHistoryModal = ({
             </DialogDescription>
           </DialogHeader>
 
-          <MapSection mapId={mapId} />
+          <MapSection mapId={mapId} mapSide={mapSide} />
 
           {loading ? (
             <div className="py-12">
@@ -190,7 +185,6 @@ export const DraftHistoryModal = ({
                   costOverrides={costOverrides}
                   fallbackName={t("player1")}
                   borderColor="blue"
-                  side={player1Side}
                   onCardClick={(card) => handleSetPreviewCard(card)}
                 />
               </TabsContent>
@@ -203,7 +197,6 @@ export const DraftHistoryModal = ({
                   costOverrides={costOverrides}
                   fallbackName={t("player2")}
                   borderColor="green"
-                  side={player2Side}
                   onCardClick={(card) => handleSetPreviewCard(card)}
                 />
               </TabsContent>

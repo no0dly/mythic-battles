@@ -4,7 +4,11 @@ import { TRPCError } from "@trpc/server";
 import { zUuid } from "../schemas";
 import type { DraftResetRequest, Card, GameMap, DraftSettings, CardOrigin } from "@/types/database.types";
 import { DRAFT_STATUS, DRAFT_RESET_REQUEST_STATUS, GAME_STATUS, CARD_TYPES, ALL_VALUE } from "@/types/constants";
-import { generateDraftPool, selectRandomMap } from "./drafts/index";
+import {
+  generateDraftPool,
+  selectRandomMap,
+  selectRandomMapSide,
+} from "./drafts/index";
 import { DraftPoolConfig } from "@/types/draft-settings.types";
 
 export const draftResetRequestsRouter = router({
@@ -220,17 +224,12 @@ export const draftResetRequestsRouter = router({
       ];
       const firstTurnUserId = player2Roll > player1Roll ? draftData.player2_id : draftData.player1_id;
 
-      // Re-randomize sides on reset
-      const player1SideA = Math.random() < 0.5;
-      const playersSetup = [
-        { userID: draftData.player1_id, side: player1SideA ? 'A' : 'B' },
-        { userID: draftData.player2_id, side: player1SideA ? 'B' : 'A' },
-      ];
-
       // Fetch maps and select new one
       const { data: allMaps } = await ctx.supabase.from("maps").select("*");
       const selectedMap = selectRandomMap((allMaps ?? []) as GameMap[], { origins, maps: settings.maps });
-      const mapUpdate = selectedMap ? { map_id: selectedMap.id } : {};
+      const mapUpdate = selectedMap
+        ? { map_id: selectedMap.id, map_side: selectRandomMapSide() }
+        : {};
 
       // Apply all updates in parallel
       await Promise.all([
@@ -246,7 +245,6 @@ export const draftResetRequestsRouter = router({
           .update({
             draft_pool: allCardIds,
             initial_roll: initialRoll,
-            players_setup: playersSetup,
             draft_history: { picks: [] },
             draft_status: DRAFT_STATUS.DRAFT,
             current_turn_user_id: firstTurnUserId,

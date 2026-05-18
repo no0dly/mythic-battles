@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { DraftHistory, PlayerSetup } from "@/types/database.types";
+import type { DraftHistory, MapSide } from "@/types/database.types";
 import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,7 @@ interface DraftInfoProps {
     player2_id: string;
     draft_total_cost: number;
     map_id?: string | null;
-    players_setup?: PlayerSetup[] | null;
+    map_side?: MapSide | null;
   } | null;
   player1Name: string;
   player2Name: string;
@@ -116,7 +116,7 @@ export const DraftInfo = ({
         player2Id={draft.player2_id}
         draftTotalCost={draft.draft_total_cost}
         mapId={draft.map_id}
-        playersSetup={draft.players_setup}
+        mapSide={draft.map_side}
       />
     </div>
   );

@@ -53,7 +53,10 @@ export function MultiselectForMapType({
   const [selected, setSelected] = React.useState<string[]>(() => {
     if (!externalValue || externalValue.length === 0) return [ALL_VALUE];
     if (externalValue.includes(ALL_VALUE)) return [ALL_VALUE];
-    if (mapTypeOptions.length > 0 && externalValue.length === mapTypeOptions.length)
+    if (
+      mapTypeOptions.length > 0 &&
+      externalValue.length === mapTypeOptions.length
+    )
       return [ALL_VALUE];
     return externalValue as string[];
   });
@@ -61,6 +64,7 @@ export function MultiselectForMapType({
   // Sync with external value changes
   React.useEffect(() => {
     if (!externalValue || externalValue.length === 0) {
+      // eslint-disable-next-line
       setSelected([ALL_VALUE]);
     } else if (externalValue.includes(ALL_VALUE)) {
       setSelected([ALL_VALUE]);
