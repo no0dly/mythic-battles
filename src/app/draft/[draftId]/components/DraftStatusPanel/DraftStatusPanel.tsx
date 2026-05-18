@@ -203,7 +203,7 @@ export function DraftStatusPanel({ draft, cards }: DraftStatusPanelProps) {
         </div>
       </div>
 
-      <MapSection mapId={draft.map_id} />
+      <MapSection mapId={draft.map_id} mapSide={draft.map_side} />
 
       <DraftActionButtons
         draftId={draft.id}

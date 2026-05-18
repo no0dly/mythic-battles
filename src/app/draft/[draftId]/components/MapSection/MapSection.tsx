@@ -5,13 +5,15 @@ import { Map } from "lucide-react";
 import Image from "next/image";
 import { useTranslation } from "react-i18next";
 import { api } from "@/trpc/client";
-import type { GameMap } from "@/types/database.types";
+import type { GameMap, MapSide } from "@/types/database.types";
 import { MapPreviewDialog } from "../MapPreviewDialog/MapPreviewDialog";
 
 interface MapSectionProps {
   mapId: string | null | undefined;
+  mapSide?: MapSide | null;
 }
-export function MapSection({ mapId }: MapSectionProps) {
+
+export function MapSection({ mapId, mapSide }: MapSectionProps) {
   const { t } = useTranslation();
   const [previewMap, setPreviewMap] = useState<GameMap | null>(null);
   const { data: maps } = api.maps.list.useQuery(undefined, {
@@ -34,9 +36,16 @@ export function MapSection({ mapId }: MapSectionProps) {
   return (
     <>
       <div className="flex flex-col items-center gap-3">
-        <div className="flex items-center gap-2 self-start">
-          <Map className="h-5 w-5" />
-          <h3 className="text-lg font-semibold">{t("map")}</h3>
+        <div className="flex w-full items-center justify-between self-start">
+          <div className="flex items-center gap-2">
+            <Map className="h-5 w-5" />
+            <h3 className="text-lg font-semibold">{t("map")}</h3>
+          </div>
+          {mapSide && (
+            <span className="text-sm font-semibold text-muted-foreground">
+              {t("mapSide")}: {mapSide}
+            </span>
+          )}
         </div>
         <button
           onClick={handleOpen}
@@ -57,7 +66,11 @@ export function MapSection({ mapId }: MapSectionProps) {
         </button>
       </div>
 
-      <MapPreviewDialog map={previewMap} onClose={handleClose} />
+      <MapPreviewDialog
+        map={previewMap}
+        mapSide={mapSide}
+        onClose={handleClose}
+      />
     </>
   );
 }

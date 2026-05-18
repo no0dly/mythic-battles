@@ -1,4 +1,4 @@
-import { CARD_CLASS, CARD_ORIGIN, CARD_TYPES, GAME_STATUS, SESSION_STATUS, DRAFT_STATUS, GAME_INVITATION_STATUS, DRAFT_RESET_REQUEST_STATUS, DRAFT_READY_CHECK_STATUS, FRIENDSHIP_STATUS, WIN_CONDITION, MAP_TYPE } from "./constants"
+import { CARD_CLASS, CARD_ORIGIN, CARD_TYPES, GAME_STATUS, SESSION_STATUS, DRAFT_STATUS, GAME_INVITATION_STATUS, DRAFT_RESET_REQUEST_STATUS, DRAFT_READY_CHECK_STATUS, FRIENDSHIP_STATUS, WIN_CONDITION, MAP_TYPE, MAP_SIDE } from "./constants"
 import { ValueOf } from "./interfaces"
 
 export type Json =
@@ -190,6 +190,8 @@ export type InitialRoll = {
   roll: number
 }
 
+export type MapSide = ValueOf<typeof MAP_SIDE>
+
 export type Draft = {
   id: string
   game_id: string
@@ -203,6 +205,7 @@ export type Draft = {
   updated_at: string
   draft_pool: string[]
   map_id: string | null
+  map_side: MapSide | null
 }
 
 export type Database = {

@@ -146,7 +146,7 @@ export default function DraftFinished({ draft, cards }: DraftFinishedProps) {
             />
           </div>
 
-          <MapSection mapId={draft.map_id} />
+          <MapSection mapId={draft.map_id} mapSide={draft.map_side} />
 
           <section className="space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-2">

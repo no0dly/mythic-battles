@@ -1,4 +1,4 @@
-import type { Card, GameMap } from "@/types/database.types";
+import type { Card, GameMap, MapSide } from "@/types/database.types";
 import type { DraftPoolResult } from "./types";
 import {
   organizeCardsByType,
@@ -8,7 +8,7 @@ import {
 } from "./helpers";
 import { MAX_DRAFT_ITERATIONS, SPECIAL_CASE_UNITS } from "./constants";
 import { DraftPoolConfig } from "@/types/draft-settings.types";
-import { ALL_VALUE, CARD_TYPES } from "@/types/constants";
+import { ALL_VALUE, CARD_TYPES, MAP_SIDE_VALUES } from "@/types/constants";
 
 type CardSelectionResult = {
   selectedIds: string[];
@@ -339,5 +339,12 @@ export function selectRandomMap(
   if (eligible.length === 0) return null;
 
   return eligible[Math.floor(Math.random() * eligible.length)];
+}
+
+/** Randomly pick map setup side A or B when a map is assigned to a draft. */
+export function selectRandomMapSide(): MapSide {
+  return MAP_SIDE_VALUES[
+    Math.floor(Math.random() * MAP_SIDE_VALUES.length)
+  ];
 }
 

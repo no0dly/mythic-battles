@@ -4,7 +4,11 @@ import { TRPCError } from "@trpc/server";
 import { zUuid } from "../schemas";
 import type { DraftResetRequest, Card, GameMap, DraftSettings, CardOrigin } from "@/types/database.types";
 import { DRAFT_STATUS, DRAFT_RESET_REQUEST_STATUS, GAME_STATUS, CARD_TYPES, ALL_VALUE } from "@/types/constants";
-import { generateDraftPool, selectRandomMap } from "./drafts/index";
+import {
+  generateDraftPool,
+  selectRandomMap,
+  selectRandomMapSide,
+} from "./drafts/index";
 import { DraftPoolConfig } from "@/types/draft-settings.types";
 
 export const draftResetRequestsRouter = router({
@@ -223,7 +227,9 @@ export const draftResetRequestsRouter = router({
       // Fetch maps and select new one
       const { data: allMaps } = await ctx.supabase.from("maps").select("*");
       const selectedMap = selectRandomMap((allMaps ?? []) as GameMap[], { origins, maps: settings.maps });
-      const mapUpdate = selectedMap ? { map_id: selectedMap.id } : {};
+      const mapUpdate = selectedMap
+        ? { map_id: selectedMap.id, map_side: selectRandomMapSide() }
+        : {};
 
       // Apply all updates in parallel
       await Promise.all([

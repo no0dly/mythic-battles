@@ -236,6 +236,7 @@ const translation = {
   areYouSurePickCard: "Это действие нельзя отменить.",
   confirm: "Подтвердить",
   strategicValue: "Стратегическая ценность",
+  mapSide: "Сторона",
 
   // Active Draft
   activeDraftInProgress: "Активный драфт в процессе",

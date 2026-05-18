@@ -4,7 +4,6 @@ create table public.drafts (
   player1_id uuid not null,
   player2_id uuid not null,
   initial_roll jsonb null default '[]'::jsonb,
-  players_setup jsonb null,
   draft_status text not null default 'rollForTurn'::text,
   draft_history jsonb null default '{"picks": []}'::jsonb,
   current_turn_user_id uuid null,
@@ -12,12 +11,16 @@ create table public.drafts (
   updated_at timestamp with time zone null default now(),
   draft_pool uuid[] null default '{}'::uuid[],
   map_id text null,
+  map_side text null,
   constraint drafts_pkey primary key (id),
   constraint drafts_current_turn_user_id_fkey foreign KEY (current_turn_user_id) references users (id) on delete set null,
   constraint drafts_game_id_fkey foreign KEY (game_id) references games (id) on delete CASCADE,
   constraint drafts_player1_id_fkey foreign KEY (player1_id) references users (id) on delete CASCADE,
   constraint drafts_player2_id_fkey foreign KEY (player2_id) references users (id) on delete CASCADE,
   constraint drafts_check check ((player1_id <> player2_id)),
+  constraint drafts_map_side_check check (
+    map_side is null or map_side = any (array['A'::text, 'B'::text])
+  ),
   constraint drafts_draft_status_check check (
     (
       draft_status = any (

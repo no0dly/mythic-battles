@@ -124,6 +124,13 @@ export const DRAFT_STATUS = {
   FINISHED: 'finished',
 } as const;
 
+export const MAP_SIDE = {
+  A: 'A',
+  B: 'B',
+} as const;
+
+export const MAP_SIDE_VALUES = [MAP_SIDE.A, MAP_SIDE.B] as const;
+
 export const GAME_INVITATION_STATUS = {
   PENDING: 'pending',
   ACCEPTED: 'accepted',

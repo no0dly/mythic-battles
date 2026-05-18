@@ -14,7 +14,11 @@ import {
   DRAFT_RESET_REQUEST_STATUS,
   DRAFT_READY_CHECK_STATUS,
 } from "@/types/constants";
-import { generateDraftPool, selectRandomMap } from "./drafts/index";
+import {
+  generateDraftPool,
+  selectRandomMap,
+  selectRandomMapSide,
+} from "./drafts/index";
 import type { AppRouter } from "../root";
 import { DraftPoolConfig } from "@/types/draft-settings.types";
 
@@ -283,6 +287,7 @@ export const draftsRouter = router({
       });
 
       if (selectedMap) {
+        const mapSide = selectRandomMapSide();
         await Promise.all([
           ctx.supabase
             .from("games")
@@ -290,7 +295,7 @@ export const draftsRouter = router({
             .eq("id", input.game_id),
           ctx.supabase
             .from("drafts")
-            .update({ map_id: selectedMap.id } as never)
+            .update({ map_id: selectedMap.id, map_side: mapSide } as never)
             .eq("id", draft.id),
         ]);
       }
