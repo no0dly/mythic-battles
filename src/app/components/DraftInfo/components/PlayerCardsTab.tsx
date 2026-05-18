@@ -2,7 +2,7 @@ import Image from "next/image";
 import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { formatDisplayName } from "@/utils/users";
-import type { Card, UserProfile, PlayerDeploymentSide } from "@/types/database.types";
+import type { Card, UserProfile } from "@/types/database.types";
 import { PlayerAvatar } from "./PlayerAvatar";
 
 type UserData = Pick<
@@ -17,7 +17,6 @@ interface PlayerCardsTabProps {
   costOverrides: Map<string, number>;
   fallbackName: string;
   borderColor: "blue" | "green";
-  side?: PlayerDeploymentSide | null;
   onCardClick: (card: Card) => void;
 }
 
@@ -28,7 +27,6 @@ export const PlayerCardsTab = ({
   costOverrides,
   fallbackName,
   borderColor,
-  side,
   onCardClick,
 }: PlayerCardsTabProps) => {
   const { t } = useTranslation();
@@ -67,7 +65,6 @@ export const PlayerCardsTab = ({
           <div className="flex flex-col gap-1 text-sm font-semibold text-gray-700">
             <span>{t("totalCost")}:</span>
             <span>{t("strategicValue")}:</span>
-            {side != null ? <span>{t("side")}:</span> : null}
           </div>
           <div className="flex flex-col items-end gap-1">
             <span className="text-lg font-bold text-purple-700">
@@ -76,11 +73,6 @@ export const PlayerCardsTab = ({
             <span className="text-sm font-semibold text-purple-700">
               {totalStrategicValue}
             </span>
-            {side != null ? (
-              <span className="text-sm font-semibold text-purple-700">
-                {side}
-              </span>
-            ) : null}
           </div>
         </div>
 

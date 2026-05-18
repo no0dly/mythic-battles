@@ -89,9 +89,6 @@ export default function DraftFinished({ draft, cards }: DraftFinishedProps) {
     }
   });
 
-  const player1Side = draft.players_setup?.find((s) => s.userID === draft.player1_id)?.side ?? null;
-  const player2Side = draft.players_setup?.find((s) => s.userID === draft.player2_id)?.side ?? null;
-
   const player1Name = usersMap[draft.player1_id]
     ? formatDisplayName(
         usersMap[draft.player1_id].display_name,
@@ -137,7 +134,6 @@ export default function DraftFinished({ draft, cards }: DraftFinishedProps) {
               totalCost={player1TotalCost}
               costOverrides={costOverrides}
               accent="blue"
-              side={player1Side}
               onCardClick={(card) => handleSetPreviewCard(card)}
             />
             <PlayerSection
@@ -146,7 +142,6 @@ export default function DraftFinished({ draft, cards }: DraftFinishedProps) {
               totalCost={player2TotalCost}
               costOverrides={costOverrides}
               accent="green"
-              side={player2Side}
               onCardClick={(card) => handleSetPreviewCard(card)}
             />
           </div>

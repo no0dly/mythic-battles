@@ -236,7 +236,6 @@ const translation = {
   areYouSurePickCard: "This action cannot be undone.",
   confirm: "Confirm",
   strategicValue: "Strategic Value",
-  side: "Side",
 
   // Active Draft
   activeDraftInProgress: "Active Draft in Progress",

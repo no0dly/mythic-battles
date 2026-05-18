@@ -67,8 +67,6 @@ export function DraftStatusPanel({ draft, cards }: DraftStatusPanelProps) {
     player1Status,
     player2Status,
     picks,
-    player1Side,
-    player2Side,
   } = useDraftDetails({
     draft,
     cards,
@@ -166,7 +164,6 @@ export function DraftStatusPanel({ draft, cards }: DraftStatusPanelProps) {
         </div>
         <div className="flex justify-between text-xs text-muted-foreground mt-1">
           <span>{t("strategicValue")}: {player1StrategicValue}</span>
-          {player1Side && <span>{t("side")}: {player1Side}</span>}
         </div>
       </div>
       <div className="mb-10">
@@ -203,7 +200,6 @@ export function DraftStatusPanel({ draft, cards }: DraftStatusPanelProps) {
         </div>
         <div className="flex justify-between text-xs text-muted-foreground mt-1">
           <span>{t("strategicValue")}: {player2StrategicValue}</span>
-          {player2Side && <span>{t("side")}: {player2Side}</span>}
         </div>
       </div>
 

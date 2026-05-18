@@ -190,20 +190,12 @@ export type InitialRoll = {
   roll: number
 }
 
-export type PlayerDeploymentSide = 'A' | 'B'
-
-export type PlayerSetup = {
-  userID: string
-  side: PlayerDeploymentSide
-}
-
 export type Draft = {
   id: string
   game_id: string
   player1_id: string
   player2_id: string
   initial_roll: InitialRoll[] | null
-  players_setup: PlayerSetup[] | null
   draft_status: DraftStatus
   draft_history: Json | null
   current_turn_user_id: string
@@ -257,12 +249,10 @@ export type Database = {
         Row: Draft
         Insert: Omit<Draft, 'id' | 'created_at' | 'updated_at'> & {
           initial_roll?: InitialRoll[]
-          players_setup?: PlayerSetup[]
           draft_history?: Json | DraftHistory
         }
         Update: Partial<Omit<Draft, 'id' | 'created_at' | 'updated_at'>> & {
           initial_roll?: InitialRoll[]
-          players_setup?: PlayerSetup[]
           draft_history?: Json | DraftHistory
         }
       }
@@ -316,12 +306,10 @@ export type GameUpdate = Partial<Omit<Game, 'id' | 'created_at' | 'updated_at'>>
 }
 export type DraftInsert = Omit<Draft, 'id' | 'created_at' | 'updated_at'> & {
   initial_roll?: InitialRoll[]
-  players_setup?: PlayerSetup[]
   draft_history?: Json | DraftHistory
 }
 export type DraftUpdate = Partial<Omit<Draft, 'id' | 'created_at' | 'updated_at'>> & {
   initial_roll?: InitialRoll[]
-  players_setup?: PlayerSetup[]
   draft_history?: Json | DraftHistory
 }
 export type GameInvitationInsert = Omit<GameInvitation, 'id' | 'created_at' | 'updated_at' | 'responded_at'>

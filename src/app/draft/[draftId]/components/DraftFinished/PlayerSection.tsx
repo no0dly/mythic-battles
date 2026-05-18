@@ -1,6 +1,6 @@
 "use client";
 
-import type { Card, PlayerDeploymentSide } from "@/types/database.types";
+import type { Card } from "@/types/database.types";
 import { CardImage } from "@/app/components/DraftInfo/components";
 import { useTranslation } from "react-i18next";
 
@@ -28,7 +28,6 @@ interface PlayerSectionProps {
   totalCost: number;
   costOverrides: Map<string, number>;
   accent: PlayerSectionColor;
-  side: PlayerDeploymentSide | null;
   onCardClick: (card: Card) => void;
 }
 
@@ -38,7 +37,6 @@ export const PlayerSection = ({
   totalCost,
   costOverrides,
   accent,
-  side,
   onCardClick,
 }: PlayerSectionProps) => {
   const { t } = useTranslation();
@@ -60,12 +58,6 @@ export const PlayerSection = ({
           </p>
           <h3 className={`text-xl font-semibold ${accentStyles.title}`}>
             {name}
-            {side && (
-              <span className="text-sm text-gray-600">
-                {" "}
-                ({t("side")} {side})
-              </span>
-            )}
           </h3>
           <p className="text-sm text-gray-600">
             {cards.length} {t("picks")}
