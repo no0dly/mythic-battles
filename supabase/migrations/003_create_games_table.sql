@@ -46,7 +46,7 @@ create table public.games (
       win_condition is null
       or win_condition = any (
         array[
-          'killedGod'::text,
+          'killedDivinity'::text,
           'obtainedGems'::text
         ]
       )

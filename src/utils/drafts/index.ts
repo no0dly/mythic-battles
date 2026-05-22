@@ -9,6 +9,7 @@ export {
   canPickCard,
   canStartGame,
   getPlayerCardStats,
+  hasDivinityPicked,
 } from './cardPickRestrictions'
 
 export type {

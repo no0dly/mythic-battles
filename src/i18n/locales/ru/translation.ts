@@ -40,7 +40,7 @@ const translation = {
   selectWinner: "Выберите победителя",
   selectWinCondition: "Выберите условие победы",
   winConditionOptions: {
-    killedGod: "Убит бог",
+    killedDivinity: "Убита божественность",
     obtainedGems: "Собраны кристаллы",
   },
   submit: "Отправить",
@@ -262,14 +262,14 @@ const translation = {
 
   // Ограничения выбора карт
   notEnoughPoints: "Недостаточно очков для выбора этой карты",
-  godCardLimitReached: "Вы можете выбрать только 1 карту Бога",
+  divinityCardLimitReached: "Можно выбрать только одну божественность (Бог или Титан)",
   monster5CostLimitReached: "Вы можете выбрать только 1 карту Монстра стоимостью 5",
   cannotPickCard: "Невозможно выбрать эту карту",
   cardRestricted: "Эта карта недоступна",
-  mustReservePointsForGod: "Необходимо зарезервировать достаточно очков для карты Бога (обязательно)",
+  mustReservePointsForDivinity: "Необходимо зарезервировать достаточно очков для божественности (Бог или Титан, обязательно)",
 
   // Ограничения начала игры
-  mustPickGodCard: "Необходимо выбрать карту Бога перед началом игры",
+  mustPickDivinityCard: "Необходимо выбрать божественность (Бог или Титан) перед началом игры",
   mustUseAllPoints: "Необходимо использовать все доступные очки перед началом игры",
 
   class: "Класс",
