@@ -43,7 +43,7 @@ const translation = {
   selectWinner: "Select winner",
   selectWinCondition: "Select win condition",
   winConditionOptions: {
-    killedGod: "Killed God",
+    killedDivinity: "Killed Divinity",
     obtainedGems: "Obtained gems",
   },
   submit: "Submit",
@@ -262,14 +262,14 @@ const translation = {
 
   // Card Pick Restrictions
   notEnoughPoints: "Not enough points to pick this card",
-  godCardLimitReached: "You can only pick 1 God card",
+  divinityCardLimitReached: "You can only pick one divinity (God or Titan)",
   monster5CostLimitReached: "You can only pick 1 Monster card with cost 5",
   cannotPickCard: "Cannot pick this card",
   cardRestricted: "This card is restricted",
-  mustReservePointsForGod: "You must reserve enough points for a God card (mandatory)",
+  mustReservePointsForDivinity: "You must reserve enough points for a divinity card (God or Titan, mandatory)",
 
   // Start Game Restrictions
-  mustPickGodCard: "You must pick a God card before starting the game",
+  mustPickDivinityCard: "You must pick a divinity (God or Titan) before starting the game",
   mustUseAllPoints: "You must use all available points before starting the game",
 
   class: "Class",

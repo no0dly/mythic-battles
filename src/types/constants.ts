@@ -95,6 +95,10 @@ export const UNIT_TYPES = [
   CARD_TYPES.TROOP,
 ] as const;
 
+/** God and titan are separate card types but share divinity draft rules */
+export const isDivinityUnitType = (unitType: string): boolean =>
+  unitType === CARD_TYPES.GOD || unitType === CARD_TYPES.TITAN;
+
 export const HELPER_TYPES = [
   CARD_TYPES.ART_OF_WAR,
   CARD_TYPES.TROOP_ATTACHMENT,
@@ -196,6 +200,6 @@ export const DEFAULT_DRAFT_SETTINGS: DraftSettings = {
 } as const;
 
 export const WIN_CONDITION = {
-  KILLED_GOD: 'killedGod',
+  KILLED_DIVINITY: 'killedDivinity',
   OBTAINED_GEMS: 'obtainedGems',
 } as const;

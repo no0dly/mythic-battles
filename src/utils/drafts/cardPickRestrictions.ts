@@ -1,5 +1,5 @@
 import type { Card } from '@/types/database.types';
-import { CARD_TYPES } from '@/types/constants';
+import { CARD_TYPES, isDivinityUnitType } from '@/types/constants';
 
 /**
  * Result of card pick restriction check
@@ -13,13 +13,16 @@ export interface CardPickRestrictions {
  * Statistics about player's picked cards
  */
 export interface PlayerCardStats {
-  godCards: Card[];
+  divinityCards: Card[];
   monsterCards5Cost: Card[];
   monsterCardsLess5Cost: Card[];
   otherCards: Card[];
   totalCost: number;
   remainingPoints: number;
 }
+
+export const hasDivinityPicked = (playerCards: Card[]): boolean =>
+  playerCards.some((card) => isDivinityUnitType(card.unit_type));
 
 /**
  * Analyzes player's picked cards and returns statistics
@@ -31,18 +34,17 @@ const getPlayerCardStats = (
   playerCards: Card[],
   allowedPoints: number
 ): PlayerCardStats => {
-  const godCards: Card[] = [];
+  const divinityCards: Card[] = [];
   const monsterCards5Cost: Card[] = [];
   const monsterCardsLess5Cost: Card[] = [];
   const otherCards: Card[] = [];
   let totalCost = 0;
 
-  // Filter cards by types and cost
   playerCards.forEach((card) => {
     totalCost += card.cost;
 
-    if (card.unit_type === CARD_TYPES.GOD) {
-      godCards.push(card);
+    if (isDivinityUnitType(card.unit_type)) {
+      divinityCards.push(card);
     } else if (card.unit_type === CARD_TYPES.MONSTER) {
       if (card.cost === 5) {
         monsterCards5Cost.push(card);
@@ -54,11 +56,10 @@ const getPlayerCardStats = (
     }
   });
 
-  // Calculate remaining points
   const remainingPoints = allowedPoints - totalCost;
 
   return {
-    godCards,
+    divinityCards,
     monsterCards5Cost,
     monsterCardsLess5Cost,
     otherCards,
@@ -68,29 +69,22 @@ const getPlayerCardStats = (
 };
 
 /**
- * Finds the minimum cost of God cards from available cards
- * @param availableCards - cards available in the current draft pool
- * @returns minimum cost of a God card, or null if no God cards available
+ * Minimum cost among divinity cards in the draft pool
  */
-const getMinGodCardCost = (availableCards: Card[]): number | null => {
-  const godCards = availableCards.filter(
-    (card) => card.unit_type === CARD_TYPES.GOD
+const getMinDivinityCardCost = (availableCards: Card[]): number | null => {
+  const divinityCards = availableCards.filter((card) =>
+    isDivinityUnitType(card.unit_type)
   );
 
-  if (godCards.length === 0) {
+  if (divinityCards.length === 0) {
     return null;
   }
 
-  return Math.min(...godCards.map((card) => card.cost));
+  return Math.min(...divinityCards.map((card) => card.cost));
 };
 
 /**
  * Checks if a player can pick a card
- * @param card - card to check
- * @param playerCards - cards already picked by the player
- * @param allowedPoints - maximum number of points
- * @param availableCards - cards available in the current draft pool
- * @returns object with check result and restriction reason
  */
 export const canPickCard = (
   card: Card,
@@ -100,7 +94,6 @@ export const canPickCard = (
 ): CardPickRestrictions => {
   const stats = getPlayerCardStats(playerCards, 0);
 
-  // Check 1: Enough points
   if (card.cost > remainingPoints) {
     return {
       canPick: false,
@@ -108,17 +101,13 @@ export const canPickCard = (
     };
   }
 
-  // Check 2: God card limit
-  if (card.unit_type === CARD_TYPES.GOD) {
-    if (stats.godCards.length >= 1) {
-      return {
-        canPick: false,
-        reason: 'godCardLimitReached',
-      };
-    }
+  if (isDivinityUnitType(card.unit_type) && stats.divinityCards.length >= 1) {
+    return {
+      canPick: false,
+      reason: 'divinityCardLimitReached',
+    };
   }
 
-  // Check 3: Monster card with cost 5 limit
   if (card.unit_type === CARD_TYPES.MONSTER && card.cost === 5) {
     if (stats.monsterCards5Cost.length >= 1) {
       return {
@@ -128,34 +117,28 @@ export const canPickCard = (
     }
   }
 
-  // Check 4: Mandatory God card - ensure player has enough points left for God card
-  // If player hasn't picked a God card yet, and picking this card would leave
-  // less points than the cheapest available God card, prevent the pick
-  if (stats.godCards.length === 0 && card.unit_type !== CARD_TYPES.GOD) {
-    const minGodCardCost = getMinGodCardCost(availableCards);
+  if (
+    stats.divinityCards.length === 0 &&
+    !isDivinityUnitType(card.unit_type)
+  ) {
+    const minDivinityCardCost = getMinDivinityCardCost(availableCards);
 
-    if (minGodCardCost !== null) {
+    if (minDivinityCardCost !== null) {
       const pointsAfterPick = remainingPoints - card.cost;
-      if (pointsAfterPick < minGodCardCost) {
+      if (pointsAfterPick < minDivinityCardCost) {
         return {
           canPick: false,
-          reason: 'mustReservePointsForGod',
+          reason: 'mustReservePointsForDivinity',
         };
       }
     }
   }
-
-  // Check 5: Hero, Troop, Titan, Art of War - no limits
-  // Monster < 5 - no limits
 
   return { canPick: true };
 };
 
 /**
  * Checks if a player can start the game
- * @param playerCards - cards picked by the player
- * @param allowedPoints - maximum number of points
- * @returns object with check result and restriction reason
  */
 export const canStartGame = (
   playerCards: Card[],
@@ -163,15 +146,13 @@ export const canStartGame = (
 ): CardPickRestrictions => {
   const stats = getPlayerCardStats(playerCards, 0);
 
-  // Check 1: Must have a God card
-  if (stats.godCards.length === 0) {
+  if (stats.divinityCards.length === 0) {
     return {
       canPick: false,
-      reason: 'mustPickGodCard',
+      reason: 'mustPickDivinityCard',
     };
   }
 
-  // Check 2: Must have 0 remaining points
   if (remainingPoints !== 0) {
     return {
       canPick: false,
@@ -183,4 +164,3 @@ export const canStartGame = (
 };
 
 export { getPlayerCardStats };
-
