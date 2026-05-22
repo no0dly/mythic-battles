@@ -48,6 +48,29 @@ export const hasAvatar = (avatarUrl: string | null | undefined): boolean => {
 };
 
 /**
+ * Normalize avatar URLs for next/image (e.g. imgur page links → direct image host).
+ */
+export const normalizeAvatarUrl = (avatarUrl: string): string => {
+  const trimmed = avatarUrl.trim();
+  if (!trimmed) return trimmed;
+
+  try {
+    const { hostname, pathname } = new URL(trimmed);
+
+    if (hostname === "imgur.com" || hostname === "www.imgur.com") {
+      const imageId = pathname.split("/").filter(Boolean)[0];
+      if (imageId && !imageId.includes(".")) {
+        return `https://i.imgur.com/${imageId}.jpg`;
+      }
+    }
+  } catch {
+    return trimmed;
+  }
+
+  return trimmed;
+};
+
+/**
  * Format statistics for display
  */
 export const formatStatistics = (
@@ -57,7 +80,7 @@ export const formatStatistics = (
     wins: stats.wins,
     losses: stats.losses,
     totalGames: stats.total_games,
-    winRate: `${stats.win_rate.toFixed(2)}%`,
+    winRate: `${calculateWinRate(stats.wins, stats.total_games).toFixed(2)}%`,
     longestWinStreak: stats.longest_win_streak,
     longestLossStreak: stats.longest_loss_streak,
   };
@@ -73,13 +96,11 @@ export const updateStatsAfterGame = (
   const newWins = isWin ? currentStats.wins + 1 : currentStats.wins;
   const newLosses = isWin ? currentStats.losses : currentStats.losses + 1;
   const newTotalGames = currentStats.total_games + 1;
-  const newWinRate = calculateWinRate(newWins, newTotalGames);
 
   return {
     wins: newWins,
     losses: newLosses,
     total_games: newTotalGames,
-    win_rate: newWinRate,
     longest_win_streak: isWin
       ? Math.max(currentStats.longest_win_streak, newWins)
       : currentStats.longest_win_streak,
@@ -141,23 +162,24 @@ export const isActiveUser = (
  * Returns rank identifier (not localized string)
  */
 export const getUserRank = (stats: UserStatistics): string => {
-  const { total_games, win_rate } = stats;
+  const { total_games, wins } = stats;
+  const winRate = calculateWinRate(wins, total_games);
 
   if (total_games < 5) return USER_RANKS.BEGINNER;
   if (total_games < 20) {
-    if (win_rate >= 60) return USER_RANKS.EXPERIENCED;
+    if (winRate >= 60) return USER_RANKS.EXPERIENCED;
     return USER_RANKS.APPRENTICE;
   }
   if (total_games < 50) {
-    if (win_rate >= 70) return USER_RANKS.EXPERT;
-    if (win_rate >= 50) return USER_RANKS.EXPERIENCED;
+    if (winRate >= 70) return USER_RANKS.EXPERT;
+    if (winRate >= 50) return USER_RANKS.EXPERIENCED;
     return USER_RANKS.APPRENTICE;
   }
 
-  if (win_rate >= 80) return USER_RANKS.LEGEND;
-  if (win_rate >= 70) return USER_RANKS.MASTER;
-  if (win_rate >= 60) return USER_RANKS.EXPERT;
-  if (win_rate >= 50) return USER_RANKS.EXPERIENCED;
+  if (winRate >= 80) return USER_RANKS.LEGEND;
+  if (winRate >= 70) return USER_RANKS.MASTER;
+  if (winRate >= 60) return USER_RANKS.EXPERT;
+  if (winRate >= 50) return USER_RANKS.EXPERIENCED;
 
   return USER_RANKS.APPRENTICE;
 };
@@ -199,17 +221,27 @@ export const getRankBadgeVariant = (rank: string): "rankBeginner" | "rankApprent
 };
 
 /**
- * Compare two users for sorting (by win rate, then by total games)
+ * Compare statistics for sorting (by win rate, then by total games)
  */
-export const compareUsersByRank = (a: UserProfile, b: UserProfile): number => {
-  // First compare by win rate
-  if (a.statistics.win_rate !== b.statistics.win_rate) {
-    return b.statistics.win_rate - a.statistics.win_rate;
+export const compareStatisticsByRank = (
+  a: UserStatistics,
+  b: UserStatistics
+): number => {
+  const winRateA = calculateWinRate(a.wins, a.total_games);
+  const winRateB = calculateWinRate(b.wins, b.total_games);
+
+  if (winRateA !== winRateB) {
+    return winRateB - winRateA;
   }
 
-  // If win rates are equal, compare by total games
-  return b.statistics.total_games - a.statistics.total_games;
+  return b.total_games - a.total_games;
 };
+
+/**
+ * Compare two users for sorting (by win rate, then by total games)
+ */
+export const compareUsersByRank = (a: UserProfile, b: UserProfile): number =>
+  compareStatisticsByRank(a.statistics, b.statistics);
 
 /**
  * Filter users for search

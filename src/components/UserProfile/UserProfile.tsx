@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "react-i18next";
 import Image from "next/image";
+import { calculateWinRate } from "@/utils/users";
 
 export const UserProfile = () => {
   const { t } = useTranslation();
@@ -78,7 +79,11 @@ export const UserProfile = () => {
           <div className="bg-gray-50 p-3 rounded">
             <p className="text-sm text-gray-600">{t("winRate")}</p>
             <p className="text-2xl font-bold text-blue-600">
-              {user.statistics.win_rate.toFixed(2)}%
+              {calculateWinRate(
+                user.statistics.wins,
+                user.statistics.total_games
+              ).toFixed(2)}
+              %
             </p>
           </div>
           <div className="bg-gray-50 p-3 rounded">

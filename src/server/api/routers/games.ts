@@ -5,6 +5,7 @@ import type { Game, Draft, Session, Statistics, Json, CardOrigin } from "@/types
 import { zUuid } from "../schemas";
 import type { GameWithDraft, GameWithUserJoin } from "./games/types";
 import { parseDraftHistory } from "@/utils/drafts";
+import { updateStatsAfterGame } from "@/utils/users";
 import { GAME_STATUS, SESSION_STATUS, DEFAULT_DRAFT_SETTINGS, CARD_ORIGIN, ALL_VALUE } from "@/types/constants";
 import type { AppRouter } from "../root";
 
@@ -355,17 +356,7 @@ export const gamesRouter = router({
 
       // @ts-expect-error - Supabase SSR client typing issue with Database generic
       const winnerStats = winnerData.statistics as Statistics;
-      const winnerNewWins = winnerStats.wins + 1;
-      const winnerTotalGames = winnerStats.total_games + 1;
-      const winnerWinRate = (winnerNewWins / winnerTotalGames) * 100;
-
-      const updatedWinnerStats: Statistics = {
-        ...winnerStats,
-        wins: winnerNewWins,
-        total_games: winnerTotalGames,
-        win_rate: Number(winnerWinRate.toFixed(2)),
-        longest_win_streak: Math.max(winnerStats.longest_win_streak, winnerNewWins),
-      };
+      const updatedWinnerStats = updateStatsAfterGame(winnerStats, true);
 
       const { error: winnerUpdateError } = await ctx.supabase
         .from("users")
@@ -397,17 +388,7 @@ export const gamesRouter = router({
 
       // @ts-expect-error - Supabase SSR client typing issue with Database generic
       const loserStats = loserData.statistics as Statistics;
-      const loserNewLosses = loserStats.losses + 1;
-      const loserTotalGames = loserStats.total_games + 1;
-      const loserWinRate = (loserStats.wins / loserTotalGames) * 100;
-
-      const updatedLoserStats: Statistics = {
-        ...loserStats,
-        losses: loserNewLosses,
-        total_games: loserTotalGames,
-        win_rate: Number(loserWinRate.toFixed(2)),
-        longest_loss_streak: Math.max(loserStats.longest_loss_streak, loserNewLosses),
-      };
+      const updatedLoserStats = updateStatsAfterGame(loserStats, false);
 
       const { error: loserUpdateError } = await ctx.supabase
         .from("users")

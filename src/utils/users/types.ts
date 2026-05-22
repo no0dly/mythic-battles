@@ -4,7 +4,6 @@ export type UserStatistics = {
   wins: number;
   losses: number;
   total_games: number;
-  win_rate: number;
   longest_win_streak: number;
   longest_loss_streak: number;
 };

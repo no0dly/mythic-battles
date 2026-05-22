@@ -4,6 +4,7 @@ import {
   formatDisplayName,
   getUserInitials,
   hasAvatar,
+  normalizeAvatarUrl,
   formatStatistics,
   updateStatsAfterGame,
   validateProfileUpdate,
@@ -82,13 +83,28 @@ describe("hasAvatar", () => {
   });
 });
 
+describe("normalizeAvatarUrl", () => {
+  it("should convert imgur page URLs to i.imgur.com direct links", () => {
+    expect(normalizeAvatarUrl("https://imgur.com/mEGpqNj")).toBe(
+      "https://i.imgur.com/mEGpqNj.jpg"
+    );
+  });
+
+  it("should leave other URLs unchanged", () => {
+    const url = "https://example.com/avatar.jpg";
+    expect(normalizeAvatarUrl(url)).toBe(url);
+    expect(normalizeAvatarUrl("https://i.imgur.com/abc.png")).toBe(
+      "https://i.imgur.com/abc.png"
+    );
+  });
+});
+
 describe("formatStatistics", () => {
   it("should format statistics correctly", () => {
     const stats = {
       wins: 10,
       losses: 5,
       total_games: 15,
-      win_rate: 66.67,
       longest_win_streak: 3,
       longest_loss_streak: 2,
     };
@@ -112,7 +128,6 @@ describe("updateStatsAfterGame", () => {
       wins: 10,
       losses: 5,
       total_games: 15,
-      win_rate: 66.67,
       longest_win_streak: 3,
       longest_loss_streak: 2,
     };
@@ -122,7 +137,7 @@ describe("updateStatsAfterGame", () => {
     expect(updated.wins).toBe(11);
     expect(updated.losses).toBe(5);
     expect(updated.total_games).toBe(16);
-    expect(updated.win_rate).toBe(68.75);
+    expect(calculateWinRate(updated.wins, updated.total_games)).toBe(68.75);
     expect(updated.longest_win_streak).toBe(11);
   });
 
@@ -131,7 +146,6 @@ describe("updateStatsAfterGame", () => {
       wins: 10,
       losses: 5,
       total_games: 15,
-      win_rate: 66.67,
       longest_win_streak: 3,
       longest_loss_streak: 2,
     };
@@ -141,7 +155,7 @@ describe("updateStatsAfterGame", () => {
     expect(updated.wins).toBe(10);
     expect(updated.losses).toBe(6);
     expect(updated.total_games).toBe(16);
-    expect(updated.win_rate).toBe(62.5);
+    expect(calculateWinRate(updated.wins, updated.total_games)).toBe(62.5);
     expect(updated.longest_loss_streak).toBe(6);
   });
 });
@@ -204,7 +218,6 @@ describe("isActiveUser", () => {
         wins: 5,
         losses: 3,
         total_games: 8,
-        win_rate: 62.5,
         longest_win_streak: 2,
         longest_loss_streak: 1,
       },
@@ -225,7 +238,6 @@ describe("isActiveUser", () => {
         wins: 0,
         losses: 0,
         total_games: 0,
-        win_rate: 0,
         longest_win_streak: 0,
         longest_loss_streak: 0,
       },
@@ -243,7 +255,6 @@ describe("getUserRank", () => {
       wins: 2,
       losses: 1,
       total_games: 3,
-      win_rate: 66.67,
       longest_win_streak: 2,
       longest_loss_streak: 1,
     };
@@ -256,7 +267,6 @@ describe("getUserRank", () => {
       wins: 80,
       losses: 20,
       total_games: 100,
-      win_rate: 80.0,
       longest_win_streak: 10,
       longest_loss_streak: 2,
     };
@@ -276,7 +286,6 @@ describe("compareUsersByRank", () => {
         wins: 70,
         losses: 30,
         total_games: 100,
-        win_rate: 70.0,
         longest_win_streak: 5,
         longest_loss_streak: 3,
       },
@@ -290,7 +299,6 @@ describe("compareUsersByRank", () => {
       statistics: {
         ...user1.statistics,
         wins: 80,
-        win_rate: 80.0,
       },
     };
 
@@ -310,7 +318,6 @@ describe("filterUsersByQuery", () => {
         wins: 0,
         losses: 0,
         total_games: 0,
-        win_rate: 0,
         longest_win_streak: 0,
         longest_loss_streak: 0,
       },
@@ -326,7 +333,6 @@ describe("filterUsersByQuery", () => {
         wins: 0,
         losses: 0,
         total_games: 0,
-        win_rate: 0,
         longest_win_streak: 0,
         longest_loss_streak: 0,
       },

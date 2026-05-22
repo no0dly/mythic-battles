@@ -5,7 +5,6 @@ export const DEFAULT_STATISTICS = {
   wins: 0,
   losses: 0,
   total_games: 0,
-  win_rate: 0.0,
   longest_win_streak: 0,
   longest_loss_streak: 0,
 } as const;

@@ -3,6 +3,7 @@ import { router, protectedProcedure, publicProcedure } from "@/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 import type { UserProfile, Statistics, Json, UserSubset } from "@/types/database.types";
 import { zUuid } from "../schemas";
+import { compareStatisticsByRank, updateStatsAfterGame } from "@/utils/users";
 
 // Type for user subset returned by getUsersByIds
 
@@ -145,7 +146,6 @@ export const usersRouter = router({
         wins: z.number().int().nonnegative().optional(),
         losses: z.number().int().nonnegative().optional(),
         total_games: z.number().int().nonnegative().optional(),
-        win_rate: z.number().min(0).max(100).optional(),
         longest_win_streak: z.number().int().nonnegative().optional(),
         longest_loss_streak: z.number().int().nonnegative().optional(),
       })
@@ -211,17 +211,7 @@ export const usersRouter = router({
 
     // @ts-expect-error - Supabase SSR client typing issue with Database generic
     const stats = currentData.statistics as Statistics;
-    const newWins = stats.wins + 1;
-    const newTotalGames = stats.total_games + 1;
-    const newWinRate = (newWins / newTotalGames) * 100;
-
-    const updatedStats: Statistics = {
-      ...stats,
-      wins: newWins,
-      total_games: newTotalGames,
-      win_rate: Number(newWinRate.toFixed(2)),
-      longest_win_streak: Math.max(stats.longest_win_streak, newWins),
-    };
+    const updatedStats = updateStatsAfterGame(stats, true);
 
     const { data, error } = await ctx.supabase
       .from("users")
@@ -260,17 +250,7 @@ export const usersRouter = router({
 
     // @ts-expect-error - Supabase SSR client typing issue with Database generic
     const stats = currentData.statistics as Statistics;
-    const newLosses = stats.losses + 1;
-    const newTotalGames = stats.total_games + 1;
-    const newWinRate = (stats.wins / newTotalGames) * 100;
-
-    const updatedStats: Statistics = {
-      ...stats,
-      losses: newLosses,
-      total_games: newTotalGames,
-      win_rate: Number(newWinRate.toFixed(2)),
-      longest_loss_streak: Math.max(stats.longest_loss_streak, newLosses),
-    };
+    const updatedStats = updateStatsAfterGame(stats, false);
 
     const { data, error } = await ctx.supabase
       .from("users")
@@ -302,9 +282,7 @@ export const usersRouter = router({
       const { data, error } = await ctx.supabase
         .from("users")
         .select("id, display_name, avatar_url, statistics")
-        .gte("statistics->total_games", input.minGames)
-        .order("statistics->win_rate", { ascending: false })
-        .limit(input.limit);
+        .gte("statistics->total_games", input.minGames);
 
       if (error) {
         throw new TRPCError({
@@ -313,8 +291,16 @@ export const usersRouter = router({
         });
       }
 
-      type LeaderboardUser = Pick<UserProfile, 'id' | 'display_name' | 'avatar_url' | 'statistics'>;
-      return (data ?? []) as LeaderboardUser[];
+      type LeaderboardUser = Pick<
+        UserProfile,
+        "id" | "display_name" | "avatar_url" | "statistics"
+      >;
+
+      const users = (data ?? []) as LeaderboardUser[];
+
+      return users
+        .sort((a, b) => compareStatisticsByRank(a.statistics, b.statistics))
+        .slice(0, input.limit);
     }),
 });
 

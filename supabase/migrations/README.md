@@ -34,11 +34,12 @@ The `users` table contains extended user profiles. Records are automatically cre
   "wins": 0,
   "losses": 0,
   "total_games": 0,
-  "win_rate": 0.0,
   "longest_win_streak": 0,
   "longest_loss_streak": 0
 }
 ```
+
+Win rate is computed in the app as `wins / total_games * 100`.
 
 ### RLS Policies
 
