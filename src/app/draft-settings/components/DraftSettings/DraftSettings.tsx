@@ -22,9 +22,10 @@ import {
 import Loader from "@/components/Loader";
 import { useRouter, useSearchParams } from "next/navigation";
 import { api } from "@/trpc/client";
-import { DEFAULT_DRAFT_SETTINGS } from "@/types/constants";
+import { DEFAULT_DRAFT_SETTINGS, SOLO_PRACTICE_PLAYER_ID } from "@/types/constants";
 import { useMemo, useEffect } from "react";
 import { Game, Session } from "@/types/database.types";
+import { isPracticeSession } from "@/utils/sessions/helpers";
 
 export default function DraftSettings() {
   const { t } = useTranslation();
@@ -48,11 +49,9 @@ export default function DraftSettings() {
     },
   });
 
-  // Получить информацию о сессии, если sessionId передан
   const { data: session, isLoading: isLoadingSession } =
     api.sessions.getById.useQuery({ id: sessionId! }, { enabled: !!sessionId });
 
-  // Authorization check: verify user is part of the session
   useEffect(() => {
     if (sessionId && session && user) {
       const isAuthorized =
@@ -65,21 +64,27 @@ export default function DraftSettings() {
     }
   }, [sessionId, session, user, router, t]);
 
-  // Prepopulate opponent when sessionId is present
   useEffect(() => {
-    if (session && user && sessionId) {
-      const opponentId =
-        session.player1_id === user.id
-          ? session.player2_id
-          : session.player1_id;
+    if (!sessionId || !session || !user) return;
 
-      if (opponentId) {
-        form.setValue("opponentId", opponentId);
-      }
+    const practice = isPracticeSession(session);
+    const opponentId = practice
+      ? SOLO_PRACTICE_PLAYER_ID
+      : session.player1_id === user.id
+        ? session.player2_id
+        : session.player1_id;
+
+    if (opponentId) {
+      form.setValue("opponentId", opponentId, { shouldDirty: false });
     }
-  }, [session, user, sessionId, form]);
+  }, [sessionId, session, user, form]);
 
-  // Мутация создания приглашения
+  useEffect(() => {
+    if (!sessionId && !isLoading && friends.length === 0) {
+      form.setValue("opponentId", SOLO_PRACTICE_PLAYER_ID);
+    }
+  }, [sessionId, isLoading, friends.length, form]);
+
   const createInvitationMutation = api.gameInvitations.create.useMutation({
     onSuccess: () => {
       toast.success(t("invitationSent"));
@@ -98,9 +103,8 @@ export default function DraftSettings() {
     session: Session;
     draft: { id: string };
   }) => {
-    // После создания игры, создать приглашение
-    if (session || currentSession) {
-      const sessionData = session || currentSession;
+    const sessionData = currentSession;
+    if (sessionData && !isPracticeSession(sessionData)) {
       const inviteeId =
         sessionData.player1_id === user?.id
           ? sessionData.player2_id
@@ -117,7 +121,6 @@ export default function DraftSettings() {
 
     toast.success(t("sessionCreatedSuccessfully"));
 
-    // Перенаправить на страницу драфта, если он создан
     if (draft?.id) {
       router.push(`/draft/${draft.id}`);
     } else {
@@ -138,7 +141,10 @@ export default function DraftSettings() {
 
   const { mutate: createGameWithDraft, isPending: isCreatingGamePending } =
     api.games.createGameWithDraft.useMutation({
-      onSuccess: inviteCreation,
+      onSuccess: (data) =>
+        inviteCreation({
+          ...data,
+        }),
       onError: (error) => {
         console.error("Error creating game:", error);
         toast.error(`${t("errorCreatingGame")}: ${error.message}`);
@@ -146,13 +152,26 @@ export default function DraftSettings() {
     });
 
   const opponentOptions = useMemo(
-    () =>
-      friends.map((friend) => ({
+    () => [
+      {
+        value: SOLO_PRACTICE_PLAYER_ID,
+        label: t("practiceOpponent"),
+      },
+      ...friends.map((friend) => ({
         value: friend.id,
         label: friend.displayName,
       })),
-    [friends]
+    ],
+    [friends, t]
   );
+
+  const continueOpponentLabel = useMemo(() => {
+    if (!sessionId || !session || !user) return undefined;
+    if (isPracticeSession(session)) return t("practiceOpponent");
+    return session.player1_id === user.id
+      ? session.player2_name
+      : session.player1_name;
+  }, [sessionId, session, user, t]);
 
   const handleSubmit = (values: DraftSettingsFormValues) => {
     if (sessionId) {
@@ -174,15 +193,27 @@ export default function DraftSettings() {
         >
           <div className="flex flex-col gap-6">
             <div className="max-w-[400px]">
-              <SelectWithLoading
-                control={form.control}
-                name="opponentId"
-                labelKey="selectYourOpponent"
-                options={opponentOptions}
-                isLoading={isLoading || isLoadingSession}
-                emptyMessageKey="noFriendsYet"
-                disabled={!!sessionId}
-              />
+              {sessionId ? (
+                <div className="space-y-2">
+                  <p className="text-sm font-medium leading-none">
+                    {t("selectYourOpponent")}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {isLoadingSession
+                      ? t("loading")
+                      : (continueOpponentLabel ?? "—")}
+                  </p>
+                </div>
+              ) : (
+                <SelectWithLoading
+                  control={form.control}
+                  name="opponentId"
+                  labelKey="selectYourOpponent"
+                  options={opponentOptions}
+                  isLoading={isLoading}
+                  emptyMessageKey="noFriendsYet"
+                />
+              )}
             </div>
             <div className="max-w-[400px]">
               <MultiSelectForOriginField
@@ -245,7 +276,7 @@ export default function DraftSettings() {
                 isCreatingSessionPending ||
                 isCreatingGamePending
               }
-              disabled={isLoading || friends.length === 0}
+              disabled={isLoading || isLoadingSession}
             >
               {form.formState.isSubmitting ? t("loading") : t("generateDraft")}
             </ShimmerButton>

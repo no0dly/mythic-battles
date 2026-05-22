@@ -14,6 +14,7 @@ import useGetPickedCardsIDs from "./hooks/useGetPickedCardsIDs";
 import { api } from "@/trpc/client";
 import { canPickCard } from "@/utils/drafts/cardPickRestrictions";
 import { getPlayerCards, parseDraftHistory } from "@/utils/drafts/helpers";
+import { isPracticeDraft } from "@/utils/drafts/helpers";
 import { DEFAULT_DRAFT_SETTINGS, CARD_TYPES } from "@/types/constants";
 import { createCardIdMap } from "@/utils/cards/createCardIdMap";
 
@@ -44,16 +45,18 @@ export function DraftCardGrid({ cards, draft, user }: DraftCardGridProps) {
 
   const cardMap = useMemo(() => createCardIdMap(cards), [cards]);
 
+  const activePickPlayerId = draft.current_turn_user_id;
+
   const userRemainingPoints = useMemo(() => {
     const picks = parseDraftHistory(draft.draft_history)?.picks ?? [];
     const userSpent = picks
-      .filter((p) => p.player_id === user.id)
+      .filter((p) => p.player_id === activePickPlayerId)
       .reduce((sum, pick) => {
         if (pick.cost_override !== undefined) return sum + pick.cost_override;
         return sum + (cardMap.get(pick.card_id)?.cost ?? 0);
       }, 0);
     return allowedPoints - userSpent;
-  }, [draft.draft_history, user.id, cardMap, allowedPoints]);
+  }, [draft.draft_history, activePickPlayerId, cardMap, allowedPoints]);
 
   const filteredCards = useMemo(
     () =>
@@ -72,13 +75,15 @@ export function DraftCardGrid({ cards, draft, user }: DraftCardGridProps) {
   );
 
   const isCurrentUserTurn = useMemo(() => {
+    if (isPracticeDraft(draft)) {
+      return draft.player1_id === user.id;
+    }
     return draft.current_turn_user_id === user.id;
-  }, [draft, user]);
+  }, [draft, user.id]);
 
-  // Get player's currently picked cards
   const playerCards = useMemo(
-    () => getPlayerCards(draft, cardMap, user.id),
-    [draft, cardMap, user.id]
+    () => getPlayerCards(draft, cardMap, activePickPlayerId),
+    [draft, cardMap, activePickPlayerId]
   );
 
   const isCardPicked = useCallback(

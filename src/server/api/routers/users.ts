@@ -4,6 +4,7 @@ import { TRPCError } from "@trpc/server";
 import type { UserProfile, Statistics, Json, UserSubset } from "@/types/database.types";
 import { zUuid } from "../schemas";
 import { compareStatisticsByRank, updateStatsAfterGame } from "@/utils/users";
+import { SOLO_PRACTICE_PLAYER_ID } from "@/types/constants";
 
 // Type for user subset returned by getUsersByIds
 
@@ -89,6 +90,7 @@ export const usersRouter = router({
         .from("users")
         .select("id, email, display_name, avatar_url")
         .or(`email.ilike.%${input.query}%,display_name.ilike.%${input.query}%`)
+        .neq("id", SOLO_PRACTICE_PLAYER_ID)
         .limit(input.limit);
 
       if (error) {

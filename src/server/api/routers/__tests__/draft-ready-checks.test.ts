@@ -124,7 +124,16 @@ describe("draftReadyChecksRouter.markReady — first player", () => {
           if (readyChecksCallCount === 1) {
             return makeMaybeSingleChain(overrides?.existingCheck ?? null);
           }
-          return { insert: vi.fn(() => ({ error: overrides?.insertError ?? null })) };
+          return {
+            insert: vi.fn(() => ({
+              select: vi.fn(() => ({
+                single: vi.fn(() => ({
+                  data: overrides?.insertError ? null : { id: TEST_CHECK_ID },
+                  error: overrides?.insertError ?? null,
+                })),
+              })),
+            })),
+          };
         }
         default:
           throw new Error(`Unexpected table: ${table}`);

@@ -114,9 +114,11 @@ describe("usersRouter", () => {
           from: vi.fn(() => ({
             select: vi.fn(() => ({
               or: vi.fn(() => ({
-                limit: vi.fn(() => ({
-                  data: mockSearchResults,
-                  error: null,
+                neq: vi.fn(() => ({
+                  limit: vi.fn(() => ({
+                    data: mockSearchResults,
+                    error: null,
+                  })),
                 })),
               })),
             })),

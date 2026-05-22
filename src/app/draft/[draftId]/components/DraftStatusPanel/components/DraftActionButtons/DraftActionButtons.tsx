@@ -28,6 +28,7 @@ interface DraftActionButtonsProps {
   startGameRestrictionReason?: string;
   resetRequest?: DraftResetRequest;
   readyCheck?: DraftReadyCheck;
+  isPracticeDraft?: boolean;
 }
 
 export function DraftActionButtons({
@@ -37,6 +38,7 @@ export function DraftActionButtons({
   startGameRestrictionReason,
   resetRequest,
   readyCheck,
+  isPracticeDraft = false,
 }: DraftActionButtonsProps) {
   const { t } = useTranslation();
   const { user } = useUserProfile();
@@ -202,7 +204,7 @@ export function DraftActionButtons({
         </Button>
       )}
 
-      {!isResetPending && (
+      {!isResetPending && !isPracticeDraft && (
         <Button
           onClick={() => requestResetMutation.mutate({ draft_id: draftId })}
           variant="outline"

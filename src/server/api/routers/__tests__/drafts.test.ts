@@ -22,6 +22,8 @@ const createDraftRecord = (overrides: Partial<Draft> = {}): Draft => ({
   created_at: "2024-01-01T00:00:00.000Z",
   updated_at: "2024-01-01T00:00:00.000Z",
   draft_pool: [],
+  map_id: null,
+  map_side: null,
   ...overrides,
 });
 

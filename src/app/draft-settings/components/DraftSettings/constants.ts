@@ -41,4 +41,3 @@ export const getDraftSettingsSchema = (t: (key: string) => string) =>
       .min(1, t("requiredField")),
     maps: z.array(z.string()).min(1, t("requiredField")),
   });
-

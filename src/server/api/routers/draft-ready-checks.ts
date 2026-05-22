@@ -10,6 +10,7 @@ import {
   GAME_STATUS,
   SESSION_STATUS,
 } from "@/types/constants";
+import { SOLO_PRACTICE_PLAYER_ID } from "@/types/constants";
 
 export const draftReadyChecksRouter = router({
   // Get pending ready check for a draft
@@ -78,6 +79,8 @@ export const draftReadyChecksRouter = router({
         });
       }
 
+      const isPractice = draftData.player2_id === SOLO_PRACTICE_PLAYER_ID;
+
       // Check for existing pending ready check
       const { data: existing, error: existingError } = await ctx.supabase
         .from("draft_ready_checks")
@@ -94,18 +97,21 @@ export const draftReadyChecksRouter = router({
         });
       }
 
-      // First player to click ready — create the record
+      let readyCheckId: string | null = null;
+
       if (!existing) {
-        const { error: insertError } = await ctx.supabase
+        const { data: inserted, error: insertError } = await ctx.supabase
           .from("draft_ready_checks")
           .insert({
             draft_id: input.draft_id,
             game_id: draftData.game_id,
             first_player_id: userId,
             status: DRAFT_READY_CHECK_STATUS.PENDING,
-          } as never);
+          } as never)
+          .select("id")
+          .single();
 
-        if (insertError) {
+        if (insertError || !inserted) {
           throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",
             message: "Failed to mark as ready",
@@ -113,19 +119,24 @@ export const draftReadyChecksRouter = router({
           });
         }
 
-        return { bothReady: false };
+        readyCheckId = (inserted as { id: string }).id;
+
+        if (!isPractice) {
+          return { bothReady: false };
+        }
+      } else {
+        const existingCheck = existing as DraftReadyCheck;
+        readyCheckId = existingCheck.id;
+
+        if (existingCheck.first_player_id === userId) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "You are already marked as ready",
+          });
+        }
       }
 
-      const existingCheck = existing as DraftReadyCheck;
-
-      if (existingCheck.first_player_id === userId) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "You are already marked as ready",
-        });
-      }
-
-      // Second player clicking ready — start the game
+      // Practice (first click) or multiplayer (second click): finish draft and start game
 
       // Expire any pending reset request
       await ctx.supabase
@@ -195,10 +206,12 @@ export const draftReadyChecksRouter = router({
       }
 
       // Delete the ready check record — game has started
-      await ctx.supabase
-        .from("draft_ready_checks")
-        .delete()
-        .eq("id", existingCheck.id);
+      if (readyCheckId) {
+        await ctx.supabase
+          .from("draft_ready_checks")
+          .delete()
+          .eq("id", readyCheckId);
+      }
 
       return { bothReady: true, draft: updatedDraft as Draft };
     }),

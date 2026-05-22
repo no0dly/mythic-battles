@@ -16,6 +16,8 @@ export type SessionWithPlayers = Session & {
   player2_email?: string;
   player1_avatar_url?: string;
   player2_avatar_url?: string;
+  /** Set for practice sessions: count of games with status finished */
+  finished_games_count?: number;
 };
 
 // Game list entry structure from JSON

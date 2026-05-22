@@ -10,6 +10,10 @@ import SessionDrawerButtons from "../SessionDrawerButtons";
 import { useTranslation } from "react-i18next";
 import type { SessionWithPlayers } from "@/server/api/routers/sessions/types";
 import { GamesList } from "../GamesList";
+import {
+  getSessionGamesCount,
+  isPracticeSession,
+} from "@/utils/sessions/helpers";
 
 interface Props {
   session: SessionWithPlayers | null;
@@ -22,6 +26,9 @@ export default function SessionDrawer({ session, clearSession }: Props) {
   if (!session) {
     return null;
   }
+
+  const practice = isPracticeSession(session);
+  const gamesCount = getSessionGamesCount(session);
 
   const onOpenChangeHandler = (open: boolean) => {
     if (!open) {
@@ -38,7 +45,9 @@ export default function SessionDrawer({ session, clearSession }: Props) {
               player1: session.player1_name,
               player2: session.player2_name,
             })}{" "}
-            {`${session.player1_session_score}-${session.player2_session_score}`}
+            {practice
+              ? gamesCount
+              : `${session.player1_session_score}-${session.player2_session_score}`}
           </DrawerTitle>
           <DrawerDescription className="sr-only">
             {t("sessionDetails")}

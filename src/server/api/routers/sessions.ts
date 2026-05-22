@@ -3,7 +3,14 @@ import { router, publicProcedure, protectedProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
 import type { Session, Game, Draft, CardOrigin } from "@/types/database.types";
 import { zUuid } from "../schemas";
-import { SESSION_STATUS, GAME_STATUS, DEFAULT_DRAFT_SETTINGS, CARD_ORIGIN, ALL_VALUE } from "@/types/constants";
+import {
+  SESSION_STATUS,
+  GAME_STATUS,
+  DEFAULT_DRAFT_SETTINGS,
+  CARD_ORIGIN,
+  ALL_VALUE,
+  SOLO_PRACTICE_PLAYER_ID,
+} from "@/types/constants";
 import {
   fetchPlayersMap,
   enrichSessionWithPlayers,
@@ -129,10 +136,44 @@ export const sessionsRouter = router({
         Array.from(playerIds)
       );
 
-      // Combine sessions with player information
-      const sessionsWithPlayers: SessionWithPlayers[] = sessionsList.map((session) =>
-        enrichSessionWithPlayers(session, nameMap, emailMap, avatarMap)
-      );
+      const practiceSessionIds = sessionsList
+        .filter((s) => s.player2_id === SOLO_PRACTICE_PLAYER_ID)
+        .map((s) => s.id);
+
+      const finishedGamesCountBySession = new Map<string, number>();
+
+      if (practiceSessionIds.length > 0) {
+        const { data: finishedGames, error: finishedGamesError } = await ctx.supabase
+          .from("games")
+          .select("session_id")
+          .in("session_id", practiceSessionIds)
+          .eq("status", GAME_STATUS.FINISHED);
+
+        if (finishedGamesError) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to fetch finished games for practice sessions",
+          });
+        }
+
+        for (const row of (finishedGames ?? []) as { session_id: string }[]) {
+          finishedGamesCountBySession.set(
+            row.session_id,
+            (finishedGamesCountBySession.get(row.session_id) ?? 0) + 1
+          );
+        }
+      }
+
+      const sessionsWithPlayers: SessionWithPlayers[] = sessionsList.map((session) => {
+        const enriched = enrichSessionWithPlayers(session, nameMap, emailMap, avatarMap);
+        if (session.player2_id === SOLO_PRACTICE_PLAYER_ID) {
+          return {
+            ...enriched,
+            finished_games_count: finishedGamesCountBySession.get(session.id) ?? 0,
+          };
+        }
+        return enriched;
+      });
 
       return sessionsWithPlayers;
     }),
@@ -158,6 +199,7 @@ export const sessionsRouter = router({
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
       const { opponentId, user_allowed_points, draft_size, gods_amount, titans_amount, troop_attachment_amount, origins, maps } = input;
+      const isPractice = opponentId === SOLO_PRACTICE_PLAYER_ID;
 
       // Track created records for rollback
       let createdSession: Session | null = null;
@@ -187,7 +229,7 @@ export const sessionsRouter = router({
             player2_id: opponentId,
             player1_session_score: 0,
             player2_session_score: 0,
-            status: SESSION_STATUS.INVITE_TO_DRAFT,
+            status: isPractice ? SESSION_STATUS.DRAFT : SESSION_STATUS.INVITE_TO_DRAFT,
             error_message: null,
             game_list: null,
           } as never)
@@ -210,7 +252,7 @@ export const sessionsRouter = router({
           .insert({
             session_id: createdSession.id,
             game_number: 1,
-            status: GAME_STATUS.INVITE_TO_DRAFT,
+            status: isPractice ? GAME_STATUS.DRAFT : GAME_STATUS.INVITE_TO_DRAFT,
             created_by: userId,
             winner_id: null,
             draft_id: null,

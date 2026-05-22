@@ -15,6 +15,7 @@ import { GameMetadata } from "./GameMetadata";
 import { DRAFT_STATUS, GAME_STATUS } from "@/types/constants";
 import { useUserProfile } from "@/hooks";
 import { SessionWithPlayers } from "@/server/api/routers/sessions/types";
+import { isPracticeSession } from "@/utils/sessions/helpers";
 
 interface GameItemProps {
   game: GameWithDraft;
@@ -32,6 +33,7 @@ export const GameItem = ({ game, session, index }: GameItemProps) => {
     player1_id: player1Id,
   } = session;
 
+  const practice = isPracticeSession(session);
   const winnerName = game.winner_id === player1Id ? player1Name : player2Name;
 
   const handleGoToDraft = () => {
@@ -67,21 +69,25 @@ export const GameItem = ({ game, session, index }: GameItemProps) => {
             </span>
             <GameStatusBadge status={game.status} />
           </div>
-          <div className="flex items-center gap-2">
-            <GameResult
-              winnerId={game.winner_id}
-              currentPlayerId={user?.id ?? ""}
-            />
-          </div>
+          {!practice && (
+            <div className="flex items-center gap-2">
+              <GameResult
+                winnerId={game.winner_id}
+                currentPlayerId={user?.id ?? ""}
+              />
+            </div>
+          )}
         </div>
       </AccordionTrigger>
 
       <AccordionContent className="px-4 pb-4">
         <div className="space-y-4 pt-2 animate-slide-in-down">
-          <GameScore
-            winnerName={(game.winner_id && winnerName) ?? ""}
-            winCondition={game.win_condition}
-          />
+          {!practice && (
+            <GameScore
+              winnerName={(game.winner_id && winnerName) ?? ""}
+              winCondition={game.win_condition}
+            />
+          )}
 
           <DraftInfo
             draft={

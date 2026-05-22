@@ -10,6 +10,7 @@ import { MapSection } from "../MapSection/MapSection";
 import { api } from "@/trpc/client";
 import { canStartGame } from "@/utils/drafts";
 import { useUserProfile } from "@/hooks/useUserProfile";
+import { isPracticeDraft } from "@/utils/drafts/helpers";
 
 interface DraftStatusPanelProps {
   draft: DraftWithRelations;
@@ -39,16 +40,18 @@ export function DraftStatusPanel({ draft, cards }: DraftStatusPanelProps) {
       }
     );
 
-  const { data: userAllowedPoints, isLoading: gameLoading } =
+  const { data: gameSettings, isLoading: gameLoading } =
     api.games.getGameSettings.useQuery(
       {
         game_id: gameId,
       },
       {
         enabled: !!gameId,
-        select: (data) => data?.user_allowed_points,
       }
     );
+
+  const userAllowedPoints = gameSettings?.user_allowed_points;
+  const isPractice = isPracticeDraft(draft);
 
   const isLoading = playersLoading || gameLoading;
 
@@ -74,18 +77,28 @@ export function DraftStatusPanel({ draft, cards }: DraftStatusPanelProps) {
     userAllowedPoints,
   });
 
-  // Check if current user can start the game
-  const currentUserCards = useMemo(() => {
-    if (!user) return [];
-    return user.id === player1Id ? player1Cards : player2Cards;
-  }, [user, player1Id, player1Cards, player2Cards]);
-
-  const currentUserRemaining = user?.id === player1Id ? player1Remaining : player2Remaining;
-
   const { canPick, reason } = useMemo(() => {
     if (!user || !userAllowedPoints) return { canPick: true };
+    if (isPractice) {
+      const army1 = canStartGame(player1Cards, player1Remaining);
+      if (!army1.canPick) return army1;
+      return canStartGame(player2Cards, player2Remaining);
+    }
+    const currentUserCards =
+      user.id === player1Id ? player1Cards : player2Cards;
+    const currentUserRemaining =
+      user.id === player1Id ? player1Remaining : player2Remaining;
     return canStartGame(currentUserCards, currentUserRemaining);
-  }, [currentUserCards, currentUserRemaining, user, userAllowedPoints]);
+  }, [
+    user,
+    userAllowedPoints,
+    isPractice,
+    player1Id,
+    player1Cards,
+    player2Cards,
+    player1Remaining,
+    player2Remaining,
+  ]);
 
   const isPlayer1Ready =
     readyCheck?.first_player_id === player1Id || readyCheck?.second_player_id === player1Id;
@@ -212,6 +225,7 @@ export function DraftStatusPanel({ draft, cards }: DraftStatusPanelProps) {
         startGameRestrictionReason={reason}
         resetRequest={resetRequest}
         readyCheck={readyCheck}
+        isPracticeDraft={isPractice}
       />
     </div>
   );

@@ -19,6 +19,9 @@ export interface OptimisticDraftUpdateInput {
   bringsWithCost?: number
   playerId: string
   timestamp?: string
+  /** When set with cardCostById, next turn matches server pickCard logic */
+  playerAllowedPoints?: number
+  cardCostById?: Map<string, number>
 }
 
 export interface OptimisticDraftUpdateResult {
