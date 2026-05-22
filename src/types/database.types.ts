@@ -13,7 +13,6 @@ export type Statistics = {
   wins: number
   losses: number
   total_games: number
-  win_rate: number
   longest_win_streak: number
   longest_loss_streak: number
 }
@@ -25,7 +24,6 @@ export type UserProfile = {
   avatar_url: string
   created_at: string
   updated_at: string
-  sessions: string[]
   statistics: Statistics
 }
 

@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import type { UserStatistics as UserStatsType } from "@/utils/users";
 import { useMemo } from "react";
 import {
+  calculateWinRate,
   getUserRank,
   getRankTranslationKey,
   getRankBadgeVariant,
@@ -22,12 +23,13 @@ export const UserStatistics = ({
 }: UserStatisticsProps) => {
   const { t } = useTranslation();
 
-  const { rankKey, rankVariant } = useMemo(() => {
+  const { rankKey, rankVariant, winRate } = useMemo(() => {
     const rank = getUserRank(statistics);
     return {
       rank,
       rankKey: getRankTranslationKey(rank),
       rankVariant: getRankBadgeVariant(rank),
+      winRate: calculateWinRate(statistics.wins, statistics.total_games),
     };
   }, [statistics]);
 
@@ -39,7 +41,7 @@ export const UserStatistics = ({
         </Badge>
 
         <Badge className="bg-purple-500/20 hover:bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-500/30 px-3 py-1">
-          <span className="font-bold">{statistics.win_rate.toFixed(1)}%</span>
+          <span className="font-bold">{winRate.toFixed(1)}%</span>
           <span className="ml-1 text-xs opacity-75">WR</span>
         </Badge>
 
@@ -89,7 +91,7 @@ export const UserStatistics = ({
         <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-lg">
           <p className="text-sm text-purple-700 font-medium">{t("winRate")}</p>
           <p className="text-3xl font-bold text-purple-600">
-            {statistics.win_rate.toFixed(2)}%
+            {winRate.toFixed(2)}%
           </p>
         </div>
 

@@ -2,6 +2,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { usersRouter } from "../users";
 import type { UserProfile } from "@/types/database.types";
+import { calculateWinRate } from "@/utils/users";
 
 const TEST_USER_UUID = "550e8400-e29b-41d4-a716-446655440000";
 
@@ -14,7 +15,6 @@ const mockUser: UserProfile = {
     wins: 10,
     losses: 5,
     total_games: 15,
-    win_rate: 66.67,
     longest_win_streak: 3,
     longest_loss_streak: 2,
   },
@@ -296,7 +296,6 @@ describe("usersRouter", () => {
             wins: 50,
             losses: 10,
             total_games: 60,
-            win_rate: 83.33,
             longest_win_streak: 10,
             longest_loss_streak: 2,
           },
@@ -309,7 +308,6 @@ describe("usersRouter", () => {
             wins: 30,
             losses: 20,
             total_games: 50,
-            win_rate: 60.0,
             longest_win_streak: 5,
             longest_loss_streak: 3,
           },
@@ -321,12 +319,8 @@ describe("usersRouter", () => {
           from: vi.fn(() => ({
             select: vi.fn(() => ({
               gte: vi.fn(() => ({
-                order: vi.fn(() => ({
-                  limit: vi.fn(() => ({
-                    data: mockLeaderboard,
-                    error: null,
-                  })),
-                })),
+                data: mockLeaderboard,
+                error: null,
               })),
             })),
           })),
@@ -337,8 +331,16 @@ describe("usersRouter", () => {
       const result = await caller.getLeaderboard({ limit: 10, minGames: 5 });
 
       expect(result).toEqual(mockLeaderboard);
-      expect(result[0]?.statistics.win_rate).toBeGreaterThan(
-        result[1]?.statistics.win_rate ?? 0
+      expect(
+        calculateWinRate(
+          result[0]?.statistics.wins ?? 0,
+          result[0]?.statistics.total_games ?? 0
+        )
+      ).toBeGreaterThan(
+        calculateWinRate(
+          result[1]?.statistics.wins ?? 0,
+          result[1]?.statistics.total_games ?? 0
+        )
       );
     });
   });

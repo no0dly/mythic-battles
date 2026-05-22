@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "react-i18next";
 import Image from "next/image";
+import { calculateWinRate } from "@/utils/users";
 
 interface LeaderboardProps {
   limit?: number;
@@ -79,7 +80,11 @@ export const Leaderboard = ({ limit = 10, minGames = 5 }: LeaderboardProps) => {
             {/* Stats */}
             <div className="text-right">
               <p className="font-bold text-blue-600">
-                {user.statistics.win_rate.toFixed(2)}%
+                {calculateWinRate(
+                  user.statistics.wins,
+                  user.statistics.total_games
+                ).toFixed(2)}
+                %
               </p>
               <p className="text-sm text-gray-600">
                 {user.statistics.wins}W / {user.statistics.losses}L
