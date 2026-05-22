@@ -21,6 +21,8 @@ import {
 } from "./drafts/index";
 import type { AppRouter } from "../root";
 import { DraftPoolConfig } from "@/types/draft-settings.types";
+import { computeNextTurnUserId } from "@/utils/drafts/helpers";
+import { SOLO_PRACTICE_PLAYER_ID } from "@/types/constants";
 
 export const draftsRouter = router({
   // Generate draft pool (returns pool without creating draft record)
@@ -538,14 +540,6 @@ export const draftsRouter = router({
         });
       }
 
-      // Verify it's the user's turn
-      if (draftData.current_turn_user_id !== userId) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "It's not your turn",
-        });
-      }
-
       // Verify card is in draft pool
       if (!draftData.draft_pool.includes(input.card_id)) {
         throw new TRPCError({
@@ -593,15 +587,28 @@ export const draftsRouter = router({
       }
 
       const playerAllowedPoints = draftSettings.user_allowed_points;
+      const pickingPlayerId = draftData.current_turn_user_id;
+
+      const isPractice = draftData.player2_id === SOLO_PRACTICE_PLAYER_ID;
+      const canPick =
+        isPractice
+          ? draftData.player1_id === userId
+          : draftData.current_turn_user_id === userId;
+
+      if (!canPick) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "It's not your turn",
+        });
+      }
 
       // Parse draft history
       const { parseDraftHistory } = await import("@/utils/drafts/helpers");
       const draftHistory = parseDraftHistory(draftData.draft_history);
       const picks = draftHistory?.picks || [];
 
-      // Calculate spent points for current user
-      // Picks with cost_override use that value; others look up the card cost from DB
-      const userPicks = picks.filter((pick) => pick.player_id === userId);
+      // Calculate spent points for the army currently picking
+      const userPicks = picks.filter((pick) => pick.player_id === pickingPlayerId);
       const picksWithOverride = userPicks.filter((p) => p.cost_override !== undefined);
       const picksNeedingLookup = userPicks.filter((p) => p.cost_override === undefined);
 
@@ -649,7 +656,7 @@ export const draftsRouter = router({
       // Add pick to draft history
       const newPick = {
         card_id: input.card_id,
-        player_id: userId,
+        player_id: pickingPlayerId,
         pick_number: nextPickNumber,
         timestamp: new Date().toISOString(),
       };
@@ -661,7 +668,7 @@ export const draftsRouter = router({
       if (companionId) {
         updatedPicks.push({
           card_id: companionId,
-          player_id: userId,
+          player_id: pickingPlayerId,
           pick_number: updatedPicks.length + 1,
           timestamp: new Date().toISOString(),
           auto: true,
@@ -672,7 +679,9 @@ export const draftsRouter = router({
       if (input.bringsWith) {
         const { card_id: bwCardId, cost: bwCost } = input.bringsWith;
 
-        const alreadyPicked = picks.some((p) => p.card_id === bwCardId && p.player_id === userId);
+        const alreadyPicked = picks.some(
+          (p) => p.card_id === bwCardId && p.player_id === pickingPlayerId
+        );
         if (alreadyPicked) {
           throw new TRPCError({
             code: "BAD_REQUEST",
@@ -690,7 +699,7 @@ export const draftsRouter = router({
 
         updatedPicks.push({
           card_id: bwCardId,
-          player_id: userId,
+          player_id: pickingPlayerId,
           pick_number: updatedPicks.length + 1,
           timestamp: new Date().toISOString(),
           cost_override: bwCost,
@@ -702,40 +711,36 @@ export const draftsRouter = router({
         ...(draftHistory?.initial_roll && { initial_roll: draftHistory.initial_roll }),
       };
 
-      // Determine next turn (alternate between players)
-      // But don't pass to opponent if they've reached max allowed points
-      const opponentId =
-        draftData.current_turn_user_id === draftData.player1_id
-          ? draftData.player2_id
-          : draftData.player1_id;
+      const picksNeedingCostLookup = updatedPicks.filter(
+        (p) => p.cost_override === undefined
+      );
+      const cardCostById = new Map<string, number>();
+      cardCostById.set(input.card_id, cardData.cost);
 
-      // Calculate opponent's spent points to check if they've reached max
-      const opponentPicks = updatedPicks.filter((pick) => pick.player_id === opponentId);
-
-      const opponentPicksWithOverride = opponentPicks.filter((p) => p.cost_override !== undefined);
-      const opponentPicksNeedingLookup = opponentPicks.filter((p) => p.cost_override === undefined);
-      let opponentSpentPoints = opponentPicksWithOverride.reduce((sum, p) => sum + p.cost_override!, 0);
-
-      if (opponentPicksNeedingLookup.length > 0) {
-        const { data: opponentPickedCards, error: opponentCardsError } = await ctx.supabase
+      if (picksNeedingCostLookup.length > 0) {
+        const { data: costCards, error: costCardsError } = await ctx.supabase
           .from("cards")
-          .select("cost")
-          .in("id", opponentPicksNeedingLookup.map((p) => p.card_id));
+          .select("id, cost")
+          .in("id", [...new Set(picksNeedingCostLookup.map((p) => p.card_id))]);
 
-        if (opponentCardsError) {
+        if (costCardsError) {
           throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",
-            message: "Failed to fetch opponent's picked cards",
+            message: "Failed to fetch picked cards for turn calculation",
           });
         }
 
-        opponentSpentPoints += (opponentPickedCards as { cost: number }[] || []).reduce((sum, c) => sum + c.cost, 0);
+        for (const costCard of (costCards ?? []) as { id: string; cost: number }[]) {
+          cardCostById.set(costCard.id, costCard.cost);
+        }
       }
-      const opponentHasReachedMax = opponentSpentPoints >= playerAllowedPoints;
 
-      // If opponent has reached max points, keep turn with current player
-      // Otherwise, pass to opponent
-      const nextTurnUserId = opponentHasReachedMax ? userId : opponentId;
+      const nextTurnUserId = computeNextTurnUserId(
+        draftData,
+        updatedPicks,
+        playerAllowedPoints,
+        cardCostById
+      );
 
       // Ensure companion and bringsWith cards are in the draft pool
       let updatedPool = draftData.draft_pool;

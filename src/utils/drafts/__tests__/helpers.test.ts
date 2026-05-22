@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { createOptimisticDraftUpdate, getPlayerCards } from "../helpers";
+import {
+  computeNextTurnUserId,
+  createOptimisticDraftUpdate,
+  getPlayerCards,
+} from "../helpers";
 import { createCardIdMap } from "@/utils/cards/createCardIdMap";
 import type { Card, Draft } from "@/types/database.types";
 import { CARD_TYPES, DRAFT_STATUS } from "@/types/constants";
@@ -30,6 +34,8 @@ const makeDraft = (overrides: Partial<Draft> = {}): Draft => ({
   draft_history: null,
   draft_status: DRAFT_STATUS.DRAFT,
   initial_roll: null,
+  map_id: null,
+  map_side: null,
   created_at: "2024-01-01T00:00:00Z",
   updated_at: "2024-01-01T00:00:00Z",
   ...overrides,
@@ -56,9 +62,38 @@ describe("createOptimisticDraftUpdate", () => {
       draft: makeDraft({ current_turn_user_id: "player-1" }),
       cardId: "card-1",
       playerId: "player-1",
+      playerAllowedPoints: 18,
+      cardCostById: new Map([["card-1", 1]]),
     });
 
     expect(result.current_turn_user_id).toBe("player-2");
+  });
+
+  it("keeps turn when opponent has spent all allowed points", () => {
+    const result = createOptimisticDraftUpdate({
+      draft: makeDraft({
+        current_turn_user_id: "player-1",
+        draft_history: {
+          picks: [
+            {
+              card_id: "opp-1",
+              player_id: "player-2",
+              pick_number: 1,
+              timestamp: "2024-01-01T00:00:00Z",
+            },
+          ],
+        },
+      }),
+      cardId: "card-1",
+      playerId: "player-1",
+      playerAllowedPoints: 18,
+      cardCostById: new Map([
+        ["card-1", 1],
+        ["opp-1", 18],
+      ]),
+    });
+
+    expect(result.current_turn_user_id).toBe("player-1");
   });
 
   it("auto-adds companion pick when companionCardId is provided", () => {
@@ -154,6 +189,35 @@ describe("createOptimisticDraftUpdate", () => {
 
     expect(result.draft_history.picks).toHaveLength(1);
     expect(result.draft_history.picks[0].cost_override).toBeUndefined();
+  });
+});
+
+describe("computeNextTurnUserId", () => {
+  it("passes turn to opponent when opponent has budget left", () => {
+    const next = computeNextTurnUserId(
+      makeDraft({ current_turn_user_id: "player-1" }),
+      [],
+      18,
+      new Map()
+    );
+    expect(next).toBe("player-2");
+  });
+
+  it("keeps turn when opponent is at point cap", () => {
+    const next = computeNextTurnUserId(
+      makeDraft({ current_turn_user_id: "player-1" }),
+      [
+        {
+          card_id: "opp-1",
+          player_id: "player-2",
+          pick_number: 1,
+          timestamp: "2024-01-01T00:00:00Z",
+        },
+      ],
+      18,
+      new Map([["opp-1", 18]])
+    );
+    expect(next).toBe("player-1");
   });
 });
 

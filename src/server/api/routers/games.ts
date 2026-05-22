@@ -6,6 +6,7 @@ import { zUuid } from "../schemas";
 import type { GameWithDraft, GameWithUserJoin } from "./games/types";
 import { parseDraftHistory } from "@/utils/drafts";
 import { updateStatsAfterGame } from "@/utils/users";
+import { SOLO_PRACTICE_PLAYER_ID } from "@/types/constants";
 import { GAME_STATUS, SESSION_STATUS, DEFAULT_DRAFT_SETTINGS, CARD_ORIGIN, ALL_VALUE } from "@/types/constants";
 import type { AppRouter } from "../root";
 
@@ -244,20 +245,41 @@ export const gamesRouter = router({
       z.object({
         gameId: zUuid,
         sessionId: zUuid,
-        winnerId: zUuid,
-        winCondition: z.string(),
+        winnerId: zUuid.optional(),
+        winCondition: z.string().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       const { gameId, sessionId, winnerId, winCondition } = input;
 
+      const { data: session, error: sessionFetchError } = await ctx.supabase
+        .from("sessions")
+        .select(
+          "player1_id, player2_id, player1_session_score, player2_session_score",
+        )
+        .eq("id", sessionId)
+        .single();
+
+      if (sessionFetchError || !session) {
+        throw new TRPCError({
+          code:
+            sessionFetchError?.code === "PGRST116"
+              ? "NOT_FOUND"
+              : "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch session",
+        });
+      }
+
+      const sessionData = session as Session;
+      const isPractice = sessionData.player2_id === SOLO_PRACTICE_PLAYER_ID;
+
       const { data: updatedGame, error: gameUpdateError } = await ctx.supabase
         .from("games")
         .update({
           status: GAME_STATUS.FINISHED,
-          winner_id: winnerId ?? null,
+          winner_id: isPractice ? null : (winnerId ?? null),
           finished_at: new Date().toISOString(),
-          win_condition: winCondition,
+          win_condition: isPractice ? null : (winCondition ?? null),
         } as never)
         .eq("id", gameId)
         .eq("session_id", sessionId)
@@ -288,26 +310,16 @@ export const gamesRouter = router({
         });
       }
 
-      // Increment session score for the winner
-      const { data: session, error: sessionFetchError } = await ctx.supabase
-        .from("sessions")
-        .select(
-          "player1_id, player2_id, player1_session_score, player2_session_score",
-        )
-        .eq("id", sessionId)
-        .single();
-
-      if (sessionFetchError || !session) {
-        throw new TRPCError({
-          code:
-            sessionFetchError?.code === "PGRST116"
-              ? "NOT_FOUND"
-              : "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch session for score update",
-        });
+      if (isPractice) {
+        return { success: true };
       }
 
-      const sessionData = session as Session;
+      if (!winnerId || !winCondition) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Winner and win condition are required",
+        });
+      }
       const isWinnerPlayer1 = sessionData.player1_id === winnerId;
       const isWinnerPlayer2 = sessionData.player2_id === winnerId;
 
@@ -370,36 +382,38 @@ export const gamesRouter = router({
         });
       }
 
-      const { data: loserData, error: loserFetchError } = await ctx.supabase
-        .from("users")
-        .select("statistics")
-        .eq("id", loserId)
-        .single();
+      if (loserId !== SOLO_PRACTICE_PLAYER_ID) {
+        const { data: loserData, error: loserFetchError } = await ctx.supabase
+          .from("users")
+          .select("statistics")
+          .eq("id", loserId)
+          .single();
 
-      if (loserFetchError || !loserData) {
-        throw new TRPCError({
-          code:
-            loserFetchError?.code === "PGRST116"
-              ? "NOT_FOUND"
-              : "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch loser statistics",
-        });
-      }
+        if (loserFetchError || !loserData) {
+          throw new TRPCError({
+            code:
+              loserFetchError?.code === "PGRST116"
+                ? "NOT_FOUND"
+                : "INTERNAL_SERVER_ERROR",
+            message: "Failed to fetch loser statistics",
+          });
+        }
 
-      // @ts-expect-error - Supabase SSR client typing issue with Database generic
-      const loserStats = loserData.statistics as Statistics;
-      const updatedLoserStats = updateStatsAfterGame(loserStats, false);
+        // @ts-expect-error - Supabase SSR client typing issue with Database generic
+        const loserStats = loserData.statistics as Statistics;
+        const updatedLoserStats = updateStatsAfterGame(loserStats, false);
 
-      const { error: loserUpdateError } = await ctx.supabase
-        .from("users")
-        .update({ statistics: updatedLoserStats as Json } as never)
-        .eq("id", loserId);
+        const { error: loserUpdateError } = await ctx.supabase
+          .from("users")
+          .update({ statistics: updatedLoserStats as Json } as never)
+          .eq("id", loserId);
 
-      if (loserUpdateError) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to update loser statistics",
-        });
+        if (loserUpdateError) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to update loser statistics",
+          });
+        }
       }
 
       return { success: true };
@@ -448,6 +462,7 @@ export const gamesRouter = router({
         }
 
         const sessionData = session as Session;
+        const isPractice = sessionData.player2_id === SOLO_PRACTICE_PLAYER_ID;
 
         // Verify user is part of the session
         if (sessionData.player1_id !== userId && sessionData.player2_id !== userId) {
@@ -483,7 +498,7 @@ export const gamesRouter = router({
           .insert({
             session_id: sessionId,
             game_number: nextGameNumber,
-            status: GAME_STATUS.INVITE_TO_DRAFT,
+            status: isPractice ? GAME_STATUS.DRAFT : GAME_STATUS.INVITE_TO_DRAFT,
             created_by: userId,
             winner_id: null,
             draft_id: null,
@@ -538,7 +553,7 @@ export const gamesRouter = router({
           .from("sessions")
           .update({
             game_list: updatedGameList,
-            status: SESSION_STATUS.INVITE_TO_DRAFT,
+            status: isPractice ? SESSION_STATUS.DRAFT : SESSION_STATUS.INVITE_TO_DRAFT,
           } as never)
           .eq("id", sessionId)
           .select()

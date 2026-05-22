@@ -7,6 +7,10 @@ import SessionDrawer from "../SessionDrawer";
 import { api } from "@/trpc/client";
 import Loader from "@/components/Loader/Loader";
 import type { SessionWithPlayers } from "@/server/api/routers/sessions/types";
+import {
+  getSessionGamesCount,
+  isPracticeSession,
+} from "@/utils/sessions/helpers";
 
 function SessionsCard() {
   const { t } = useTranslation();
@@ -55,14 +59,10 @@ function SessionsCard() {
     return (
       <ul className="space-y-2 w-full max-h-[300px] overflow-auto">
         {sessions.map((session) => {
-          const {
-            id,
-            player1_name,
-            player2_name,
-            player1_session_score,
-            player2_session_score,
-            status,
-          } = session;
+          const { id, status } = session;
+          const practice = isPracticeSession(session);
+          const gamesCount = getSessionGamesCount(session);
+
           return (
             <li
               key={id}
@@ -70,17 +70,17 @@ function SessionsCard() {
               onClick={onSelectSessionHandler(session)}
               className="group/session flex items-center justify-between p-2 rounded-lg hover:bg-gray-500/10 transition-colors duration-200 gap-2 sm:gap-4 cursor-pointer w-full min-w-0"
             >
-              <div className="flex items-center gap-1 min-w-0 flex-1">
-                <span className="text-xs font-semibold text-foreground group-hover/session:text-gray-600 transition-colors truncate">
-                  {t("playedVSPlayer", {
-                    player1: player1_name,
-                    player2: player2_name,
-                  })}
+              <span className="text-xs font-semibold text-foreground group-hover/session:text-gray-600 transition-colors truncate min-w-0 flex-1">
+                {t("playedVSPlayer", {
+                  player1: session.player1_name,
+                  player2: session.player2_name,
+                })}
+                <span className="font-bold text-emerald-600 ml-1">
+                  {practice
+                    ? ` (${gamesCount})`
+                    : ` (${session.player1_session_score}-${session.player2_session_score})`}
                 </span>
-                <span className="font-bold text-emerald-600 text-xs flex-shrink-0">
-                  {`(${player1_session_score}-${player2_session_score})`}
-                </span>
-              </div>
+              </span>
               <Badge variant={status} className="flex-shrink-0">
                 {t(status)}
               </Badge>

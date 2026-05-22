@@ -128,6 +128,9 @@ export const DRAFT_STATUS = {
   FINISHED: 'finished',
 } as const;
 
+/** Fixed UUID — must match supabase/migrations/018_seed_solo_practice_user.sql */
+export const SOLO_PRACTICE_PLAYER_ID = '00000000-0000-0000-0000-000000000001';
+
 export const MAP_SIDE = {
   A: 'A',
   B: 'B',

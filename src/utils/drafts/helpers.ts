@@ -5,6 +5,19 @@ import { DraftWithRelations, DraftState } from './interfaces'
 import { DRAFT_STATE } from './constants'
 import { OptimisticDraftUpdateInput, OptimisticDraftUpdateResult } from './interfaces'
 import { type CardIdMap } from '@/utils/cards/createCardIdMap'
+import { SOLO_PRACTICE_PLAYER_ID } from '@/types/constants'
+
+export const getOpponentPlayerId = (draft: {
+  player1_id: string
+  player2_id: string
+  current_turn_user_id: string
+}): string =>
+  draft.current_turn_user_id === draft.player1_id
+    ? draft.player2_id
+    : draft.player1_id
+
+export const isPracticeDraft = (draft: { player2_id: string }): boolean =>
+  draft.player2_id === SOLO_PRACTICE_PLAYER_ID
 
 /**
 * Parse draft_history from JSONB
@@ -149,6 +162,10 @@ export const getDraftState = (
     const gameStatus = draft.game?.status
     const invitation = draft.invitation
 
+    if (isPracticeDraft(draft)) {
+      return DRAFT_STATE.DRAFT_IN_PROGRESS
+    }
+
     // Проверяем наличие pending приглашения
     const hasPendingInvitation = invitation?.status === GAME_INVITATION_STATUS.PENDING
 
@@ -206,6 +223,36 @@ export const getDraftState = (
 
 
 
+export const sumPlayerSpentPoints = (
+  picks: DraftPick[],
+  playerId: string,
+  cardCostById: Map<string, number>
+): number =>
+  picks
+    .filter((p) => p.player_id === playerId)
+    .reduce((sum, pick) => {
+      if (pick.cost_override !== undefined) {
+        return sum + pick.cost_override
+      }
+      return sum + (cardCostById.get(pick.card_id) ?? 0)
+    }, 0)
+
+/**
+ * Matches server pickCard turn logic: alternate unless opponent has spent all allowed points.
+ */
+export const computeNextTurnUserId = (
+  draft: Pick<Draft, 'player1_id' | 'player2_id' | 'current_turn_user_id'>,
+  picks: DraftPick[],
+  playerAllowedPoints: number,
+  cardCostById: Map<string, number>
+): string => {
+  const pickingPlayerId = draft.current_turn_user_id
+  const opponentId = getOpponentPlayerId(draft)
+  const opponentSpent = sumPlayerSpentPoints(picks, opponentId, cardCostById)
+  const opponentHasReachedMax = opponentSpent >= playerAllowedPoints
+  return opponentHasReachedMax ? pickingPlayerId : opponentId
+}
+
 export const createOptimisticDraftUpdate = ({
   draft,
   cardId,
@@ -214,6 +261,8 @@ export const createOptimisticDraftUpdate = ({
   bringsWithCost,
   playerId,
   timestamp = new Date().toISOString(),
+  playerAllowedPoints,
+  cardCostById,
 }: OptimisticDraftUpdateInput): OptimisticDraftUpdateResult => {
   const draftHistory = parseDraftHistory(draft.draft_history)
   const picks = draftHistory?.picks || []
@@ -254,7 +303,11 @@ export const createOptimisticDraftUpdate = ({
   }
 
   const nextTurnUserId =
-    draft.current_turn_user_id === draft.player1_id ? draft.player2_id : draft.player1_id
+    playerAllowedPoints !== undefined && cardCostById
+      ? computeNextTurnUserId(draft, updatedPicks, playerAllowedPoints, cardCostById)
+      : draft.current_turn_user_id === draft.player1_id
+        ? draft.player2_id
+        : draft.player1_id
 
   return {
     draft_history: updatedHistory,

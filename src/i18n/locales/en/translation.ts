@@ -132,6 +132,7 @@ const translation = {
   clearFilters: "Clear",
   draftSettings: "Draft Settings",
   gameSettings: "Game settings",
+  practiceOpponent: "Practice (draft both sides)",
   selectYourOpponent: "Select your opponent",
   chooseOneFromTheList: "Choose one from the list",
   battleDetails: "Battle details (not sure yet)",

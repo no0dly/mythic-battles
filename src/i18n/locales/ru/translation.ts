@@ -40,7 +40,7 @@ const translation = {
   selectWinner: "Выберите победителя",
   selectWinCondition: "Выберите условие победы",
   winConditionOptions: {
-    killedDivinity: "Убита божественность",
+    killedDivinity: "Убито божественность",
     obtainedGems: "Собраны кристаллы",
   },
   submit: "Отправить",
@@ -130,6 +130,7 @@ const translation = {
   clearFilters: "Очистить",
   draftSettings: "Настройки драфта",
   gameSettings: "Настройки игры",
+  practiceOpponent: "Практика (обе стороны)",
   selectYourOpponent: "Выберите противника",
   chooseOneFromTheList: "Выберите из списка",
   battleDetails: "Детали битвы (пока не определено)",

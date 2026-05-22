@@ -37,6 +37,7 @@ import {
 import type { FinishGameFormValues } from "./types";
 import { api } from "@/trpc/client";
 import { toast } from "sonner";
+import { SOLO_PRACTICE_PLAYER_ID } from "@/types/constants";
 
 interface SessionDrawerButtonsInProgressProps {
   session: SessionWithPlayers;
@@ -50,6 +51,7 @@ export default function SessionDrawerButtonsInProgress({
   const { t } = useTranslation();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const utils = api.useUtils();
+  const isPractice = session.player2_id === SOLO_PRACTICE_PLAYER_ID;
   const formSchema = useMemo(() => createFinishGameFormSchema(t), [t]);
 
   const form = useForm<FinishGameFormValues>({
@@ -106,6 +108,32 @@ export default function SessionDrawerButtonsInProgress({
   const handleCloseModal = () => {
     handleOpenChange(false);
   };
+
+  const handlePracticeFinish = () => {
+    const currentGame = session.game_list?.[session.game_list.length - 1];
+    if (!currentGame) {
+      return;
+    }
+
+    finishGame({
+      gameId: currentGame,
+      sessionId: session.id,
+    });
+  };
+
+  if (isPractice) {
+    return (
+      <Button
+        onClick={handlePracticeFinish}
+        variant="default"
+        size="lg"
+        loading={isFinishingGame}
+        className="whitespace-nowrap w-full"
+      >
+        {t("finish")}
+      </Button>
+    );
+  }
 
   return (
     <Dialog open={isModalOpen} onOpenChange={handleOpenChange}>

@@ -25,6 +25,7 @@ import { useParams } from "next/navigation";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { createOptimisticDraftUpdate, parseDraftHistory } from "@/utils/drafts/helpers";
 import type { Draft } from "@/types/database.types";
+import { DEFAULT_DRAFT_SETTINGS } from "@/types/constants";
 import { Badge } from "@/components/ui/badge";
 import { CardPreviewDialog } from "@/app/components/DraftInfo/components";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -86,13 +87,35 @@ export default function ConfirmCardPickModal({
 
         if (previousDraft && user) {
           const draft = previousDraft as Draft;
+          const gameSettings = utils.games.getGameSettings.getData({
+            game_id: draft.game_id,
+          });
+          const poolCards = utils.cards.getByIds.getData({
+            ids: draft.draft_pool ?? [],
+          });
+          const cardCostById = new Map<string, number>();
+          for (const poolCard of poolCards ?? []) {
+            cardCostById.set(poolCard.id, poolCard.cost);
+          }
+          cardCostById.set(card.id, card.cost);
+          if (companionCard) {
+            cardCostById.set(companionCard.id, companionCard.cost);
+          }
+          if (variables.bringsWith) {
+            cardCostById.set(variables.bringsWith.card_id, variables.bringsWith.cost);
+          }
+
           const optimisticUpdate = createOptimisticDraftUpdate({
             draft,
             cardId: variables.card_id,
             companionCardId: companionCard?.id,
             bringsWithCardId: variables.bringsWith?.card_id,
             bringsWithCost: variables.bringsWith?.cost,
-            playerId: user.id,
+            playerId: draft.current_turn_user_id,
+            playerAllowedPoints:
+              gameSettings?.user_allowed_points ??
+              DEFAULT_DRAFT_SETTINGS.user_allowed_points,
+            cardCostById,
           });
 
           utils.drafts.getById.setData(
@@ -107,11 +130,21 @@ export default function ConfirmCardPickModal({
 
         return { previousDraft };
       },
-      onSuccess: () => {
+      onSuccess: (updatedDraft) => {
         toast.success(t("cardPickedSuccessfully"));
         setIsConfirmModalShown(false);
 
-        void utils.drafts.getById.invalidate({ id: draftId });
+        utils.drafts.getById.setData({ id: draftId }, (old) =>
+          old
+            ? {
+                ...old,
+                ...updatedDraft,
+                draft_history: updatedDraft.draft_history,
+                current_turn_user_id: updatedDraft.current_turn_user_id,
+                draft_pool: updatedDraft.draft_pool,
+              }
+            : old
+        );
       },
       onError: (error, _variables, context) => {
         // Rollback to previous value on error

@@ -4,6 +4,7 @@ import { TRPCError } from "@trpc/server";
 import { zUuid } from "../schemas";
 import type { DraftResetRequest, Card, GameMap, DraftSettings, CardOrigin } from "@/types/database.types";
 import { DRAFT_STATUS, DRAFT_RESET_REQUEST_STATUS, GAME_STATUS, CARD_TYPES, ALL_VALUE } from "@/types/constants";
+import { SOLO_PRACTICE_PLAYER_ID } from "@/types/constants";
 import {
   generateDraftPool,
   selectRandomMap,
@@ -86,6 +87,13 @@ export const draftResetRequestsRouter = router({
 
       if (draftData.draft_status !== DRAFT_STATUS.DRAFT) {
         throw new TRPCError({ code: "BAD_REQUEST", message: "Draft is not in draft status" });
+      }
+
+      if (draftData.player2_id === SOLO_PRACTICE_PLAYER_ID) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Reset requests are not available in practice drafts",
+        });
       }
 
       const { data: existing } = await ctx.supabase
