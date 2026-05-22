@@ -3,6 +3,7 @@ import {
   formatDisplayName,
   getUserInitials,
   hasAvatar,
+  normalizeAvatarUrl,
   getUserRank,
   getRankTranslationKey,
   getRankBadgeVariant,
@@ -19,7 +20,7 @@ export const useUserProfile = () => {
 
         return {
           ...user,
-          avatarUrl: user.avatar_url,
+          avatarUrl: normalizeAvatarUrl(user.avatar_url),
           displayName: formatDisplayName(user.display_name, user.email),
           initials: getUserInitials(user.display_name, user.email),
           showAvatar: hasAvatar(user.avatar_url),
@@ -83,7 +84,7 @@ export const useSearchUsers = (query: string, limit: number = 10) => {
       select: (users) =>
         users.map((user) => ({
           ...user,
-          avatarUrl: user.avatar_url,
+          avatarUrl: normalizeAvatarUrl(user.avatar_url),
           displayName: formatDisplayName(user.display_name, user.email),
           initials: getUserInitials(user.display_name, user.email),
           showAvatar: hasAvatar(user.avatar_url),
@@ -168,7 +169,7 @@ export const useLeaderboard = (limit: number = 10, minGames: number = 5) => {
       select: (users) =>
         users.map((user) => ({
           ...user,
-          avatarUrl: user.avatar_url,
+          avatarUrl: normalizeAvatarUrl(user.avatar_url),
           displayName: formatDisplayName(user.display_name, ""),
           initials: getUserInitials(user.display_name, ""),
           showAvatar: hasAvatar(user.avatar_url),
@@ -196,7 +197,7 @@ export const useFriends = () => {
       select: (friends) =>
         friends.map((friend) => ({
           ...friend,
-          avatarUrl: friend.avatar_url,
+          avatarUrl: normalizeAvatarUrl(friend.avatar_url),
           displayName: formatDisplayName(friend.display_name, friend.email),
           initials: getUserInitials(friend.display_name, friend.email),
           showAvatar: hasAvatar(friend.avatar_url),
@@ -223,7 +224,7 @@ export const usePendingRequests = () => {
           sender: request.sender
             ? {
                 ...request.sender,
-                avatarUrl: request.sender.avatar_url,
+                avatarUrl: normalizeAvatarUrl(request.sender.avatar_url),
                 displayName: formatDisplayName(
                   request.sender.display_name,
                   request.sender.email
@@ -258,7 +259,7 @@ export const useSentRequests = () => {
           recipient: request.recipient
             ? {
                 ...request.recipient,
-                avatarUrl: request.recipient.avatar_url,
+                avatarUrl: normalizeAvatarUrl(request.recipient.avatar_url),
                 displayName: formatDisplayName(
                   request.recipient.display_name,
                   request.recipient.email

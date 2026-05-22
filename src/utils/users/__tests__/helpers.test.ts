@@ -4,6 +4,7 @@ import {
   formatDisplayName,
   getUserInitials,
   hasAvatar,
+  normalizeAvatarUrl,
   formatStatistics,
   updateStatsAfterGame,
   validateProfileUpdate,
@@ -79,6 +80,22 @@ describe("hasAvatar", () => {
 
   it("should return false for whitespace-only string", () => {
     expect(hasAvatar("   ")).toBe(false);
+  });
+});
+
+describe("normalizeAvatarUrl", () => {
+  it("should convert imgur page URLs to i.imgur.com direct links", () => {
+    expect(normalizeAvatarUrl("https://imgur.com/mEGpqNj")).toBe(
+      "https://i.imgur.com/mEGpqNj.jpg"
+    );
+  });
+
+  it("should leave other URLs unchanged", () => {
+    const url = "https://example.com/avatar.jpg";
+    expect(normalizeAvatarUrl(url)).toBe(url);
+    expect(normalizeAvatarUrl("https://i.imgur.com/abc.png")).toBe(
+      "https://i.imgur.com/abc.png"
+    );
   });
 });
 

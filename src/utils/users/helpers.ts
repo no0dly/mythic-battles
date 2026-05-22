@@ -48,6 +48,29 @@ export const hasAvatar = (avatarUrl: string | null | undefined): boolean => {
 };
 
 /**
+ * Normalize avatar URLs for next/image (e.g. imgur page links → direct image host).
+ */
+export const normalizeAvatarUrl = (avatarUrl: string): string => {
+  const trimmed = avatarUrl.trim();
+  if (!trimmed) return trimmed;
+
+  try {
+    const { hostname, pathname } = new URL(trimmed);
+
+    if (hostname === "imgur.com" || hostname === "www.imgur.com") {
+      const imageId = pathname.split("/").filter(Boolean)[0];
+      if (imageId && !imageId.includes(".")) {
+        return `https://i.imgur.com/${imageId}.jpg`;
+      }
+    }
+  } catch {
+    return trimmed;
+  }
+
+  return trimmed;
+};
+
+/**
  * Format statistics for display
  */
 export const formatStatistics = (
