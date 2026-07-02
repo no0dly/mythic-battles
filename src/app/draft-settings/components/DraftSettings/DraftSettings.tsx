@@ -12,7 +12,7 @@ import {
   NumberInputField,
 } from "@/components/FormFields";
 import { MultiSelectForOriginField } from "@/app/draft-settings/components/MultiSelectForOrigin/MultiselectForOrigin";
-import { MultiSelectForMapTypeField } from "@/app/draft-settings/components/MultiselectForMapType/MultiselectForMapType";
+import { MultiSelectForMapTypeField } from "@/app/draft-settings/components/MultiselectForMapType";
 import {
   DraftSettingsFormValues,
   getDraftSettingsSchema,
