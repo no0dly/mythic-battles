@@ -44,6 +44,10 @@ const badgeVariants = cva(
           "bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/30",
         rankLegend:
           "bg-gradient-to-r from-yellow-500/30 to-orange-500/30 text-orange-800 dark:text-orange-200 border-orange-500/40 font-bold",
+        friend:
+          "gap-1 border-emerald-500/40 bg-gradient-to-r from-emerald-500/25 via-teal-500/20 to-cyan-500/25 text-emerald-800 dark:text-emerald-200 shadow-sm",
+        friendPending:
+          "gap-1 border-amber-500/35 bg-amber-500/15 text-amber-800 dark:text-amber-200",
         hero: "bg-slate-600 text-white border-transparent",
         monster: "bg-emerald-600 text-white border-transparent",
         god: "bg-amber-500 text-white border-transparent",

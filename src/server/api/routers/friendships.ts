@@ -40,7 +40,7 @@ export const friendshipsRouter = router({
 
     const { data: profilesData, error: profilesError } = await ctx.supabase
       .from("users")
-      .select("id, email, display_name, avatar_url")
+      .select("id, display_name, avatar_url")
       .in("id", friendIds);
 
     if (profilesError) {
@@ -50,7 +50,7 @@ export const friendshipsRouter = router({
       });
     }
 
-    type UserProfileSubset = Pick<UserProfile, 'id' | 'email' | 'display_name' | 'avatar_url'>;
+    type UserProfileSubset = Pick<UserProfile, "id" | "display_name" | "avatar_url">;
     const profiles = (profilesData ?? []) as UserProfileSubset[];
 
     return profiles;
@@ -84,7 +84,7 @@ export const friendshipsRouter = router({
 
     const { data: profilesData, error: profilesError } = await ctx.supabase
       .from("users")
-      .select("id, email, display_name, avatar_url")
+      .select("id, display_name, avatar_url")
       .in("id", senderIds);
 
     if (profilesError) {
@@ -94,7 +94,7 @@ export const friendshipsRouter = router({
       });
     }
 
-    type UserProfileSubset = Pick<UserProfile, 'id' | 'email' | 'display_name' | 'avatar_url'>;
+    type UserProfileSubset = Pick<UserProfile, "id" | "display_name" | "avatar_url">;
     const profiles = (profilesData ?? []) as UserProfileSubset[];
 
     return requests.map((request) => ({
@@ -131,7 +131,7 @@ export const friendshipsRouter = router({
 
     const { data: profilesData, error: profilesError } = await ctx.supabase
       .from("users")
-      .select("id, email, display_name, avatar_url")
+      .select("id, display_name, avatar_url")
       .in("id", recipientIds);
 
     if (profilesError) {
@@ -141,7 +141,7 @@ export const friendshipsRouter = router({
       });
     }
 
-    type UserProfileSubset = Pick<UserProfile, 'id' | 'email' | 'display_name' | 'avatar_url'>;
+    type UserProfileSubset = Pick<UserProfile, "id" | "display_name" | "avatar_url">;
     const profiles = (profilesData ?? []) as UserProfileSubset[];
 
     return sentRequests.map((request) => ({
@@ -153,36 +153,62 @@ export const friendshipsRouter = router({
   // Send a friend request
   sendRequest: protectedProcedure
     .input(
-      z.object({
-        friendEmail: z.string().email(),
-      })
+      z
+        .object({
+          friendEmail: z.string().email().optional(),
+          friendId: zUuid.optional(),
+        })
+        .refine((data) => data.friendEmail || data.friendId, {
+          message: "Either friendEmail or friendId is required",
+        })
     )
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
 
-      // Validate email format
-      if (!isValidEmail(input.friendEmail)) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Invalid email format",
-        });
-      }
+      type UserMinimal = Pick<UserProfile, "id" | "email">;
+      let friendData: UserMinimal;
 
-      // Find user by email
-      const { data: friendDataRaw, error: friendError } = await ctx.supabase
-        .from("users")
-        .select("id, email")
-        .eq("email", input.friendEmail)
-        .single();
+      if (input.friendId) {
+        const { data: friendById, error: friendByIdError } = await ctx.supabase
+          .from("users")
+          .select("id, email")
+          .eq("id", input.friendId)
+          .single();
 
-      type UserMinimal = Pick<UserProfile, 'id' | 'email'>;
-      const friendData = friendDataRaw as UserMinimal | null;
+        if (friendByIdError || !friendById) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: FRIENDSHIP_ERROR_MESSAGES.USER_NOT_FOUND,
+          });
+        }
 
-      if (friendError || !friendData) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: FRIENDSHIP_ERROR_MESSAGES.USER_NOT_FOUND,
-        });
+        friendData = friendById as UserMinimal;
+      } else {
+        const friendEmail = input.friendEmail!;
+
+        // Validate email format
+        if (!isValidEmail(friendEmail)) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Invalid email format",
+          });
+        }
+
+        // Find user by email
+        const { data: friendDataRaw, error: friendError } = await ctx.supabase
+          .from("users")
+          .select("id, email")
+          .eq("email", friendEmail)
+          .single();
+
+        if (friendError || !friendDataRaw) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: FRIENDSHIP_ERROR_MESSAGES.USER_NOT_FOUND,
+          });
+        }
+
+        friendData = friendDataRaw as UserMinimal;
       }
 
       if (friendData.id === userId) {

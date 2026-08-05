@@ -1,76 +1,19 @@
 "use client";
 
-import { useState } from "react";
-import { Leaderboard } from "@/components/Leaderboard";
-import { UserSearch } from "@/components/UserSearch";
+import Leaderboard from "@/components/Leaderboard";
 import { useTranslation } from "react-i18next";
-import { Button } from "@/components/ui/button";
-import PageLayout from "@/components/PageLayout";
 
 export default function LeaderboardPage() {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<"leaderboard" | "search">(
-    "leaderboard"
-  );
-  const [minGames, setMinGames] = useState(0);
-
-  const handleSelectUser = (userId: string) => {
-    console.log("Selected user:", userId);
-  };
 
   return (
-    <PageLayout
-      title={
-        activeTab === "leaderboard"
-          ? t("leaderboard.leaders")
-          : t("searchUsers")
-      }
-    >
-      <div>
-        {/* Tabs */}
-        <div className="flex gap-4 mb-6">
-          <Button
-            onClick={() => setActiveTab("leaderboard")}
-            variant={activeTab === "leaderboard" ? "default" : "outline"}
-          >
-            {t("leaderboard.leaders")}
-          </Button>
-          <Button
-            onClick={() => setActiveTab("search")}
-            variant={activeTab === "search" ? "default" : "outline"}
-          >
-            {t("searchUsers")}
-          </Button>
-        </div>
-
-        {/* Content */}
-        {activeTab === "leaderboard" ? (
-          <>
-            {/* Filters */}
-            <div className="mb-6 bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {t("leaderboard.minGamesRequired")}
-              </label>
-              <div className="flex gap-2">
-                {[0, 5, 10, 20, 50].map((value) => (
-                  <Button
-                    key={value}
-                    onClick={() => setMinGames(value)}
-                    variant={minGames === value ? "default" : "outline"}
-                    size="sm"
-                  >
-                    {value === 0 ? t("leaderboard.all") : value}
-                  </Button>
-                ))}
-              </div>
-            </div>
-
-            <Leaderboard limit={20} minGames={minGames} />
-          </>
-        ) : (
-          <UserSearch onSelectUser={handleSelectUser} />
-        )}
+    <div className="mx-auto flex h-full min-h-0 w-full max-w-7xl flex-col px-4 py-6 sm:px-6 sm:py-8 lg:px-8 md:py-12">
+      <h2 className="mb-4 flex-shrink-0 text-2xl font-semibold text-gray-900 dark:text-white sm:mb-6 sm:text-3xl">
+        {t("leaderboard.leaders")}
+      </h2>
+      <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden">
+        <Leaderboard limit={50} />
       </div>
-    </PageLayout>
+    </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,14 +16,19 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { AuthStatus } from "@/components/AuthStatus";
 interface MobileMenuProps {
   userEmail: string | null;
+  isAuthenticated?: boolean;
 }
 
-export function MobileMenu({ userEmail }: MobileMenuProps) {
+export function MobileMenu({
+  userEmail,
+  isAuthenticated = false,
+}: MobileMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const { t } = useTranslation();
   const pathname = usePathname();
   const isWikiPage = pathname?.startsWith("/wiki");
   const isLeaderboardPage = pathname?.startsWith("/leaderboard");
+  const isFriendsPage = pathname?.startsWith("/friends");
 
   const handleToggleMenu = (value: boolean) => () => setIsOpen(value);
 
@@ -74,6 +79,13 @@ export function MobileMenu({ userEmail }: MobileMenuProps) {
                   <Button variant="ghost" asChild className="justify-start">
                     <Link href="/leaderboard" onClick={handleToggleMenu(false)}>
                       {t("leaderboard.leaders")}
+                    </Link>
+                  </Button>
+                )}
+                {isAuthenticated && !isFriendsPage && (
+                  <Button variant="ghost" asChild className="justify-start">
+                    <Link href="/friends" onClick={handleToggleMenu(false)}>
+                      {t("friends")}
                     </Link>
                   </Button>
                 )}

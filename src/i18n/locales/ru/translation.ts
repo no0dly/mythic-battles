@@ -19,8 +19,29 @@ const translation = {
   favoriteGod: "Любимый бог",
   lastDeck: "Последняя колода",
   friends: "Друзья",
-  addFriend: "Добавить друга",
+  friendsPageSubtitle:
+    "Отправляйте приглашения, управляйте запросами и поддерживайте список друзей.",
+  friendsInviteTitle: "Добавить друга",
+  friendsInviteHint:
+    "Ищите по отображаемому имени или отправьте запрос по email.",
+  friendsRosterTitle: "Список друзей",
+  friendsRosterHint:
+    "Друзья, входящие запросы и приглашения, которые вы отправили.",
+  friendsPendingBadgeHint: "Ожидающие запросы в друзья",
+  friendsNewRequestTag: "Новый запрос в друзья",
+  friendsNewRequestsTag: "Новые запросы в друзья",
+  friendsAwaitingResponseTag: "Ожидает принятия",
+  friendsAwaitingResponsesTag: "Ожидают принятия",
+  addFriend: "Отправить запрос",
+  friendInviteByName: "По имени",
+  friendInviteByEmail: "По email",
+  friendName: "Имя друга",
+  friendNamePlaceholder: "введите имя",
+  friendNameRequired: "Введите имя друга",
+  friendInviteSelectFromList: "Выберите пользователя из списка",
   friendEmail: "Email друга",
+  friendEmailPlaceholder: "Введите email адрес",
+  friendInviteMinSearchHint: "Введите минимум 3 символа для поиска по имени",
   emailRequired: "Email обязателен",
   emailInvalid: "Пожалуйста, введите действительный email адрес",
   noFriendsYet: "Пока нет друзей. Добавьте друга чтобы начать",
@@ -115,6 +136,9 @@ const translation = {
     leaders: "Таблица лидеров",
     minGamesRequired: "Минимум игр для отображения",
     all: "Все",
+    showingPlayers: "Показано игроков: {{count}}",
+    filterPlaceholder: "Фильтр по имени",
+    noFilterResults: "Нет игроков по этому фильтру",
   },
   search: {
     placeholder: {
@@ -237,7 +261,7 @@ const translation = {
   areYouSurePickCard: "Это действие нельзя отменить.",
   confirm: "Подтвердить",
   strategicValue: "Стратегическая ценность",
-  mapSide: "Сторона",
+  mapSetup: "Сетап",
 
   // Active Draft
   activeDraftInProgress: "Активный драфт в процессе",

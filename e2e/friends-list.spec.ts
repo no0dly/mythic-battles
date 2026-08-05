@@ -1,183 +1,78 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from "@playwright/test";
 
 /**
- * Friends List E2E Tests
- * 
- * NOTE: These tests require an authenticated user session.
- * The FriendsList component is only visible when logged in (inside LoggedContent).
- * 
- * To run these tests successfully, you need to either:
- * 1. Authenticate manually before running tests
- * 2. Set up Playwright authentication storage (see Playwright docs)
- * 3. Use a test account with proper credentials
- * 
- * Currently, tests will be skipped if the user is not authenticated.
+ * Friends page E2E tests.
+ *
+ * Requires an authenticated session. Tests are skipped when logged out.
  */
-test.describe('Friends List', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto('/');
-    await page.waitForLoadState('networkidle');
-  });
-
-  // Helper to check if logged in and skip test if not
+test.describe("Friends page", () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async function checkLoggedIn(page: any) {
-    // Check for elements that indicate logged-in state
-    // LoggedContent shows "User Info" heading, NotLoggedContent shows "Login" button
-    const hasUserInfo = await page.getByText(/user info/i).isVisible().catch(() => false);
-    const hasLoginButton = await page.getByRole('link', { name: /login/i }).isVisible().catch(() => false);
-    const isLoggedIn = hasUserInfo && !hasLoginButton;
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
 
-    test.skip(!isLoggedIn, 'User is not logged in - skipping test. Authentication is required for FriendsList tests.');
+    const hasWelcome = await page
+      .getByText(/welcome/i)
+      .first()
+      .isVisible()
+      .catch(() => false);
+    const hasLoginButton = await page
+      .getByRole("link", { name: /login/i })
+      .isVisible()
+      .catch(() => false);
+    const isLoggedIn = hasWelcome && !hasLoginButton;
+
+    test.skip(
+      !isLoggedIn,
+      "User is not logged in - skipping friends page tests."
+    );
     return isLoggedIn;
   }
 
-  test('opens friends dialog when clicking friends button', async ({ page }) => {
-    // Check if logged in - will skip test if not
+  test("navigates to friends page from home link", async ({ page }) => {
     await checkLoggedIn(page);
 
-    // Find and click the friends button - it's inside UserInfoCard
-    const friendsButton = page.getByRole('button', { name: /friends/i }).first();
-    await expect(friendsButton).toBeVisible({ timeout: 5000 });
-    await friendsButton.click();
+    const friendsLink = page.getByRole("link", { name: /friends/i }).first();
+    await expect(friendsLink).toBeVisible({ timeout: 5000 });
+    await friendsLink.click();
 
-    // Dialog should be visible
-    await expect(page.getByRole('dialog')).toBeVisible();
-    await expect(page.getByRole('heading', { name: /friends/i })).toBeVisible();
+    await expect(page).toHaveURL(/\/friends/);
+    await expect(page.getByRole("heading", { name: /friends/i })).toBeVisible();
   });
 
-  test('displays friends list in dialog', async ({ page }) => {
+  test("shows friend count on home link", async ({ page }) => {
     await checkLoggedIn(page);
 
-    const friendsButton = page.getByRole('button', { name: /friends/i }).first();
-    await expect(friendsButton).toBeVisible({ timeout: 5000 });
-    await friendsButton.click();
-
-    // Wait for dialog to be visible
-    await expect(page.getByRole('dialog')).toBeVisible();
-
-    // Check that friends are displayed (at least one friend from mocked data)
-    await expect(page.getByText('Alice')).toBeVisible({ timeout: 3000 });
+    const friendsLink = page.getByRole("link", { name: /friends/i }).first();
+    await expect(friendsLink).toBeVisible({ timeout: 5000 });
+    await expect(friendsLink).toContainText(/\(\d+\)|\.\.\./);
   });
 
-  test('shows friend count on button', async ({ page }) => {
+  test("displays invite form on friends page", async ({ page }) => {
     await checkLoggedIn(page);
+    await page.goto("/friends");
+    await page.waitForLoadState("networkidle");
 
-    const friendsButton = page.getByRole('button', { name: /friends/i }).first();
-    await expect(friendsButton).toBeVisible({ timeout: 5000 });
-
-    // Should show count (17 from mocked data)
-    await expect(friendsButton).toContainText('17');
+    await expect(page.getByRole("heading", { name: /friends/i })).toBeVisible();
+    await expect(
+      page.getByRole("tab", { name: /by name|by email|по имени|по email/i }).first()
+    ).toBeVisible();
   });
 
-  test('displays add friend form in dialog', async ({ page }) => {
+  test("validates email invite on friends page", async ({ page }) => {
     await checkLoggedIn(page);
+    await page.goto("/friends");
+    await page.waitForLoadState("networkidle");
 
-    const friendsButton = page.getByRole('button', { name: /friends/i }).first();
-    await expect(friendsButton).toBeVisible({ timeout: 5000 });
-    await friendsButton.click();
+    await page.getByRole("tab", { name: /by email|по email/i }).click();
 
-    await expect(page.getByRole('dialog')).toBeVisible();
-
-    // Form elements should be visible
-    await expect(page.getByLabel(/friend's email/i)).toBeVisible();
-    await expect(page.getByRole('button', { name: /add friend/i }).last()).toBeVisible();
-  });
-
-  test('validates email input - empty submission', async ({ page }) => {
-    await checkLoggedIn(page);
-
-    const friendsButton = page.getByRole('button', { name: /friends/i }).first();
-    await expect(friendsButton).toBeVisible({ timeout: 5000 });
-    await friendsButton.click();
-
-    await expect(page.getByRole('dialog')).toBeVisible();
-
-    // Submit without entering email
-    const submitButtons = page.getByRole('button', { name: /add friend/i });
-    const submitButton = submitButtons.last();
+    const submitButton = page
+      .getByRole("button", { name: /send request|отправить запрос/i })
+      .last();
     await submitButton.click();
 
-    // Should show validation error
-    await expect(page.getByText(/email is required/i)).toBeVisible({ timeout: 3000 });
-  });
-
-  test('validates email input - invalid format', async ({ page }) => {
-    await checkLoggedIn(page);
-
-    const friendsButton = page.getByRole('button', { name: /friends/i }).first();
-    await expect(friendsButton).toBeVisible({ timeout: 5000 });
-    await friendsButton.click();
-
-    await expect(page.getByRole('dialog')).toBeVisible();
-
-    const emailInput = page.getByLabel(/friend's email/i);
-    await emailInput.fill('invalid-email');
-
-    const submitButtons = page.getByRole('button', { name: /add friend/i });
-    const submitButton = submitButtons.last();
-    await submitButton.click();
-
-    // Should show validation error
-    await expect(page.getByText(/please enter a valid email address/i)).toBeVisible({ timeout: 3000 });
-  });
-
-  test('accepts valid email input', async ({ page }) => {
-    await checkLoggedIn(page);
-
-    const friendsButton = page.getByRole('button', { name: /friends/i }).first();
-    await expect(friendsButton).toBeVisible({ timeout: 5000 });
-    await friendsButton.click();
-
-    await expect(page.getByRole('dialog')).toBeVisible();
-
-    const emailInput = page.getByLabel(/friend's email/i);
-    await emailInput.fill('newfriend@example.com');
-
-    const submitButtons = page.getByRole('button', { name: /add friend/i });
-    const submitButton = submitButtons.last();
-    await submitButton.click();
-
-    // Input should be cleared after submission (form resets)
-    await expect(emailInput).toHaveValue('', { timeout: 3000 });
-
-    // No error should be visible
-    await expect(page.getByText(/email is required/i)).not.toBeVisible();
-    await expect(page.getByText(/please enter a valid email address/i)).not.toBeVisible();
-  });
-
-  test('closes dialog and resets form', async ({ page }) => {
-    await checkLoggedIn(page);
-
-    const friendsButton = page.getByRole('button', { name: /friends/i }).first();
-    await expect(friendsButton).toBeVisible({ timeout: 5000 });
-    await friendsButton.click();
-
-    await expect(page.getByRole('dialog')).toBeVisible();
-
-    // Enter invalid email to trigger error
-    const emailInput = page.getByLabel(/friend's email/i);
-    await emailInput.fill('invalid');
-
-    const submitButtons = page.getByRole('button', { name: /add friend/i });
-    const submitButton = submitButtons.last();
-    await submitButton.click();
-
-    await expect(page.getByText(/please enter a valid email address/i)).toBeVisible({ timeout: 3000 });
-
-    // Close dialog (click outside or ESC)
-    await page.keyboard.press('Escape');
-
-    // Dialog should be closed
-    await expect(page.getByRole('dialog')).not.toBeVisible();
-
-    // Reopen dialog
-    await friendsButton.click();
-    await expect(page.getByRole('dialog')).toBeVisible();
-
-    // Form should be reset (no error visible)
-    await expect(page.getByText(/please enter a valid email address/i)).not.toBeVisible();
-    const newEmailInput = page.getByLabel(/friend's email/i);
-    await expect(newEmailInput).toHaveValue('');
+    await expect(
+      page.getByText(/email is required|email обязателен/i)
+    ).toBeVisible({ timeout: 3000 });
   });
 });

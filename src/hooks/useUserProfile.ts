@@ -8,6 +8,7 @@ import {
   getRankTranslationKey,
   getRankBadgeVariant,
 } from "@/utils/users";
+import { SEARCH_DEFAULTS } from "@/utils/users/constants";
 
 /**
  * Hook to get current user profile
@@ -15,6 +16,7 @@ import {
 export const useUserProfile = () => {
   const { data, isLoading, error, refetch } =
     api.users.getCurrentUser.useQuery(undefined, {
+      retry: false,
       select: (user) => {
         if (!user) return user;
 
@@ -76,17 +78,23 @@ export const useUser = (userId: string) => {
 /**
  * Hook to search users
  */
-export const useSearchUsers = (query: string, limit: number = 10) => {
+export const useSearchUsers = (
+  query: string,
+  limit: number = SEARCH_DEFAULTS.LIMIT,
+  options?: { enabled?: boolean }
+) => {
   const { data, isLoading, error } = api.users.searchUsers.useQuery(
     { query, limit },
     {
-      enabled: query.length > 0,
+      enabled:
+        (options?.enabled ?? true) &&
+        query.length >= SEARCH_DEFAULTS.MIN_QUERY_LENGTH,
       select: (users) =>
         users.map((user) => ({
           ...user,
           avatarUrl: normalizeAvatarUrl(user.avatar_url),
-          displayName: formatDisplayName(user.display_name, user.email),
-          initials: getUserInitials(user.display_name, user.email),
+          displayName: formatDisplayName(user.display_name),
+          initials: getUserInitials(user.display_name),
           showAvatar: hasAvatar(user.avatar_url),
         })),
     }
@@ -159,7 +167,7 @@ export const useIncrementLoss = () => {
 /**
  * Hook to get leaderboard
  */
-export const useLeaderboard = (limit: number = 10, minGames: number = 5) => {
+export const useLeaderboard = (limit: number = 10, minGames: number = 0) => {
   const { data, isLoading, error } = api.users.getLeaderboard.useQuery(
     {
       limit,
@@ -170,8 +178,8 @@ export const useLeaderboard = (limit: number = 10, minGames: number = 5) => {
         users.map((user) => ({
           ...user,
           avatarUrl: normalizeAvatarUrl(user.avatar_url),
-          displayName: formatDisplayName(user.display_name, ""),
-          initials: getUserInitials(user.display_name, ""),
+          displayName: formatDisplayName(user.display_name),
+          initials: getUserInitials(user.display_name),
           showAvatar: hasAvatar(user.avatar_url),
           rank: getUserRank(user.statistics),
           rankKey: getRankTranslationKey(getUserRank(user.statistics)),
@@ -190,16 +198,17 @@ export const useLeaderboard = (limit: number = 10, minGames: number = 5) => {
 /**
  * Hook to get friends list
  */
-export const useFriends = () => {
+export const useFriends = (options?: { enabled?: boolean }) => {
   const { data, isLoading, error } = api.friendships.getFriends.useQuery(
     undefined,
     {
+      enabled: options?.enabled ?? true,
       select: (friends) =>
         friends.map((friend) => ({
           ...friend,
           avatarUrl: normalizeAvatarUrl(friend.avatar_url),
-          displayName: formatDisplayName(friend.display_name, friend.email),
-          initials: getUserInitials(friend.display_name, friend.email),
+          displayName: formatDisplayName(friend.display_name),
+          initials: getUserInitials(friend.display_name),
           showAvatar: hasAvatar(friend.avatar_url),
         })),
     }
@@ -215,9 +224,10 @@ export const useFriends = () => {
 /**
  * Hook to get pending friend requests
  */
-export const usePendingRequests = () => {
+export const usePendingRequests = (options?: { enabled?: boolean }) => {
   const { data, isLoading, error } =
     api.friendships.getPendingRequests.useQuery(undefined, {
+      enabled: options?.enabled ?? true,
       select: (requests) =>
         requests.map((request) => ({
           ...request,
@@ -225,14 +235,8 @@ export const usePendingRequests = () => {
             ? {
                 ...request.sender,
                 avatarUrl: normalizeAvatarUrl(request.sender.avatar_url),
-                displayName: formatDisplayName(
-                  request.sender.display_name,
-                  request.sender.email
-                ),
-                initials: getUserInitials(
-                  request.sender.display_name,
-                  request.sender.email
-                ),
+                displayName: formatDisplayName(request.sender.display_name),
+                initials: getUserInitials(request.sender.display_name),
                 showAvatar: hasAvatar(request.sender.avatar_url),
               }
             : undefined,
@@ -249,10 +253,11 @@ export const usePendingRequests = () => {
 /**
  * Hook to get sent friend requests
  */
-export const useSentRequests = () => {
+export const useSentRequests = (options?: { enabled?: boolean }) => {
   const { data, isLoading, error } = api.friendships.getSentRequests.useQuery(
     undefined,
     {
+      enabled: options?.enabled ?? true,
       select: (requests) =>
         requests.map((request) => ({
           ...request,
@@ -260,14 +265,8 @@ export const useSentRequests = () => {
             ? {
                 ...request.recipient,
                 avatarUrl: normalizeAvatarUrl(request.recipient.avatar_url),
-                displayName: formatDisplayName(
-                  request.recipient.display_name,
-                  request.recipient.email
-                ),
-                initials: getUserInitials(
-                  request.recipient.display_name,
-                  request.recipient.email
-                ),
+                displayName: formatDisplayName(request.recipient.display_name),
+                initials: getUserInitials(request.recipient.display_name),
                 showAvatar: hasAvatar(request.recipient.avatar_url),
               }
             : undefined,

@@ -2,7 +2,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { cardsRouter } from "../cards";
 import type { Card } from "@/types/database.types";
-import { CARD_TYPES } from "@/types/constants";
+import { CARD_CLASS, CARD_ORIGIN, CARD_TYPES } from "@/types/constants";
 import { TRPCError } from "@trpc/server";
 
 const TEST_CARD_UUID = "550e8400-e29b-41d4-a716-446655440001";
@@ -16,7 +16,9 @@ const mockCards: Card[] = [
     amount_of_card_activations: 1,
     strategic_value: 10,
     talents: [],
-    class: "god",
+    class: [CARD_CLASS.FLYING],
+    origin: CARD_ORIGIN.COR,
+    extra: null,
     image_url: "/zeus.jpg",
     created_at: "2024-01-01T00:00:00Z",
     updated_at: "2024-01-01T00:00:00Z",
@@ -29,7 +31,9 @@ const mockCards: Card[] = [
     amount_of_card_activations: 1,
     strategic_value: 9,
     talents: [],
-    class: "god",
+    class: [CARD_CLASS.TERRESTRIAL],
+    origin: CARD_ORIGIN.COR,
+    extra: null,
     image_url: "/ares.jpg",
     created_at: "2024-01-01T00:00:00Z",
     updated_at: "2024-01-01T00:00:00Z",
@@ -42,7 +46,9 @@ const mockCards: Card[] = [
     amount_of_card_activations: 1,
     strategic_value: 8,
     talents: [],
-    class: "hero",
+    class: [CARD_CLASS.TERRESTRIAL],
+    origin: CARD_ORIGIN.COR,
+    extra: null,
     image_url: "/athena.jpg",
     created_at: "2024-01-01T00:00:00Z",
     updated_at: "2024-01-01T00:00:00Z",

@@ -3,7 +3,7 @@ import { describe, it, expect } from "vitest";
 import { getFilteredData, getFilteredMaps, getUniqueCosts, chunk } from "../utils";
 import { DEFAULT_FILTER } from "@/stores/cardFilters";
 import type { Card, GameMap } from "@/types/database.types";
-import { CARD_TYPES, MAP_TYPE } from "@/types/constants";
+import { CARD_CLASS, CARD_ORIGIN, CARD_TYPES, MAP_TYPE } from "@/types/constants";
 import { MAPS_FILTER_VALUE } from "../utils";
 
 const mockCards: Card[] = [
@@ -15,7 +15,9 @@ const mockCards: Card[] = [
     amount_of_card_activations: 1,
     strategic_value: 10,
     talents: [],
-    class: "god",
+    class: [CARD_CLASS.FLYING],
+    origin: CARD_ORIGIN.COR,
+    extra: null,
     image_url: "/zeus.jpg",
     created_at: "2024-01-01T00:00:00Z",
     updated_at: "2024-01-01T00:00:00Z",
@@ -28,7 +30,9 @@ const mockCards: Card[] = [
     amount_of_card_activations: 1,
     strategic_value: 9,
     talents: [],
-    class: "god",
+    class: [CARD_CLASS.TERRESTRIAL],
+    origin: CARD_ORIGIN.COR,
+    extra: null,
     image_url: "/ares.jpg",
     created_at: "2024-01-01T00:00:00Z",
     updated_at: "2024-01-01T00:00:00Z",
@@ -41,7 +45,9 @@ const mockCards: Card[] = [
     amount_of_card_activations: 1,
     strategic_value: 8,
     talents: [],
-    class: "hero",
+    class: [CARD_CLASS.TERRESTRIAL],
+    origin: CARD_ORIGIN.COR,
+    extra: null,
     image_url: "/athena.jpg",
     created_at: "2024-01-01T00:00:00Z",
     updated_at: "2024-01-01T00:00:00Z",
@@ -54,7 +60,9 @@ const mockCards: Card[] = [
     amount_of_card_activations: 1,
     strategic_value: 7,
     talents: [],
-    class: "monster",
+    class: [CARD_CLASS.HUGE],
+    origin: CARD_ORIGIN.COR,
+    extra: null,
     image_url: "/minotaur.jpg",
     created_at: "2024-01-01T00:00:00Z",
     updated_at: "2024-01-01T00:00:00Z",
@@ -67,7 +75,9 @@ const mockCards: Card[] = [
     amount_of_card_activations: 1,
     strategic_value: 5,
     talents: [],
-    class: "",
+    class: [],
+    origin: null,
+    extra: null,
     image_url: "/shield.jpg",
     created_at: "2024-01-01T00:00:00Z",
     updated_at: "2024-01-01T00:00:00Z",
@@ -79,28 +89,25 @@ const mockMaps: GameMap[] = [
     id: "m1",
     name: "Sacred Grove",
     map_type: [MAP_TYPE.FOREST, MAP_TYPE.WATER],
-    origin: null,
+    origin: CARD_ORIGIN.COR,
     image_url: "/grove.jpg",
     created_at: "2024-01-01T00:00:00Z",
-    updated_at: "2024-01-01T00:00:00Z",
   },
   {
     id: "m2",
     name: "Ruined Temple",
     map_type: [MAP_TYPE.RUINS],
-    origin: null,
+    origin: CARD_ORIGIN.ASG,
     image_url: "/temple.jpg",
     created_at: "2024-01-01T00:00:00Z",
-    updated_at: "2024-01-01T00:00:00Z",
   },
   {
     id: "m3",
     name: "Burning Fields",
     map_type: null,
-    origin: null,
+    origin: CARD_ORIGIN.RAG,
     image_url: "/fields.jpg",
     created_at: "2024-01-01T00:00:00Z",
-    updated_at: "2024-01-01T00:00:00Z",
   },
 ];
 

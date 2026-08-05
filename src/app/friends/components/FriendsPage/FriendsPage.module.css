@@ -1,0 +1,250 @@
+.Page {
+  position: relative;
+  isolation: isolate;
+  min-height: 100%;
+  color: var(--foreground);
+}
+
+.Shell {
+  max-width: 80rem;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 2.5rem;
+}
+
+@media (min-width: 640px) {
+  .Shell {
+    padding: 2rem 1.5rem 3rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .Shell {
+    padding: 3rem 2rem 3.5rem;
+  }
+}
+
+.Hero {
+  margin-bottom: 1.5rem;
+}
+
+.Title {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin: 0;
+  font-size: clamp(1.75rem, 3.5vw, 2.25rem);
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--foreground);
+}
+
+.TitleMark {
+  display: inline-block;
+}
+
+.Subtitle {
+  margin: 0.65rem 0 0;
+  max-width: 36rem;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--muted-foreground);
+  animation: FriendsRise 0.45s ease-out 0.06s both;
+}
+
+.Layout {
+  display: grid;
+  gap: 1.25rem;
+  animation: FriendsRise 0.45s ease-out 0.1s both;
+}
+
+@media (min-width: 960px) {
+  .Layout {
+    grid-template-columns: minmax(24rem, 32rem) minmax(0, 1fr);
+    align-items: start;
+    gap: 1.5rem;
+  }
+}
+
+.Panel {
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 2px);
+  background: var(--card);
+  color: var(--card-foreground);
+  box-shadow: 0 1px 3px oklch(0 0 0 / 0.06);
+  overflow: visible;
+}
+
+.PanelHeader {
+  padding: 1.1rem 1.25rem 0.85rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.PanelTitle {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--foreground);
+}
+
+.PanelHint {
+  margin: 0.3rem 0 0;
+  font-size: 0.85rem;
+  color: var(--muted-foreground);
+}
+
+.PanelBody {
+  padding: 1.1rem 1.25rem 1.25rem;
+}
+
+.RosterPanel {
+  min-height: 24rem;
+}
+
+.RosterContent {
+  min-height: 16rem;
+}
+
+.TabsList {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+  padding: 0.3rem;
+  border-radius: var(--radius);
+  background: var(--muted);
+  border: 1px solid var(--border);
+}
+
+.Tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  min-height: 2.4rem;
+  padding: 0.4rem 0.5rem;
+  border: 0;
+  border-radius: calc(var(--radius) - 2px);
+  background: transparent;
+  color: var(--muted-foreground);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.Tab[data-active="true"] {
+  background: var(--background);
+  color: var(--foreground);
+  box-shadow: 0 1px 2px oklch(0 0 0 / 0.06);
+}
+
+.TabBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.3rem;
+  border-radius: 999px;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+.TabBadgeIncoming {
+  background: var(--destructive);
+  color: white;
+}
+
+.TabBadgeSent {
+  background: var(--destructive);
+  color: white;
+}
+
+.List {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.Row {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: color-mix(in oklab, var(--muted) 55%, transparent);
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease;
+  animation: FriendsRise 0.35s ease-out both;
+}
+
+.Row:hover {
+  border-color: var(--border);
+  background: var(--muted);
+}
+
+.Avatar,
+.AvatarFallback {
+  flex-shrink: 0;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 999px;
+  object-fit: cover;
+}
+
+.AvatarFallback {
+  display: grid;
+  place-items: center;
+  background: oklch(0.623 0.188 259.8);
+  color: white;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.RowName {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-weight: 600;
+  color: var(--foreground);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.Empty {
+  display: grid;
+  place-items: center;
+  min-height: 12rem;
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--muted-foreground);
+  font-size: 0.95rem;
+}
+
+@keyframes FriendsRise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .Subtitle,
+  .Layout,
+  .Row {
+    animation: none !important;
+    transition: none !important;
+  }
+}
