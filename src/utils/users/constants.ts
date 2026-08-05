@@ -59,7 +59,8 @@ export const LEADERBOARD_DEFAULTS = {
 export const SEARCH_DEFAULTS = {
   LIMIT: 10,
   MAX_LIMIT: 50,
-  MIN_QUERY_LENGTH: 1,
+  MIN_QUERY_LENGTH: 3,
+  DEBOUNCE_MS: 400,
 } as const;
 
 /**

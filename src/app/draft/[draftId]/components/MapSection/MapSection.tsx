@@ -43,7 +43,7 @@ export function MapSection({ mapId, mapSide }: MapSectionProps) {
           </div>
           {mapSide && (
             <span className="text-sm font-semibold text-muted-foreground">
-              {t("mapSide")}: {mapSide}
+              {t("mapSetup")}: {mapSide}
             </span>
           )}
         </div>

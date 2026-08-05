@@ -5,7 +5,7 @@ import { ShimmerButton } from "@/components/ui/shimmer-button";
 import { UserStatistics } from "@/components/UserStatistics";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useRouter } from "next/navigation";
-import FriendsList from "../FriendsList";
+import FriendsHomeLink from "@/components/FriendsHomeLink";
 
 function LoggedContent() {
   const { t } = useTranslation();
@@ -34,7 +34,7 @@ function LoggedContent() {
               </div>
               <UserStatistics statistics={user.statistics} compact />
               <div className="mt-5">
-                <FriendsList />
+                <FriendsHomeLink />
               </div>
             </div>
           )}

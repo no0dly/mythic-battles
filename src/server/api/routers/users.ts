@@ -3,7 +3,11 @@ import { router, protectedProcedure, publicProcedure } from "@/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 import type { UserProfile, Statistics, Json, UserSubset } from "@/types/database.types";
 import { zUuid } from "../schemas";
-import { compareStatisticsByRank, updateStatsAfterGame } from "@/utils/users";
+import {
+  compareStatisticsByRank,
+  updateStatsAfterGame,
+  SEARCH_DEFAULTS,
+} from "@/utils/users";
 import { SOLO_PRACTICE_PLAYER_ID } from "@/types/constants";
 
 // Type for user subset returned by getUsersByIds
@@ -77,21 +81,26 @@ export const usersRouter = router({
       return (data ?? []) as UserSubset[];
     }),
 
-  // Search users by email or display name
+  // Search users by display name (public profile fields only)
   searchUsers: publicProcedure
     .input(
       z.object({
-        query: z.string().min(1),
+        query: z.string().min(SEARCH_DEFAULTS.MIN_QUERY_LENGTH),
         limit: z.number().min(1).max(50).default(10),
       })
     )
     .query(async ({ ctx, input }) => {
-      const { data, error } = await ctx.supabase
+      let query = ctx.supabase
         .from("users")
-        .select("id, email, display_name, avatar_url")
-        .or(`email.ilike.%${input.query}%,display_name.ilike.%${input.query}%`)
-        .neq("id", SOLO_PRACTICE_PLAYER_ID)
-        .limit(input.limit);
+        .select("id, display_name, avatar_url")
+        .ilike("display_name", `%${input.query}%`)
+        .neq("id", SOLO_PRACTICE_PLAYER_ID);
+
+      if (ctx.session?.user.id) {
+        query = query.neq("id", ctx.session.user.id);
+      }
+
+      const { data, error } = await query.limit(input.limit);
 
       if (error) {
         throw new TRPCError({
@@ -100,8 +109,11 @@ export const usersRouter = router({
         });
       }
 
-      type UserSubset = Pick<UserProfile, 'id' | 'email' | 'display_name' | 'avatar_url'>;
-      return (data ?? []) as UserSubset[];
+      type PublicUserSearchResult = Pick<
+        UserProfile,
+        "id" | "display_name" | "avatar_url"
+      >;
+      return (data ?? []) as PublicUserSearchResult[];
     }),
 
   // Update current user profile
@@ -284,7 +296,7 @@ export const usersRouter = router({
       const { data, error } = await ctx.supabase
         .from("users")
         .select("id, display_name, avatar_url, statistics")
-        .gte("statistics->total_games", input.minGames);
+        .neq("id", SOLO_PRACTICE_PLAYER_ID);
 
       if (error) {
         throw new TRPCError({
@@ -298,7 +310,10 @@ export const usersRouter = router({
         "id" | "display_name" | "avatar_url" | "statistics"
       >;
 
-      const users = (data ?? []) as LeaderboardUser[];
+      const users = ((data ?? []) as LeaderboardUser[]).filter((user) => {
+        const totalGames = user.statistics?.total_games ?? 0;
+        return totalGames >= input.minGames;
+      });
 
       return users
         .sort((a, b) => compareStatisticsByRank(a.statistics, b.statistics))

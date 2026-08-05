@@ -1,21 +1,67 @@
 "use client";
 
+import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useLeaderboard } from "@/hooks/useUserProfile";
+import {
+  FRIENDSHIP_UI_STATUS,
+  useFriendshipStatus,
+} from "@/hooks/useFriendshipStatus";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import Loader from "@/components/Loader";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { useTranslation } from "react-i18next";
-import Image from "next/image";
-import { calculateWinRate } from "@/utils/users";
+import { SEARCH_DEFAULTS } from "@/utils/users/constants";
+import { LEADERBOARD_DEFAULT_LIMIT } from "./constants";
+import LeaderboardFilter from "./components/LeaderboardFilter";
+import LeaderboardList from "./components/LeaderboardList";
+import type { RankedLeaderboardPlayer } from "./types";
 
 interface LeaderboardProps {
   limit?: number;
-  minGames?: number;
 }
 
-export const Leaderboard = ({ limit = 10, minGames = 5 }: LeaderboardProps) => {
+export default function Leaderboard({
+  limit = LEADERBOARD_DEFAULT_LIMIT,
+}: LeaderboardProps) {
   const { t } = useTranslation();
-  const { leaderboard, isLoading, error } = useLeaderboard(limit, minGames);
+  const [filter, setFilter] = useState("");
+  const debouncedFilter = useDebouncedValue(
+    filter.trim(),
+    SEARCH_DEFAULTS.DEBOUNCE_MS
+  );
+
+  const { leaderboard, isLoading, error } = useLeaderboard(limit, 0);
+  const {
+    getStatusForUserId,
+    isAuthenticated,
+    isLoading: isFriendshipLoading,
+  } = useFriendshipStatus();
+
+  const rankedPlayers = useMemo<RankedLeaderboardPlayer[]>(
+    () =>
+      leaderboard.map((user, index) => ({
+        user,
+        rank: index + 1,
+      })),
+    [leaderboard]
+  );
+
+  const filteredPlayers = useMemo(() => {
+    if (!debouncedFilter) return rankedPlayers;
+    const query = debouncedFilter.toLowerCase();
+    return rankedPlayers.filter(({ user }) =>
+      user.displayName.toLowerCase().includes(query)
+    );
+  }, [rankedPlayers, debouncedFilter]);
+
+  function handleFilterChange(value: string) {
+    setFilter(value);
+  }
+
+  function getFriendshipStatus(userId: string) {
+    if (!isAuthenticated) return FRIENDSHIP_UI_STATUS.NONE;
+    return getStatusForUserId(userId);
+  }
 
   if (isLoading) {
     return <Loader />;
@@ -29,70 +75,16 @@ export const Leaderboard = ({ limit = 10, minGames = 5 }: LeaderboardProps) => {
     );
   }
 
-  if (leaderboard.length === 0) {
-    return (
-      <Card className="p-6">
-        <p className="text-gray-500">{t("leaderboard.noData")}</p>
-      </Card>
-    );
-  }
-
   return (
-    <Card className="p-6">
-      <div className="space-y-3">
-        {leaderboard.map((user, index) => (
-          <div
-            key={user.id}
-            className="flex items-center gap-4 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
-          >
-            {/* Position */}
-            <div className="flex-shrink-0 w-8 text-center">
-              <span className="text-lg font-bold text-gray-600">
-                #{index + 1}
-              </span>
-            </div>
-
-            {/* Avatar */}
-              <div className="flex-shrink-0">
-                {user.showAvatar ? (
-                  <Image
-                    src={user.avatarUrl}
-                    alt={user.displayName}
-                    width={50}
-                    height={50}
-                    className="w-12 h-12 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold">
-                    {user.initials}
-                  </div>
-                )}
-              </div>
-
-            {/* User Info */}
-            <div className="flex-grow">
-              <p className="font-semibold">{user.displayName}</p>
-              <Badge variant={user.rankVariant} className="mt-1">
-                {t(user.rankKey)}
-              </Badge>
-            </div>
-
-            {/* Stats */}
-            <div className="text-right">
-              <p className="font-bold text-blue-600">
-                {calculateWinRate(
-                  user.statistics.wins,
-                  user.statistics.total_games
-                ).toFixed(2)}
-                %
-              </p>
-              <p className="text-sm text-gray-600">
-                {user.statistics.wins}W / {user.statistics.losses}L
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
-    </Card>
+    <div className="space-y-4">
+      <LeaderboardFilter value={filter} onValueChange={handleFilterChange} />
+      <LeaderboardList
+        totalCount={leaderboard.length}
+        players={filteredPlayers}
+        showFriendActions={isAuthenticated}
+        isFriendshipLoading={isFriendshipLoading}
+        getFriendshipStatus={getFriendshipStatus}
+      />
+    </div>
   );
-};
+}

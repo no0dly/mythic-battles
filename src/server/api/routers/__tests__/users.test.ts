@@ -97,13 +97,11 @@ describe("usersRouter", () => {
       const mockSearchResults = [
         {
           id: "user-1",
-          email: "user1@example.com",
           display_name: "User One",
           avatar_url: "",
         },
         {
           id: "user-2",
-          email: "user2@example.com",
           display_name: "User Two",
           avatar_url: "",
         },
@@ -113,11 +111,13 @@ describe("usersRouter", () => {
         supabase: {
           from: vi.fn(() => ({
             select: vi.fn(() => ({
-              or: vi.fn(() => ({
+              ilike: vi.fn(() => ({
                 neq: vi.fn(() => ({
-                  limit: vi.fn(() => ({
-                    data: mockSearchResults,
-                    error: null,
+                  neq: vi.fn(() => ({
+                    limit: vi.fn(() => ({
+                      data: mockSearchResults,
+                      error: null,
+                    })),
                   })),
                 })),
               })),
@@ -320,7 +320,7 @@ describe("usersRouter", () => {
         supabase: {
           from: vi.fn(() => ({
             select: vi.fn(() => ({
-              gte: vi.fn(() => ({
+              neq: vi.fn(() => ({
                 data: mockLeaderboard,
                 error: null,
               })),
@@ -344,6 +344,54 @@ describe("usersRouter", () => {
           result[1]?.statistics.total_games ?? 0
         )
       );
+    });
+
+    it("should filter users below minGames threshold", async () => {
+      const mockLeaderboard = [
+        {
+          id: "user-1",
+          display_name: "Qualified Player",
+          avatar_url: "",
+          statistics: {
+            wins: 10,
+            losses: 0,
+            total_games: 10,
+            longest_win_streak: 5,
+            longest_loss_streak: 0,
+          },
+        },
+        {
+          id: "user-2",
+          display_name: "New Player",
+          avatar_url: "",
+          statistics: {
+            wins: 1,
+            losses: 1,
+            total_games: 2,
+            longest_win_streak: 1,
+            longest_loss_streak: 1,
+          },
+        },
+      ];
+
+      const ctx = createMockContext({
+        supabase: {
+          from: vi.fn(() => ({
+            select: vi.fn(() => ({
+              neq: vi.fn(() => ({
+                data: mockLeaderboard,
+                error: null,
+              })),
+            })),
+          })),
+        },
+      }) as any;
+      const caller = usersRouter.createCaller(ctx);
+
+      const result = await caller.getLeaderboard({ limit: 10, minGames: 5 });
+
+      expect(result).toHaveLength(1);
+      expect(result[0]?.id).toBe("user-1");
     });
   });
 

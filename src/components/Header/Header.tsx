@@ -19,7 +19,7 @@ export default async function Header() {
         </div>
         <div className="flex items-center gap-4">
           <div className="hidden md:flex">
-            <HeaderActions>
+            <HeaderActions isAuthenticated={Boolean(user)}>
               {user && <NotificationsBell />}
               <AuthStatus userEmail={user?.email ?? null} />
             </HeaderActions>
@@ -27,7 +27,10 @@ export default async function Header() {
           <div className="flex items-center gap-4 md:hidden">
             {user && <NotificationsBell />}
           </div>
-          <MobileMenu userEmail={user?.email ?? null} />
+          <MobileMenu
+            userEmail={user?.email ?? null}
+            isAuthenticated={Boolean(user)}
+          />
         </div>
       </div>
     </nav>

@@ -96,7 +96,7 @@ export const MapPreviewDialog = ({
                         </h3>
                         {mapSide && (
                           <span className="shrink-0 text-sm font-semibold text-muted-foreground">
-                            {t("mapSide")}: {mapSide}
+                            {t("mapSetup")}: {mapSide}
                           </span>
                         )}
                       </div>

@@ -15,12 +15,17 @@ export const calculateWinRate = (wins: number, totalGames: number): number => {
  */
 export const formatDisplayName = (
   displayName: string,
-  email: string
+  email?: string
 ): string => {
   if (displayName && displayName.trim().length > 0) {
     return displayName;
   }
-  return email.split("@")[0] ?? "User";
+
+  if (email && email.trim().length > 0) {
+    return email.split("@")[0] ?? "User";
+  }
+
+  return "User";
 };
 
 /**
@@ -28,7 +33,7 @@ export const formatDisplayName = (
  */
 export const getUserInitials = (
   displayName: string,
-  email: string
+  email?: string
 ): string => {
   const name = formatDisplayName(displayName, email);
   const parts = name.split(" ");
