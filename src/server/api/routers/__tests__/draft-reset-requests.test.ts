@@ -53,14 +53,6 @@ const makeUpdateChain = () => {
   return { update, eq };
 };
 
-// Select chain returning a single row
-const makeSingleSelectChain = <T>(data: T | null, error: unknown = null) => {
-  const single = vi.fn(() => ({ data, error }));
-  const eq = vi.fn(() => ({ single }));
-  const select = vi.fn(() => ({ eq }));
-  return { select, eq, single };
-};
-
 // Select chain with maybeSingle
 const makeMaybeSingleChain = <T>(data: T | null, error: unknown = null) => {
   const maybeSingle = vi.fn(() => ({ data, error }));

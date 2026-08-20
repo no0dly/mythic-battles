@@ -2,11 +2,7 @@
 
 import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { InfoPopup, INFO_POPUP_TRIGGER_CLASS } from "@/components/InfoPopup";
 import { cn } from "@/lib/utils";
 import type { MapType } from "@/types/database.types";
 
@@ -33,16 +29,11 @@ export function MapTypeBadges({
     >
       {showLabel && <strong>{t("mapType")}:</strong>}
       {mapTypes.map((mapType) => (
-        <Tooltip key={mapType}>
-          <TooltipTrigger asChild>
-            <Badge variant="mapType" className="cursor-help select-none">
-              {t(`mapTypeTitles.${mapType}`)}
-            </Badge>
-          </TooltipTrigger>
-          <TooltipContent sideOffset={6} className="max-w-xs">
-            {t(`mapTypeEffects.${mapType}`)}
-          </TooltipContent>
-        </Tooltip>
+        <InfoPopup key={mapType} content={t(`mapTypeEffects.${mapType}`)}>
+          <Badge variant="mapType" className={INFO_POPUP_TRIGGER_CLASS}>
+            {t(`mapTypeTitles.${mapType}`)}
+          </Badge>
+        </InfoPopup>
       ))}
     </span>
   );

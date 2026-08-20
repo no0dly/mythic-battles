@@ -2,7 +2,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import CardGalleryFilter from "../CardGalleryFilter";
-import { MAPS_FILTER_VALUE } from "@/app/wiki/components/CardGallery/utils";
 
 // ---------------------------------------------------------------------------
 // Mock the hook — component test only verifies rendering and wiring
@@ -38,22 +37,34 @@ vi.mock("react-i18next", () => ({
 }));
 
 vi.mock("@/components/ui/input", () => ({
-  Input: ({ onChange, ...props }: any) => <input onChange={onChange} {...props} />,
+  Input: ({ onChange, ...props }: any) => (
+    <input onChange={onChange} {...props} />
+  ),
 }));
 vi.mock("@/components/ui/label", () => ({
-  Label: ({ children, htmlFor }: any) => <label htmlFor={htmlFor}>{children}</label>,
+  Label: ({ children, htmlFor }: any) => (
+    <label htmlFor={htmlFor}>{children}</label>
+  ),
 }));
 vi.mock("@/components/ui/button", () => ({
-  Button: ({ children, onClick }: any) => <button onClick={onClick}>{children}</button>,
+  Button: ({ children, onClick }: any) => (
+    <button onClick={onClick}>{children}</button>
+  ),
 }));
 vi.mock("@/components/ui/card", () => ({
-  Card: ({ children, className }: any) => <div className={className}>{children}</div>,
+  Card: ({ children, className }: any) => (
+    <div className={className}>{children}</div>
+  ),
 }));
 vi.mock("@/components/ui/multi-select", () => ({
   MultiSelect: ({ onValueChange, placeholder, options }: any) => (
     <div data-testid="multi-select" data-placeholder={placeholder}>
       {(options ?? []).map((opt: any) => (
-        <button key={opt.value} data-testid={`option-${opt.value}`} onClick={() => onValueChange([opt.value])}>
+        <button
+          key={opt.value}
+          data-testid={`option-${opt.value}`}
+          onClick={() => onValueChange([opt.value])}
+        >
           {opt.label}
         </button>
       ))}
