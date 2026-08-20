@@ -3,32 +3,21 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { TRPCError } from "@trpc/server";
 import { sharedDraftsRouter } from "../shared-drafts";
 import type { Card, SharedDraftRow } from "@/types/database.types";
-import { CARD_CLASS, CARD_ORIGIN, CARD_TYPES } from "@/types/constants";
+import { MAP_SIDE } from "@/types/constants";
+import { makeCard } from "@/utils/shared-drafts/__tests__/makeCard";
+import {
+  SHARED_DRAFT_ID,
+  SPARTANS_ID,
+  TARTARUS_MAP_ID,
+  TEST_SHARE_SLUG,
+  ZEUS_ID,
+} from "@/utils/shared-drafts/__tests__/constants";
 import {
   FAILED_TO_FETCH_CARDS,
   SHARED_DRAFT_NOT_FOUND,
 } from "../shared-drafts/constants";
 
-const ZEUS_ID = "e6f3e814-3611-40b3-aa2e-5d3bce9ef8f6";
-const SPARTANS_ID = "90255181-79c2-4004-8c05-5d8d539b3508";
-const SHARED_DRAFT_ID = "11111111-1111-4111-8111-111111111111";
-const TEST_SHARE_SLUG = "test-share";
-
-const mockCard: Card = {
-  id: ZEUS_ID,
-  unit_name: "Zeus",
-  unit_type: CARD_TYPES.GOD,
-  cost: 6,
-  amount_of_card_activations: 1,
-  strategic_value: 1,
-  talents: [],
-  class: [CARD_CLASS.TERRESTRIAL],
-  origin: CARD_ORIGIN.COR,
-  extra: null,
-  image_url: "/zeus.jpg",
-  created_at: "2024-01-01T00:00:00Z",
-  updated_at: "2024-01-01T00:00:00Z",
-};
+const mockCard = makeCard();
 
 const mockSharedDraftRow: SharedDraftRow = {
   id: SHARED_DRAFT_ID,
@@ -36,6 +25,8 @@ const mockSharedDraftRow: SharedDraftRow = {
   title: "Test share",
   player1_card_ids: [ZEUS_ID],
   player2_card_ids: [SPARTANS_ID],
+  map_id: TARTARUS_MAP_ID,
+  map_side: MAP_SIDE.B,
   created_at: "2024-01-01T00:00:00Z",
   updated_at: "2024-01-01T00:00:00Z",
 };
@@ -94,6 +85,8 @@ describe("sharedDraftsRouter", () => {
       expect(result.title).toBe("Test share");
       expect(result.player1_card_ids).toEqual([ZEUS_ID]);
       expect(result.player2_card_ids).toEqual([SPARTANS_ID]);
+      expect(result.map_id).toBe(TARTARUS_MAP_ID);
+      expect(result.map_side).toBe(MAP_SIDE.B);
       expect(result.cards).toEqual([mockCard]);
       expect(ctx.supabase.from).toHaveBeenCalledWith("shared_drafts");
       expect(ctx.supabase.from).toHaveBeenCalledWith("cards");

@@ -1,10 +1,7 @@
 "use client";
 
 import { useTranslation } from "react-i18next";
-
-interface SharedDraftNotFoundProps {
-  message?: string;
-}
+import type { SharedDraftNotFoundProps } from "./types";
 
 export default function SharedDraftNotFound({
   message,
@@ -18,7 +15,7 @@ export default function SharedDraftNotFound({
           {t("error")}
         </p>
         <p className="text-muted-foreground">
-          {message || t("sharedDraftNotFound")}
+          {message ?? t("sharedDraftNotFound")}
         </p>
       </div>
     </div>

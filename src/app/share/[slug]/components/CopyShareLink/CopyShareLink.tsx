@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Check, Copy } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -10,6 +10,15 @@ import { COPY_FEEDBACK_MS } from "./constants";
 export default function CopyShareLink() {
   const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
+  const resetTimeoutRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (resetTimeoutRef.current !== null) {
+        window.clearTimeout(resetTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleCopy = useCallback(async () => {
     try {
@@ -21,8 +30,13 @@ export default function CopyShareLink() {
       return;
     }
 
-    window.setTimeout(() => {
+    if (resetTimeoutRef.current !== null) {
+      window.clearTimeout(resetTimeoutRef.current);
+    }
+
+    resetTimeoutRef.current = window.setTimeout(() => {
       setCopied(false);
+      resetTimeoutRef.current = null;
     }, COPY_FEEDBACK_MS);
   }, [t]);
 

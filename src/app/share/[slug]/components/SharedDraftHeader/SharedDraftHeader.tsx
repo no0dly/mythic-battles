@@ -3,10 +3,7 @@
 import { ClipboardList } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import CopyShareLink from "../CopyShareLink/CopyShareLink";
-
-interface SharedDraftHeaderProps {
-  title: string;
-}
+import type { SharedDraftHeaderProps } from "./types";
 
 export default function SharedDraftHeader({ title }: SharedDraftHeaderProps) {
   const { t } = useTranslation();

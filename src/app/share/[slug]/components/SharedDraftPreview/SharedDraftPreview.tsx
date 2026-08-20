@@ -1,26 +1,20 @@
 "use client";
 
 import { useTranslation } from "react-i18next";
-import type { Card, SharedDraftArmy } from "@/types/database.types";
 import { PlayerSection } from "@/app/draft/[draftId]/components/DraftFinished/PlayerSection";
+import { MapSection } from "@/app/draft/[draftId]/components/MapSection/MapSection";
 import { cardsInListedOrder } from "@/utils/shared-drafts/cardsInListedOrder";
 import { totalCardCost } from "@/utils/shared-drafts/totalCardCost";
 import { EMPTY_COST_OVERRIDES } from "./constants";
-
-interface SharedDraftPreviewProps {
-  army: SharedDraftArmy;
-  cards: Card[];
-  onCardClick: (card: Card) => void;
-}
+import type { SharedDraftPreviewProps } from "./types";
 
 export default function SharedDraftPreview({
-  army,
-  cards,
+  draft,
   onCardClick,
 }: SharedDraftPreviewProps) {
   const { t } = useTranslation();
-  const player1Cards = cardsInListedOrder(army.player1_card_ids, cards);
-  const player2Cards = cardsInListedOrder(army.player2_card_ids, cards);
+  const player1Cards = cardsInListedOrder(draft.player1_card_ids, draft.cards);
+  const player2Cards = cardsInListedOrder(draft.player2_card_ids, draft.cards);
 
   return (
     <section
@@ -45,6 +39,7 @@ export default function SharedDraftPreview({
           onCardClick={onCardClick}
         />
       </div>
+      <MapSection mapId={draft.map_id} mapSide={draft.map_side} />
     </section>
   );
 }
