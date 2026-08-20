@@ -190,6 +190,23 @@ export type InitialRoll = {
 
 export type MapSide = ValueOf<typeof MAP_SIDE>
 
+export type SharedDraftArmy = {
+  player1_card_ids: string[]
+  player2_card_ids: string[]
+}
+
+export type SharedDraft = {
+  id: string
+  slug: string
+  title: string
+  player1_card_ids: string[]
+  player2_card_ids: string[]
+  created_at: string
+  updated_at: string
+}
+
+export type SharedDraftRow = SharedDraft
+
 export type Draft = {
   id: string
   game_id: string
@@ -277,6 +294,11 @@ export type Database = {
         Insert: Omit<GameMap, 'created_at'>
         Update: Partial<Omit<GameMap, 'created_at'>>
       }
+      shared_drafts: {
+        Row: SharedDraftRow
+        Insert: Omit<SharedDraftRow, 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Omit<SharedDraftRow, 'id' | 'created_at' | 'updated_at'>>
+      }
     }
     Views: Record<string, never>
     Functions: Record<string, never>
@@ -321,3 +343,5 @@ export type DraftReadyCheckInsert = Omit<DraftReadyCheck, 'id' | 'created_at' | 
 export type DraftReadyCheckUpdate = Partial<Omit<DraftReadyCheck, 'id' | 'created_at' | 'updated_at'>>
 export type GameMapInsert = Omit<GameMap, 'created_at'>
 export type GameMapUpdate = Partial<Omit<GameMap, 'created_at'>>
+export type SharedDraftInsert = Omit<SharedDraftRow, 'id' | 'created_at' | 'updated_at'>
+export type SharedDraftUpdate = Partial<Omit<SharedDraftRow, 'id' | 'created_at' | 'updated_at'>>

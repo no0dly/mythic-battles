@@ -481,6 +481,13 @@ const translation = {
   readyCancelled: "Готовность отменена.",
   errorMarkingReady: "Не удалось отметить готовность.",
   errorCancellingReady: "Не удалось отменить готовность.",
+  sharedDrafts: "Общие драфты",
+  sharedDraftDescription:
+    "Анонимные армии обоих игроков. Имена аккаунтов не показываются.",
+  copyShareLink: "Скопировать ссылку",
+  shareLinkCopied: "Ссылка скопирована",
+  shareLinkCopyFailed: "Не удалось скопировать ссылку",
+  sharedDraftNotFound: "Общий драфт не найден",
 } as const;
 
 export default translation;
