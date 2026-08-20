@@ -4,11 +4,8 @@ import { TRPCError } from "@trpc/server";
 import type { Game, Draft, Session, CardOrigin } from "@/types/database.types";
 import { zUuid } from "../schemas";
 import type { GameWithDraft, GameWithUserJoin } from "./games/types";
-import { applyMatchStatistics } from "./games/helpers";
 import { parseDraftHistory } from "@/utils/drafts";
-import { createServiceRoleClient } from "@/lib/supabase/server";
-import { SOLO_PRACTICE_PLAYER_ID } from "@/types/constants";
-import { GAME_STATUS, SESSION_STATUS, DEFAULT_DRAFT_SETTINGS, CARD_ORIGIN, ALL_VALUE } from "@/types/constants";
+import { SOLO_PRACTICE_PLAYER_ID, GAME_STATUS, SESSION_STATUS, DEFAULT_DRAFT_SETTINGS, CARD_ORIGIN, ALL_VALUE } from "@/types/constants";
 import type { AppRouter } from "../root";
 
 export const gamesRouter = router({
@@ -296,6 +293,7 @@ export const gamesRouter = router({
         } as never)
         .eq("id", gameId)
         .eq("session_id", sessionId)
+        .eq("status", GAME_STATUS.IN_PROGRESS)
         .select("id")
         .single();
 
@@ -359,15 +357,6 @@ export const gamesRouter = router({
           message: "Failed to update session score",
         });
       }
-
-      const loserId = isWinnerPlayer1
-        ? sessionData.player2_id
-        : sessionData.player1_id;
-
-      // RLS only allows updating your own users row, so the session client
-      // would silently skip the opponent. Service role writes both players.
-      const adminClient = createServiceRoleClient();
-      await applyMatchStatistics(adminClient, winnerId, loserId);
 
       return { success: true };
     }),

@@ -32,6 +32,7 @@ import {
 } from "./constants";
 import {
   createFinishGameFormSchema,
+  getCurrentGameId,
   mapSessionPlayersToOptions,
 } from "./utils";
 import type { FinishGameFormValues } from "./types";
@@ -59,25 +60,32 @@ export default function SessionDrawerButtonsInProgress({
     defaultValues: FINISH_GAME_FORM_DEFAULT_VALUES,
   });
 
+  const playerOptions = useMemo(
+    () => mapSessionPlayersToOptions(session),
+    [session]
+  );
+
+  const handleOpenChange = (open: boolean) => {
+    setIsModalOpen(open);
+    if (!open) {
+      form.reset();
+    }
+  };
+
   const { mutate: finishGame, isPending: isFinishingGame } =
     api.games.finishGame.useMutation({
-      onSuccess: () => {
-        utils.sessions.invalidate();
+      onSuccess: async () => {
+        await utils.invalidate();
         clearSession();
-        handleCloseModal();
+        handleOpenChange(false);
       },
       onError: (error) => {
         toast.error(error.message || t("errorFinishingGame"));
       },
     });
 
-  const playerOptions = useMemo(
-    () => mapSessionPlayersToOptions(session),
-    [session]
-  );
-
   const handleFormSubmit = (values: FinishGameFormValues) => {
-    const currentGame = session.game_list?.[session.game_list.length - 1];
+    const currentGame = getCurrentGameId(session);
 
     if (!currentGame) {
       return;
@@ -89,28 +97,10 @@ export default function SessionDrawerButtonsInProgress({
       winnerId: values.playerId,
       winCondition: values.winCondition,
     });
-    utils.sessions.invalidate();
-
-    handleCloseModal();
-  };
-
-  const handleOpenChange = (open: boolean) => {
-    setIsModalOpen(open);
-    if (!open) {
-      form.reset();
-    }
-  };
-
-  const handleOpenModal = () => {
-    handleOpenChange(true);
-  };
-
-  const handleCloseModal = () => {
-    handleOpenChange(false);
   };
 
   const handlePracticeFinish = () => {
-    const currentGame = session.game_list?.[session.game_list.length - 1];
+    const currentGame = getCurrentGameId(session);
     if (!currentGame) {
       return;
     }
@@ -138,7 +128,7 @@ export default function SessionDrawerButtonsInProgress({
   return (
     <Dialog open={isModalOpen} onOpenChange={handleOpenChange}>
       <Button
-        onClick={handleOpenModal}
+        onClick={() => handleOpenChange(true)}
         variant="default"
         size="lg"
         loading={isFinishingGame}
@@ -212,7 +202,7 @@ export default function SessionDrawerButtonsInProgress({
                 type="button"
                 variant="outline"
                 loading={isFinishingGame}
-                onClick={handleCloseModal}
+                onClick={() => handleOpenChange(false)}
               >
                 {t("cancel")}
               </Button>

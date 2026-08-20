@@ -20,3 +20,6 @@ export const mapSessionPlayersToOptions = (session: SessionWithPlayers) => [
   { id: session.player2_id, name: session.player2_name },
 ];
 
+export const getCurrentGameId = (session: SessionWithPlayers) =>
+  session.game_list?.[session.game_list.length - 1];
+
