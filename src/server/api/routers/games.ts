@@ -1,11 +1,12 @@
 import { z } from "zod";
 import { router, publicProcedure, protectedProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
-import type { Game, Draft, Session, Statistics, Json, CardOrigin } from "@/types/database.types";
+import type { Game, Draft, Session, CardOrigin } from "@/types/database.types";
 import { zUuid } from "../schemas";
 import type { GameWithDraft, GameWithUserJoin } from "./games/types";
+import { applyMatchStatistics } from "./games/helpers";
 import { parseDraftHistory } from "@/utils/drafts";
-import { updateStatsAfterGame } from "@/utils/users";
+import { createServiceRoleClient } from "@/lib/supabase/server";
 import { SOLO_PRACTICE_PLAYER_ID } from "@/types/constants";
 import { GAME_STATUS, SESSION_STATUS, DEFAULT_DRAFT_SETTINGS, CARD_ORIGIN, ALL_VALUE } from "@/types/constants";
 import type { AppRouter } from "../root";
@@ -271,6 +272,18 @@ export const gamesRouter = router({
       }
 
       const sessionData = session as Session;
+      const userId = ctx.session.user.id;
+
+      if (
+        sessionData.player1_id !== userId &&
+        sessionData.player2_id !== userId
+      ) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You are not authorized to finish this game",
+        });
+      }
+
       const isPractice = sessionData.player2_id === SOLO_PRACTICE_PLAYER_ID;
 
       const { data: updatedGame, error: gameUpdateError } = await ctx.supabase
@@ -347,74 +360,14 @@ export const gamesRouter = router({
         });
       }
 
-      // Update user statistics (winner win, loser loss)
-      const loserId = isWinnerPlayer1 ? sessionData.player2_id : sessionData.player1_id;
+      const loserId = isWinnerPlayer1
+        ? sessionData.player2_id
+        : sessionData.player1_id;
 
-      const { data: winnerData, error: winnerFetchError } = await ctx.supabase
-        .from("users")
-        .select("statistics")
-        .eq("id", winnerId)
-        .single();
-
-      if (winnerFetchError || !winnerData) {
-        throw new TRPCError({
-          code:
-            winnerFetchError?.code === "PGRST116"
-              ? "NOT_FOUND"
-              : "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch winner statistics",
-        });
-      }
-
-      // @ts-expect-error - Supabase SSR client typing issue with Database generic
-      const winnerStats = winnerData.statistics as Statistics;
-      const updatedWinnerStats = updateStatsAfterGame(winnerStats, true);
-
-      const { error: winnerUpdateError } = await ctx.supabase
-        .from("users")
-        .update({ statistics: updatedWinnerStats as Json } as never)
-        .eq("id", winnerId);
-
-      if (winnerUpdateError) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to update winner statistics",
-        });
-      }
-
-      if (loserId !== SOLO_PRACTICE_PLAYER_ID) {
-        const { data: loserData, error: loserFetchError } = await ctx.supabase
-          .from("users")
-          .select("statistics")
-          .eq("id", loserId)
-          .single();
-
-        if (loserFetchError || !loserData) {
-          throw new TRPCError({
-            code:
-              loserFetchError?.code === "PGRST116"
-                ? "NOT_FOUND"
-                : "INTERNAL_SERVER_ERROR",
-            message: "Failed to fetch loser statistics",
-          });
-        }
-
-        // @ts-expect-error - Supabase SSR client typing issue with Database generic
-        const loserStats = loserData.statistics as Statistics;
-        const updatedLoserStats = updateStatsAfterGame(loserStats, false);
-
-        const { error: loserUpdateError } = await ctx.supabase
-          .from("users")
-          .update({ statistics: updatedLoserStats as Json } as never)
-          .eq("id", loserId);
-
-        if (loserUpdateError) {
-          throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: "Failed to update loser statistics",
-          });
-        }
-      }
+      // RLS only allows updating your own users row, so the session client
+      // would silently skip the opponent. Service role writes both players.
+      const adminClient = createServiceRoleClient();
+      await applyMatchStatistics(adminClient, winnerId, loserId);
 
       return { success: true };
     }),

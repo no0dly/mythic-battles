@@ -32,7 +32,8 @@ export const createClient = async () => {
 
 /**
  * Creates a service role client that bypasses RLS.
- * Use this only for administrative operations like rollback cleanup.
+ * Use only for server-side admin writes that must touch another user's row
+ * (e.g. applying match statistics for both players).
  */
 export const createServiceRoleClient = () => {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
