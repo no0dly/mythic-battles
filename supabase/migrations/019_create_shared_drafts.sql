@@ -8,12 +8,18 @@ create table public.shared_drafts (
   title text not null,
   player1_card_ids uuid[] not null,
   player2_card_ids uuid[] not null,
+  map_id text null,
+  map_side text null,
   created_at timestamp with time zone not null default now(),
   updated_at timestamp with time zone not null default now(),
   constraint shared_drafts_pkey primary key (id),
   constraint shared_drafts_slug_key unique (slug),
   constraint shared_drafts_slug_check check (
     slug ~ '^[a-z0-9]+(?:-[a-z0-9]+)*$'
+  ),
+  constraint shared_drafts_map_id_fkey foreign KEY (map_id) references public.maps (id) on delete set null,
+  constraint shared_drafts_map_side_check check (
+    map_side is null or map_side = any (array['A'::text, 'B'::text])
   )
 );
 

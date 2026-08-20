@@ -1,9 +1,4 @@
 import { z } from "zod";
-import {
-  SHARE_SLUG_MAX_LENGTH,
-  SHARE_SLUG_MIN_LENGTH,
-  SHARE_SLUG_PATTERN,
-} from "@/utils/shared-drafts/constants";
 
 /**
  * UUID validation schema
@@ -14,11 +9,4 @@ export const zUuid = z.string().refine(
   { message: "Invalid UUID format" }
 );
 
-export const zShareSlug = z
-  .string()
-  .min(SHARE_SLUG_MIN_LENGTH)
-  .max(SHARE_SLUG_MAX_LENGTH)
-  .regex(SHARE_SLUG_PATTERN);
-
-
-
+export { zShareSlug } from "@/utils/shared-drafts/schemas";

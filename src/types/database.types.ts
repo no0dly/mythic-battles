@@ -201,6 +201,8 @@ export type SharedDraft = {
   title: string
   player1_card_ids: string[]
   player2_card_ids: string[]
+  map_id: string | null
+  map_side: MapSide | null
   created_at: string
   updated_at: string
 }

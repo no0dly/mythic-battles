@@ -12,6 +12,9 @@ test.describe("Shared draft preview", () => {
     await expect(
       page.getByRole("heading", { name: /shared drafts/i }),
     ).toBeVisible();
+    await expect(page.getByRole("heading", { name: /^map$/i })).toBeVisible();
+    await expect(page.getByText("Tartarus")).toBeVisible();
+    await expect(page.getByText(/setup:\s*b/i)).toBeVisible();
   });
 
   test("guest visiting an unknown share stays on the page", async ({

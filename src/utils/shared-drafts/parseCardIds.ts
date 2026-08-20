@@ -1,9 +1,8 @@
-import { z } from "zod";
-import { zUuid } from "@/server/api/schemas";
 import type { SharedDraftArmy } from "@/types/database.types";
+import { zCardIds } from "./schemas";
 
 export const parseCardIds = (value: unknown): string[] => {
-  const parsed = z.array(zUuid).safeParse(value);
+  const parsed = zCardIds.safeParse(value);
   return parsed.success ? parsed.data : [];
 };
 

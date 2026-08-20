@@ -5,13 +5,11 @@ import { zShareSlug } from "../schemas";
 import type { Card, SharedDraftRow } from "@/types/database.types";
 import { collectSharedDraftCardIds } from "@/utils/shared-drafts/collectSharedDraftCardIds";
 import { parseSharedDraftArmy } from "@/utils/shared-drafts/parseCardIds";
+import type { SharedDraftWithCards } from "@/utils/shared-drafts/types";
 import {
   FAILED_TO_FETCH_CARDS,
   SHARED_DRAFT_NOT_FOUND,
 } from "./shared-drafts/constants";
-import type { SharedDraftWithCards } from "./shared-drafts/types";
-
-export type { SharedDraftWithCards } from "./shared-drafts/types";
 
 export const sharedDraftsRouter = router({
   getBySlug: publicProcedure
@@ -60,13 +58,9 @@ export const sharedDraftsRouter = router({
       }
 
       return {
-        id: row.id,
-        slug: row.slug,
-        title: row.title,
+        ...row,
         player1_card_ids: army.player1_card_ids,
         player2_card_ids: army.player2_card_ids,
-        created_at: row.created_at,
-        updated_at: row.updated_at,
         cards,
       };
     }),
