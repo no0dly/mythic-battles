@@ -470,6 +470,13 @@ const translation = {
   readyCancelled: "Ready cancelled.",
   errorMarkingReady: "Failed to mark as ready.",
   errorCancellingReady: "Failed to cancel ready.",
+  sharedDrafts: "Shared drafts",
+  sharedDraftDescription:
+    "Anonymous army lists for both players. No account names are shown.",
+  copyShareLink: "Copy link",
+  shareLinkCopied: "Link copied",
+  shareLinkCopyFailed: "Could not copy link",
+  sharedDraftNotFound: "This shared draft was not found",
 } as const;
 
 export default translation;
