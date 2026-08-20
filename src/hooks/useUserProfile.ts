@@ -108,63 +108,6 @@ export const useSearchUsers = (
 };
 
 /**
- * Hook to update user statistics
- */
-export const useUpdateStatistics = () => {
-  const utils = api.useUtils();
-  const mutation = api.users.updateStatistics.useMutation({
-    onSuccess: () => {
-      void utils.users.getCurrentUser.invalidate();
-    },
-  });
-
-  return {
-    updateStatistics: mutation.mutate,
-    updateStatisticsAsync: mutation.mutateAsync,
-    isLoading: mutation.isPending,
-    error: mutation.error,
-  };
-};
-
-/**
- * Hook to increment win count
- */
-export const useIncrementWin = () => {
-  const utils = api.useUtils();
-  const mutation = api.users.incrementWin.useMutation({
-    onSuccess: () => {
-      void utils.users.getCurrentUser.invalidate();
-    },
-  });
-
-  return {
-    incrementWin: mutation.mutate,
-    incrementWinAsync: mutation.mutateAsync,
-    isLoading: mutation.isPending,
-    error: mutation.error,
-  };
-};
-
-/**
- * Hook to increment loss count
- */
-export const useIncrementLoss = () => {
-  const utils = api.useUtils();
-  const mutation = api.users.incrementLoss.useMutation({
-    onSuccess: () => {
-      void utils.users.getCurrentUser.invalidate();
-    },
-  });
-
-  return {
-    incrementLoss: mutation.mutate,
-    incrementLossAsync: mutation.mutateAsync,
-    isLoading: mutation.isPending,
-    error: mutation.error,
-  };
-};
-
-/**
  * Hook to get leaderboard
  */
 export const useLeaderboard = (limit: number = 10, minGames: number = 0) => {
