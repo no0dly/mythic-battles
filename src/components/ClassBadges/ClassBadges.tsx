@@ -2,11 +2,7 @@
 
 import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { InfoPopup, INFO_POPUP_TRIGGER_CLASS } from "@/components/InfoPopup";
 import { cn } from "@/lib/utils";
 import type { CardClass } from "@/types/database.types";
 
@@ -33,16 +29,11 @@ export function ClassBadges({
     >
       {showLabel && <strong>{t("class")}:</strong>}
       {classes.map((cardClass) => (
-        <Tooltip key={cardClass}>
-          <TooltipTrigger asChild>
-            <Badge variant="cardClass" className="cursor-help select-none">
-              {t(`classTitles.${cardClass}`)}
-            </Badge>
-          </TooltipTrigger>
-          <TooltipContent sideOffset={6} className="max-w-xs">
-            {t(`classEffects.${cardClass}`)}
-          </TooltipContent>
-        </Tooltip>
+        <InfoPopup key={cardClass} content={t(`classEffects.${cardClass}`)}>
+          <Badge variant="cardClass" className={INFO_POPUP_TRIGGER_CLASS}>
+            {t(`classTitles.${cardClass}`)}
+          </Badge>
+        </InfoPopup>
       ))}
     </span>
   );

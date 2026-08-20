@@ -2,11 +2,7 @@
 
 import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { InfoPopup, INFO_POPUP_TRIGGER_CLASS } from "@/components/InfoPopup";
 import { cn } from "@/lib/utils";
 
 interface TalentBadgesProps {
@@ -32,16 +28,11 @@ export function TalentBadges({
     >
       {showLabel && <strong>{t("talents")}:</strong>}
       {talents.map((talent) => (
-        <Tooltip key={talent}>
-          <TooltipTrigger asChild>
-            <Badge variant="secondary" className="cursor-help select-none">
-              {t(`talentTitles.${talent}`)}
-            </Badge>
-          </TooltipTrigger>
-          <TooltipContent sideOffset={6} className="max-w-xs">
-            {t(`talentEffects.${talent}`)}
-          </TooltipContent>
-        </Tooltip>
+        <InfoPopup key={talent} content={t(`talentEffects.${talent}`)}>
+          <Badge variant="secondary" className={INFO_POPUP_TRIGGER_CLASS}>
+            {t(`talentTitles.${talent}`)}
+          </Badge>
+        </InfoPopup>
       ))}
     </span>
   );
