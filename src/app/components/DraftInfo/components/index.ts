@@ -6,4 +6,5 @@ export { CardPreviewDialog } from "./CardPreviewDialog";
 export { CardPreviewContent } from "./CardPreviewContent";
 export { InitialRollDisplay } from "./InitialRollDisplay";
 export { EmptyDraftState } from "./EmptyDraftState";
+export { DraftPoolTab } from "./DraftPoolTab";
 

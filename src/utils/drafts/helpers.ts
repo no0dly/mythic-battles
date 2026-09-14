@@ -60,6 +60,26 @@ export const sortPicksByNumber = (picks: DraftPick[]): DraftPick[] => {
 }
 
 /**
+ * Group picks by card so a unit can show every time it was selected.
+ */
+export const groupPicksByCardId = (
+  picks: DraftPick[]
+): Map<string, DraftPick[]> => {
+  const grouped = new Map<string, DraftPick[]>()
+
+  for (const pick of picks) {
+    const existing = grouped.get(pick.card_id)
+    if (existing) {
+      existing.push(pick)
+    } else {
+      grouped.set(pick.card_id, [pick])
+    }
+  }
+
+  return grouped
+}
+
+/**
 * Checks if there are picks in the draft history
 * @param history - Draft history
 * @returns true if there is at least one pick

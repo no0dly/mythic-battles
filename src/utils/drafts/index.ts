@@ -1,6 +1,7 @@
 export {
   parseDraftHistory,
   sortPicksByNumber,
+  groupPicksByCardId,
   hasPicks,
   getPlayerCards,
   computeNextTurnUserId,

@@ -3,9 +3,10 @@ import {
   computeNextTurnUserId,
   createOptimisticDraftUpdate,
   getPlayerCards,
+  groupPicksByCardId,
 } from "../helpers";
+import type { Card, Draft, DraftPick } from "@/types/database.types";
 import { createCardIdMap } from "@/utils/cards/createCardIdMap";
-import type { Card, Draft } from "@/types/database.types";
 import { CARD_TYPES, DRAFT_STATUS } from "@/types/constants";
 
 const makeCard = (id: string, cost = 1): Card => ({
@@ -283,5 +284,37 @@ describe("getPlayerCards", () => {
       },
     });
     expect(getPlayerCards(draft, undefined, "player-1")).toHaveLength(0);
+  });
+});
+
+describe("groupPicksByCardId", () => {
+  const makePick = (
+    cardId: string,
+    pickNumber: number,
+    extras: Partial<DraftPick> = {}
+  ): DraftPick => ({
+    card_id: cardId,
+    player_id: "player-1",
+    pick_number: pickNumber,
+    timestamp: "2024-01-01T00:00:00Z",
+    ...extras,
+  });
+
+  it("groups multiple picks of the same card together", () => {
+    const grouped = groupPicksByCardId([
+      makePick("aow-1", 1),
+      makePick("hero-1", 2),
+      makePick("aow-1", 3),
+    ]);
+
+    expect(grouped.get("aow-1")).toHaveLength(2);
+    expect(grouped.get("hero-1")).toHaveLength(1);
+    expect(grouped.get("aow-1")?.map((pick) => pick.pick_number)).toEqual([
+      1, 3,
+    ]);
+  });
+
+  it("returns an empty map for no picks", () => {
+    expect(groupPicksByCardId([])).toEqual(new Map());
   });
 });
