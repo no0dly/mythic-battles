@@ -2,16 +2,11 @@ import Image from "next/image";
 import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { formatDisplayName } from "@/utils/users";
-import type { Card, UserProfile } from "@/types/database.types";
+import type { Card, UserSubset } from "@/types/database.types";
 import { PlayerAvatar } from "./PlayerAvatar";
 
-type UserData = Pick<
-  UserProfile,
-  "id" | "email" | "display_name" | "avatar_url"
->;
-
 interface PlayerCardsTabProps {
-  user: UserData | undefined;
+  user: UserSubset | undefined;
   playerCards: Card[];
   totalCost: number;
   costOverrides: Map<string, number>;

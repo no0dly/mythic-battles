@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Dialog,
@@ -10,15 +10,10 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type {
-  DraftHistory,
-  Card,
-  UserProfile,
-  MapSide,
-} from "@/types/database.types";
+import type { DraftHistory, Card, MapSide } from "@/types/database.types";
 import { MapSection } from "@/app/draft/[draftId]/components/MapSection/MapSection";
 import { api } from "@/trpc/client";
-import { sortPicksByNumber } from "@/utils/drafts";
+import { groupPicksByCardId, sortPicksByNumber } from "@/utils/drafts";
 import { formatDisplayName } from "@/utils/users";
 import Loader from "@/components/Loader";
 import { ClipboardList } from "lucide-react";
@@ -26,7 +21,9 @@ import {
   PickHistoryItem,
   PlayerCardsTab,
   CardPreviewDialog,
+  DraftPoolTab,
 } from "./components";
+import type { DraftPoolRailPick } from "./components/DraftPoolTab";
 
 interface DraftHistoryModalProps {
   open: boolean;
@@ -34,15 +31,12 @@ interface DraftHistoryModalProps {
   draftHistory: DraftHistory | null;
   player1Id: string;
   player2Id: string;
-  draftTotalCost: number;
+  draftPool?: string[];
   mapId?: string | null;
   mapSide?: MapSide | null;
 }
 
-type UserData = Pick<
-  UserProfile,
-  "id" | "email" | "display_name" | "avatar_url"
->;
+const TAB_SCROLL_CLASS = "min-h-0 flex-1 overflow-y-auto";
 
 export const DraftHistoryModal = ({
   open,
@@ -50,15 +44,17 @@ export const DraftHistoryModal = ({
   draftHistory,
   player1Id,
   player2Id,
+  draftPool = [],
   mapId,
   mapSide,
 }: DraftHistoryModalProps) => {
   const { t } = useTranslation();
   const [previewCard, setPreviewCard] = useState<Card | null>(null);
 
-  const uniqueCardIds = draftHistory?.picks
-    ? [...new Set(draftHistory.picks.map((pick) => pick.card_id))]
-    : [];
+  const uniqueCardIds = useMemo(() => {
+    const pickedIds = draftHistory?.picks?.map((pick) => pick.card_id) ?? [];
+    return [...new Set([...draftPool, ...pickedIds])];
+  }, [draftPool, draftHistory]);
 
   const { data: usersData, isLoading: usersLoading } =
     api.users.getUsersByIds.useQuery(
@@ -72,59 +68,85 @@ export const DraftHistoryModal = ({
       { enabled: open && uniqueCardIds.length > 0 }
     );
 
-  const users: Record<string, UserData> = {};
-  usersData?.forEach((user) => {
-    users[user.id] = user;
-  });
+  const users = useMemo(() => {
+    const map: Record<string, NonNullable<typeof usersData>[number]> = {};
+    usersData?.forEach((user) => {
+      map[user.id] = user;
+    });
+    return map;
+  }, [usersData]);
 
-  const cards: Record<string, Card> = {};
-  cardsData?.forEach((card) => {
-    cards[card.id] = card;
-  });
+  const cards = useMemo(() => {
+    const map: Record<string, Card> = {};
+    cardsData?.forEach((card) => {
+      map[card.id] = card;
+    });
+    return map;
+  }, [cardsData]);
 
   const loading = usersLoading || cardsLoading;
-
-  const handleSetPreviewCard = useCallback((card: Card | null) => {
-    setPreviewCard(card);
-  }, []);
 
   if (!draftHistory?.picks) {
     return null;
   }
 
   const sortedPicks = sortPicksByNumber(draftHistory.picks);
+  const picksByCardId = groupPicksByCardId(sortedPicks);
 
   const player1Cards: Card[] = [];
   const player2Cards: Card[] = [];
+  const player1Picks: DraftPoolRailPick[] = [];
+  const player2Picks: DraftPoolRailPick[] = [];
   let player1TotalCost = 0;
   let player2TotalCost = 0;
   const costOverrides = new Map<string, number>();
 
   sortedPicks.forEach((pick) => {
     const card = cards[pick.card_id];
-    if (card) {
-      const effectiveCost = pick.cost_override ?? card.cost;
-      if (pick.cost_override !== undefined) {
-        costOverrides.set(pick.card_id, pick.cost_override);
-      }
-      if (pick.player_id === player1Id) {
-        player1Cards.push(card);
-        player1TotalCost += effectiveCost;
-      } else {
-        player2Cards.push(card);
-        player2TotalCost += effectiveCost;
-      }
+    const railPick = { pick, card };
+
+    if (pick.player_id === player1Id) {
+      player1Picks.push(railPick);
+    } else if (pick.player_id === player2Id) {
+      player2Picks.push(railPick);
+    }
+
+    if (!card) {
+      return;
+    }
+
+    const effectiveCost = pick.cost_override ?? card.cost;
+    if (pick.cost_override !== undefined) {
+      costOverrides.set(pick.card_id, pick.cost_override);
+    }
+
+    if (pick.player_id === player1Id) {
+      player1Cards.push(card);
+      player1TotalCost += effectiveCost;
+    } else {
+      player2Cards.push(card);
+      player2TotalCost += effectiveCost;
     }
   });
 
+  const poolCards = uniqueCardIds
+    .map((id) => cards[id])
+    .filter((card): card is Card => !!card);
+
   const player1 = users[player1Id];
   const player2 = users[player2Id];
+  const player1Name = player1
+    ? formatDisplayName(player1.display_name, player1.email)
+    : t("player1");
+  const player2Name = player2
+    ? formatDisplayName(player2.display_name, player2.email)
+    : t("player2");
 
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-3xl! max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
+        <DialogContent className="flex h-[90vh] max-h-[90vh] min-h-0 w-full max-w-7xl! flex-col overflow-hidden">
+          <DialogHeader className="shrink-0">
             <DialogTitle className="flex items-center gap-2">
               <ClipboardList className="h-4.5 w-4.5 text-purple-600" />
               {t("draftHistoryDetails")}
@@ -134,33 +156,34 @@ export const DraftHistoryModal = ({
             </DialogDescription>
           </DialogHeader>
 
-          <MapSection mapId={mapId} mapSide={mapSide} />
+          <div className="shrink-0">
+            <MapSection mapId={mapId} mapSide={mapSide} />
+          </div>
 
           {loading ? (
             <div className="py-12">
               <Loader />
             </div>
           ) : (
-            <Tabs defaultValue="history" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
+            <Tabs
+              defaultValue="history"
+              className="flex min-h-0 flex-1 flex-col"
+            >
+              <TabsList className="grid h-auto w-full shrink-0 grid-cols-2 md:grid-cols-4">
                 <TabsTrigger value="history">{t("draftHistory")}</TabsTrigger>
-                <TabsTrigger value="player1">
-                  {player1
-                    ? formatDisplayName(player1.display_name, player1.email)
-                    : t("player1")}
+                <TabsTrigger value="player1" className="truncate">
+                  {player1Name}
                 </TabsTrigger>
-                <TabsTrigger value="player2">
-                  {player2
-                    ? formatDisplayName(player2.display_name, player2.email)
-                    : t("player2")}
+                <TabsTrigger value="player2" className="truncate">
+                  {player2Name}
                 </TabsTrigger>
+                <TabsTrigger value="pool">{t("draftWithPool")}</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="history" className="space-y-3">
-                <div className="max-h-96 space-y-2 overflow-y-auto rounded-lg border-2 border-gray-200 bg-gray-50 p-3">
+              <TabsContent value="history" className={TAB_SCROLL_CLASS}>
+                <div className="space-y-2 rounded-lg border-2 border-gray-200 bg-gray-50 p-3">
                   {sortedPicks.map((pick) => {
                     const isPlayer1 = pick.player_id === player1Id;
-                    const user = isPlayer1 ? player1 : player2;
                     const card = cards[pick.card_id];
 
                     return (
@@ -168,16 +191,16 @@ export const DraftHistoryModal = ({
                         key={`${pick.pick_number}-${pick.card_id}`}
                         pick={pick}
                         card={card}
-                        user={user}
+                        user={isPlayer1 ? player1 : player2}
                         isPlayer1={isPlayer1}
-                        onCardClick={() => handleSetPreviewCard(card || null)}
+                        onCardClick={() => setPreviewCard(card ?? null)}
                       />
                     );
                   })}
                 </div>
               </TabsContent>
 
-              <TabsContent value="player1" className="space-y-4">
+              <TabsContent value="player1" className={TAB_SCROLL_CLASS}>
                 <PlayerCardsTab
                   user={player1}
                   playerCards={player1Cards}
@@ -185,11 +208,11 @@ export const DraftHistoryModal = ({
                   costOverrides={costOverrides}
                   fallbackName={t("player1")}
                   borderColor="blue"
-                  onCardClick={(card) => handleSetPreviewCard(card)}
+                  onCardClick={setPreviewCard}
                 />
               </TabsContent>
 
-              <TabsContent value="player2" className="space-y-4">
+              <TabsContent value="player2" className={TAB_SCROLL_CLASS}>
                 <PlayerCardsTab
                   user={player2}
                   playerCards={player2Cards}
@@ -197,7 +220,24 @@ export const DraftHistoryModal = ({
                   costOverrides={costOverrides}
                   fallbackName={t("player2")}
                   borderColor="green"
-                  onCardClick={(card) => handleSetPreviewCard(card)}
+                  onCardClick={setPreviewCard}
+                />
+              </TabsContent>
+
+              <TabsContent
+                value="pool"
+                className="min-h-0 flex-1 overflow-hidden"
+              >
+                <DraftPoolTab
+                  poolCards={poolCards}
+                  picksByCardId={picksByCardId}
+                  player1Picks={player1Picks}
+                  player2Picks={player2Picks}
+                  player1TotalCost={player1TotalCost}
+                  player2TotalCost={player2TotalCost}
+                  player1Id={player1Id}
+                  player1={player1}
+                  player2={player2}
                 />
               </TabsContent>
             </Tabs>
@@ -207,7 +247,7 @@ export const DraftHistoryModal = ({
 
       <CardPreviewDialog
         card={previewCard}
-        onClose={() => handleSetPreviewCard(null)}
+        onClose={() => setPreviewCard(null)}
       />
     </>
   );

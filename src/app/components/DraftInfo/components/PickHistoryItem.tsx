@@ -1,19 +1,14 @@
 import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { formatDisplayName } from "@/utils/users";
-import type { Card, UserProfile, DraftPick } from "@/types/database.types";
+import type { Card, UserSubset, DraftPick } from "@/types/database.types";
 import { PlayerAvatar } from "./PlayerAvatar";
 import { CardImage } from "./CardImage";
-
-type UserData = Pick<
-  UserProfile,
-  "id" | "email" | "display_name" | "avatar_url"
->;
 
 interface PickHistoryItemProps {
   pick: DraftPick;
   card: Card | undefined;
-  user: UserData | undefined;
+  user: UserSubset | undefined;
   isPlayer1: boolean;
   onCardClick: () => void;
 }
