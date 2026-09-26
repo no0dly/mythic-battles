@@ -16,8 +16,6 @@ import { MultiSelectForMapTypeField } from "@/app/draft-settings/components/Mult
 import {
   DraftSettingsFormValues,
   getDraftSettingsSchema,
-  DRAFT_SIZE_OPTIONS,
-  USER_ALLOWED_POINTS_OPTIONS,
 } from "./constants";
 import Loader from "@/components/Loader";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -228,21 +226,17 @@ export default function DraftSettings() {
               />
             </div>
             <div className="max-w-[400px]">
-              <SelectWithLoading
+              <NumberInputField
                 control={form.control}
                 name="user_allowed_points"
                 labelKey="userAllowedPoints"
-                options={USER_ALLOWED_POINTS_OPTIONS}
-                disabled={true}
               />
             </div>
             <div className="max-w-[400px]">
-              <SelectWithLoading
+              <NumberInputField
                 control={form.control}
                 name="draft_size"
                 labelKey="draftCount"
-                options={DRAFT_SIZE_OPTIONS}
-                disabled={true}
               />
             </div>
             <div className="max-w-[400px]">
