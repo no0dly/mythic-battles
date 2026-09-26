@@ -12,18 +12,6 @@ export type DraftSettingsFormValues = DraftSettings & {
   maps: (string | typeof ALL_VALUE)[];
 };
 
-export const DRAFT_SIZE_OPTIONS = [
-  { value: "20", label: "20" },
-  { value: "30", label: "30" },
-  { value: "40", label: "40" },
-  { value: "50", label: "50" },
-  { value: "60", label: "60" },
-] as const;
-
-export const USER_ALLOWED_POINTS_OPTIONS = [
-  { value: "18", label: "18" },
-] as const;
-
 export const ORIGIN_OPTIONS = Object.entries(CARD_ORIGIN_FULL_NAME).map(
   ([value, label]) => ({ value, label })
 );
