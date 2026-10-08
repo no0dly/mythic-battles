@@ -160,7 +160,7 @@ export function DraftStatusPanel({ draft, cards }: DraftStatusPanelProps) {
           <p className="text-xs font-semibold mb-1 flex-shrink-0">
             {t("pickedCards")}
           </p>
-          <div className="flex-1 overflow-y-auto space-y-1">
+          <div className="flex-1 overflow-y-auto space-y-1 touch-scroll-y">
             {player1Cards.length === 0 ? (
               <p className="text-xs text-muted-foreground">
                 {t("noCardsPicked")}
@@ -196,7 +196,7 @@ export function DraftStatusPanel({ draft, cards }: DraftStatusPanelProps) {
           <p className="text-xs font-semibold mb-1 flex-shrink-0">
             {t("pickedCards")}
           </p>
-          <div className="flex-1 overflow-y-auto space-y-1">
+          <div className="flex-1 overflow-y-auto space-y-1 touch-scroll-y">
             {player2Cards.length === 0 ? (
               <p className="text-xs text-muted-foreground">
                 {t("noCardsPicked")}

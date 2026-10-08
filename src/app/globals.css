@@ -232,7 +232,14 @@
 }
 
 .layout {
-  @media (min-width: 640px) {
-    height: 100vh;
-  }
+  height: 100dvh;
+  overflow: hidden;
+}
+
+/* Android Chrome cancels a vertical swipe on an overflow region inside another
+   scroller or a fixed dialog. Allowing pan on that region keeps the gesture
+   attached to the scroller. pan-x stays enabled so horizontal card rows still move. */
+@utility touch-scroll-y {
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pan-y pinch-zoom;
 }

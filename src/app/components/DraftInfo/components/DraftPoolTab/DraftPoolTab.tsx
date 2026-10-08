@@ -127,7 +127,7 @@ export function DraftPoolTab({
       : inspectedPicks.filter((pick) => pick.pick_number === focusedPickNumber);
 
   return (
-    <div className="flex h-full min-h-0 gap-3">
+    <div className="flex min-h-0 gap-3 lg:h-full">
       <DraftPoolPlayerRail
         user={player1}
         fallbackName={t("player1")}
@@ -139,8 +139,8 @@ export function DraftPoolTab({
         onPickClick={scrollThenInspect}
       />
 
-      <div className="relative min-h-52 min-w-0 flex-1 overflow-hidden rounded-xl border-2 border-gray-200 bg-gray-50">
-        <div className="h-full overflow-y-auto p-3">
+      <div className="relative min-h-52 min-w-0 flex-1 overflow-visible rounded-xl border-2 border-gray-200 bg-gray-50 lg:overflow-hidden">
+        <div className="p-3 lg:h-full lg:overflow-y-auto lg:touch-scroll-y">
           {sortedPoolCards.length === 0 ? (
             <p className="py-12 text-center text-sm text-gray-500">
               {t("draftPoolEmpty")}

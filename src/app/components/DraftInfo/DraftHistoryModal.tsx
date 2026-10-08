@@ -36,7 +36,8 @@ interface DraftHistoryModalProps {
   mapSide?: MapSide | null;
 }
 
-const TAB_SCROLL_CLASS = "min-h-0 flex-1 overflow-y-auto";
+const TAB_SCROLL_CLASS =
+  "lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:touch-scroll-y";
 
 export const DraftHistoryModal = ({
   open,
@@ -145,7 +146,7 @@ export const DraftHistoryModal = ({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="flex h-[90vh] max-h-[90vh] min-h-0 w-full max-w-7xl! flex-col overflow-hidden">
+        <DialogContent className="flex h-auto max-h-[calc(100svh-1rem)] min-h-0 w-full max-w-7xl! flex-col overflow-y-auto overscroll-y-contain touch-scroll-y lg:h-[min(90dvh,calc(100svh-1rem))] lg:overflow-hidden">
           <DialogHeader className="shrink-0">
             <DialogTitle className="flex items-center gap-2">
               <ClipboardList className="h-4.5 w-4.5 text-purple-600" />
@@ -167,7 +168,7 @@ export const DraftHistoryModal = ({
           ) : (
             <Tabs
               defaultValue="history"
-              className="flex min-h-0 flex-1 flex-col"
+              className="flex flex-col lg:min-h-0 lg:flex-1"
             >
               <TabsList className="grid h-auto w-full shrink-0 grid-cols-2 md:grid-cols-4">
                 <TabsTrigger value="history">{t("draftHistory")}</TabsTrigger>
@@ -226,7 +227,7 @@ export const DraftHistoryModal = ({
 
               <TabsContent
                 value="pool"
-                className="min-h-0 flex-1 overflow-hidden"
+                className="lg:min-h-0 lg:flex-1 lg:overflow-hidden"
               >
                 <DraftPoolTab
                   poolCards={poolCards}

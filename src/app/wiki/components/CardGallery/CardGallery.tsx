@@ -117,7 +117,7 @@ export default function CardGallery() {
 
       <div
         ref={parentRef}
-        className={`flex-1 overflow-y-auto ${styles.scrollContainer}`}
+        className={`flex-1 overflow-y-auto touch-scroll-y ${styles.scrollContainer}`}
       >
         {filteredItems.length === 0 && !isLoading ? (
           <div className="flex items-center justify-center h-full">

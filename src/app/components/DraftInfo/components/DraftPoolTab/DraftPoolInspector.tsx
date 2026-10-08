@@ -78,7 +78,7 @@ export function DraftPoolInspector({
           <X className="h-5 w-5" />
         </button>
       </header>
-      <div className="min-h-0 flex-1 overflow-y-auto p-4">
+      <div className="min-h-0 flex-1 overflow-y-auto p-4 touch-scroll-y">
         <CardPreviewPanel card={card} />
       </div>
     </div>

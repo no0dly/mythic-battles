@@ -33,9 +33,9 @@ export default function RootLayout({
       >
         <TRPCReactProvider>
           <I18nInit>
-            <div className="layout flex flex-col overflow-hidden">
+            <div className="layout flex flex-col">
               <Header />
-              <main className="flex-1 overflow-y-auto overscroll-contain min-h-0">
+              <main className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain touch-scroll-y">
                 {children}
               </main>
             </div>

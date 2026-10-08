@@ -107,17 +107,17 @@ export default function DraftPageContent() {
 
   if (draftState === DRAFT_STATE.DRAFT_IN_PROGRESS) {
     return (
-      <div className="flex flex-col gap-4 h-full min-h-0">
+      <div className="flex flex-col gap-4 lg:h-full lg:min-h-0">
         {draft.resetRequest && (
           <ResetRequestAlert resetRequest={draft.resetRequest} />
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0">
-          <div className="lg:col-span-1 h-full overflow-y-auto">
+        <div className="grid grid-cols-1 gap-6 lg:min-h-0 lg:flex-1 lg:grid-cols-3">
+          <div className="lg:col-span-1 lg:h-full lg:overflow-y-auto lg:touch-scroll-y">
             <DraftStatusPanel draft={draft} cards={cards} />
           </div>
 
-          <div className="lg:col-span-2 flex flex-col min-h-0 overflow-hidden">
+          <div className="flex flex-col lg:col-span-2 lg:min-h-0 lg:overflow-hidden">
             <DraftCardGrid cards={cards || []} draft={draft} user={user} />
           </div>
         </div>

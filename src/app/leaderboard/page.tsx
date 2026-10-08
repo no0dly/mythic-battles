@@ -11,7 +11,7 @@ export default function LeaderboardPage() {
       <h2 className="mb-4 flex-shrink-0 text-2xl font-semibold text-gray-900 dark:text-white sm:mb-6 sm:text-3xl">
         {t("leaderboard.leaders")}
       </h2>
-      <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden">
+      <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-clip touch-scroll-y">
         <Leaderboard limit={50} />
       </div>
     </div>
