@@ -42,7 +42,7 @@ export function DraftPoolPlayerRail({
   return (
     <aside
       className={cn(
-        "hidden h-full w-56 shrink-0 flex-col overflow-hidden rounded-xl border-2 md:flex",
+        "hidden w-56 shrink-0 flex-col rounded-xl border-2 md:flex lg:h-full lg:overflow-hidden",
         styles.rail
       )}
     >
@@ -63,7 +63,7 @@ export function DraftPoolPlayerRail({
         </p>
       </div>
 
-      <ul className="min-h-0 flex-1 overflow-y-auto p-1.5">
+      <ul className="p-1.5 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:touch-scroll-y">
         {picks.length === 0 ? (
           <li className="px-2 py-3 text-center text-xs text-gray-500">
             {t("noCardsPicked")}

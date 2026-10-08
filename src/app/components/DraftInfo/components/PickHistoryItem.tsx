@@ -44,7 +44,9 @@ export const PickHistoryItem = ({
         #{pick.pick_number}
       </div>
 
-      <div className="flex-shrink-0">{user && <PlayerAvatar {...user} />}</div>
+      <div className="hidden shrink-0 md:block">
+        {user && <PlayerAvatar {...user} />}
+      </div>
 
       <div className="min-w-0 flex-1">
         <div

@@ -106,7 +106,7 @@ export function DraftCardGrid({ cards, draft, user }: DraftCardGridProps) {
   }
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    <div className="flex flex-col lg:h-full lg:overflow-hidden">
       <div className="sticky top-0 z-10 bg-background pb-2">
         <DraftCardFilter uniqueCosts={uniqueCosts} />
 
@@ -120,7 +120,7 @@ export function DraftCardGrid({ cards, draft, user }: DraftCardGridProps) {
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:touch-scroll-y">
         {filteredCards.length === 0 ? (
           <div className="flex items-center justify-center h-full py-8">
             <p className="text-muted-foreground">

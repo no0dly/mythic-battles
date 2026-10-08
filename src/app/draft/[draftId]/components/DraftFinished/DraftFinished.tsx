@@ -163,7 +163,7 @@ export default function DraftFinished({ draft, cards }: DraftFinishedProps) {
                 {t("draftHistoryEmpty")}
               </div>
             ) : (
-              <div className="max-h-[500px] space-y-3 overflow-y-auto rounded-2xl border-2 border-gray-100 bg-gray-50/80 p-4">
+              <div className="max-h-[500px] space-y-3 overflow-y-auto rounded-2xl border-2 border-gray-100 bg-gray-50/80 p-4 touch-scroll-y">
                 {sortedPicks.map((pick) => {
                   const isPlayer1 = pick.player_id === draft.player1_id;
                   const user = usersMap[pick.player_id];

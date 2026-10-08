@@ -81,7 +81,7 @@ export const PlayerSection = ({
             {t("noCardsPicked")}
           </div>
         ) : (
-          <div className="flex gap-4 overflow-x-auto pb-3 pr-1">
+          <div className="flex gap-4 overflow-x-auto pb-3 pr-1 touch-[pan-x_pan-y]">
             {cards.map((card, index) => (
               <button
                 key={card.id}
