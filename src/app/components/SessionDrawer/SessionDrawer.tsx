@@ -14,6 +14,8 @@ import {
   getSessionGamesCount,
   isPracticeSession,
 } from "@/utils/sessions/helpers";
+import { getSessionScoreText, getSessionTitle } from "@/utils/sessions/multiplayer";
+import { SessionModeBadge } from "../SessionModeBadge";
 
 interface Props {
   session: SessionWithPlayers | null;
@@ -40,14 +42,12 @@ export default function SessionDrawer({ session, clearSession }: Props) {
     <Drawer open={!!session} onOpenChange={onOpenChangeHandler}>
       <DrawerContent className="flex flex-col">
         <DrawerHeader className="pb-4">
-          <DrawerTitle className="text-2xl font-bold">
-            {t("playedVSPlayer", {
-              player1: session.player1_name,
-              player2: session.player2_name,
-            })}{" "}
-            {practice
-              ? gamesCount
-              : `${session.player1_session_score}-${session.player2_session_score}`}
+          <DrawerTitle className="flex flex-wrap items-center gap-2 text-2xl font-bold">
+            <SessionModeBadge session={session} className="text-sm" />
+            <span className="break-words">
+              {getSessionTitle(session, t)}{" "}
+              {practice ? gamesCount : getSessionScoreText(session)}
+            </span>
           </DrawerTitle>
           <DrawerDescription className="sr-only">
             {t("sessionDetails")}

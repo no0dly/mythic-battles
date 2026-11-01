@@ -10,11 +10,17 @@ import {
   CARD_ORIGIN,
   ALL_VALUE,
   SOLO_PRACTICE_PLAYER_ID,
+  GAME_MODE,
 } from "@/types/constants";
 import {
   fetchPlayersMap,
   enrichSessionWithPlayers,
+  collectSessionPlayerIds,
 } from "./sessions/helpers";
+import { resolveSessionPlayers, initialPlayerScores } from "./sessions/players";
+import { participantFilter, withLegacyColumnFallback } from "../participants";
+import { zGameMode } from "../schemas";
+import { isMultiplayerMode } from "@/utils/drafts/turnOrder";
 import type { SessionWithPlayers } from "./sessions/types";
 import type { AppRouter } from "../root";
 
@@ -40,17 +46,10 @@ export const sessionsRouter = router({
 
     const sessionsList = sessions as Session[];
 
-    // Collect all unique player IDs
-    const playerIds = new Set<string>();
-    sessionsList.forEach((session) => {
-      playerIds.add(session.player1_id);
-      playerIds.add(session.player2_id);
-    });
-
     // Fetch player information
     const { nameMap, emailMap, avatarMap } = await fetchPlayersMap(
       ctx.supabase,
-      Array.from(playerIds)
+      collectSessionPlayerIds(sessionsList)
     );
 
     // Combine sessions with player information
@@ -88,7 +87,7 @@ export const sessionsRouter = router({
       // Fetch player information
       const { nameMap, emailMap, avatarMap } = await fetchPlayersMap(
         ctx.supabase,
-        [sessionData.player1_id, sessionData.player2_id]
+        collectSessionPlayerIds([sessionData])
       );
 
       // Enrich session with player information
@@ -105,10 +104,12 @@ export const sessionsRouter = router({
   // Get sessions by list of IDs with player names
   getUserSessions: protectedProcedure
     .query(async ({ ctx }) => {
-      const { data: sessions, error } = await ctx.supabase
-        .from("sessions")
-        .select("*")
-        .or(`player1_id.eq.${ctx.session.user.id},player2_id.eq.${ctx.session.user.id}`);
+      const { data: sessions, error } = await withLegacyColumnFallback((legacy) =>
+        ctx.supabase
+          .from("sessions")
+          .select("*")
+          .or(participantFilter(ctx.session.user.id, legacy))
+      );
 
       if (error) {
         throw new TRPCError({
@@ -123,17 +124,10 @@ export const sessionsRouter = router({
 
       const sessionsList = sessions as Session[];
 
-      // Collect all unique player IDs
-      const playerIds = new Set<string>();
-      sessionsList.forEach((session) => {
-        playerIds.add(session.player1_id);
-        playerIds.add(session.player2_id);
-      });
-
       // Fetch player information
       const { nameMap, emailMap, avatarMap } = await fetchPlayersMap(
         ctx.supabase,
-        Array.from(playerIds)
+        collectSessionPlayerIds(sessionsList)
       );
 
       const practiceSessionIds = sessionsList
@@ -182,7 +176,12 @@ export const sessionsRouter = router({
   createWithDraft: protectedProcedure
     .input(
       z.object({
-        opponentId: zUuid,
+        mode: zGameMode.default(GAME_MODE.ONE_VS_ONE),
+        /** 1v1 opponent; multiplayer modes use opponentIds */
+        opponentId: zUuid.optional(),
+        opponentIds: z.array(zUuid).optional(),
+        /** 2v2 only: which of the opponentIds plays on the creator's team */
+        teammateId: zUuid.optional(),
         user_allowed_points: z.number().min(1).default(DEFAULT_DRAFT_SETTINGS.user_allowed_points),
         draft_size: z.number().min(1).default(DEFAULT_DRAFT_SETTINGS.draft_size),
         gods_amount: z.number().min(2).default(DEFAULT_DRAFT_SETTINGS.gods_amount),
@@ -198,22 +197,31 @@ export const sessionsRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
-      const { opponentId, user_allowed_points, draft_size, gods_amount, titans_amount, troop_attachment_amount, origins, maps } = input;
-      const isPractice = opponentId === SOLO_PRACTICE_PLAYER_ID;
+      const { mode, user_allowed_points, draft_size, gods_amount, titans_amount, troop_attachment_amount, origins, maps } = input;
+      const isMultiplayer = isMultiplayerMode(mode);
+      const requestedOpponents = input.opponentIds ?? (input.opponentId ? [input.opponentId] : []);
+
+      const players = resolveSessionPlayers({
+        mode,
+        creatorId: userId,
+        opponentIds: requestedOpponents,
+        teammateId: input.teammateId,
+      });
+      const { isPractice } = players;
+      const opponentIds = players.playerIds.slice(1);
 
       // Track created records for rollback
       let createdSession: Session | null = null;
       let createdGame: Game | null = null;
 
       try {
-        // Verify opponent exists (parallel with session creation if needed, but keeping sequential for clarity)
-        const { data: opponent, error: opponentError } = await ctx.supabase
+        // Verify opponents exist
+        const { data: opponents, error: opponentError } = await ctx.supabase
           .from("users")
           .select("id")
-          .eq("id", opponentId)
-          .single();
+          .in("id", opponentIds);
 
-        if (opponentError || !opponent) {
+        if (opponentError || (opponents ?? []).length !== opponentIds.length) {
           throw new TRPCError({
             code: "NOT_FOUND",
             message: "Opponent not found",
@@ -225,13 +233,19 @@ export const sessionsRouter = router({
         const { data: session, error: sessionError } = await ctx.supabase
           .from("sessions")
           .insert({
-            player1_id: userId,
-            player2_id: opponentId,
+            player1_id: players.player1Id,
+            player2_id: players.player2Id,
             player1_session_score: 0,
             player2_session_score: 0,
             status: isPractice ? SESSION_STATUS.DRAFT : SESSION_STATUS.INVITE_TO_DRAFT,
             error_message: null,
             game_list: null,
+            ...(isMultiplayer && {
+              mode,
+              player_ids: players.playerIds,
+              player_teams: players.teams,
+              player_scores: initialPlayerScores(players.playerIds),
+            }),
           } as never)
           .select()
           .single();
@@ -293,8 +307,11 @@ export const sessionsRouter = router({
           troop_attachment_amount,
           origins,
           maps,
-          player1_id: userId,
-          player2_id: opponentId,
+          player1_id: players.player1Id,
+          player2_id: players.player2Id,
+          mode,
+          player_ids: players.playerIds,
+          player_teams: players.teams,
         });
 
         // Update session with game_list

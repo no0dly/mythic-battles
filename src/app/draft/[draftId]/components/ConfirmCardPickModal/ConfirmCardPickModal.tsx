@@ -124,6 +124,9 @@ export default function ConfirmCardPickModal({
               ...draft,
               draft_history: optimisticUpdate.draft_history as never,
               current_turn_user_id: optimisticUpdate.current_turn_user_id,
+              ...(optimisticUpdate.turn_index !== undefined && {
+                turn_index: optimisticUpdate.turn_index,
+              }),
             }
           );
         }

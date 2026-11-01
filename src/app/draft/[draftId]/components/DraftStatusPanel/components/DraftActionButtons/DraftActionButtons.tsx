@@ -20,6 +20,8 @@ import type {
 import { DRAFT_STATUS } from "@/types/constants";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useState } from "react";
+import { getReadyPlayerIds } from "@/utils/drafts/readyChecks";
+import { getResetApproverIds, hasApprovedReset } from "@/utils/drafts/resetRequests";
 
 interface DraftActionButtonsProps {
   draftId: string;
@@ -29,6 +31,8 @@ interface DraftActionButtonsProps {
   resetRequest?: DraftResetRequest;
   readyCheck?: DraftReadyCheck;
   isPracticeDraft?: boolean;
+  /** Set for 3+ player drafts: enables ready progress, partial reset approval and decline */
+  playerCount?: number;
 }
 
 export function DraftActionButtons({
@@ -39,20 +43,32 @@ export function DraftActionButtons({
   resetRequest,
   readyCheck,
   isPracticeDraft = false,
+  playerCount,
 }: DraftActionButtonsProps) {
   const { t } = useTranslation();
   const { user } = useUserProfile();
   const utils = api.useUtils();
+  const isMultiplayer = playerCount !== undefined;
 
   const markReadyMutation = api.draftReadyChecks.markReady.useMutation({
     onMutate: () => {
       utils.drafts.getById.setData({ id: draftId }, (old) => {
         if (!old || !user) return old;
+        if (isMultiplayer && old.readyCheck) {
+          return {
+            ...old,
+            readyCheck: {
+              ...old.readyCheck,
+              ready_player_ids: [...getReadyPlayerIds(old.readyCheck), user.id],
+            },
+          };
+        }
         return {
           ...old,
           readyCheck: {
             first_player_id: user.id,
             second_player_id: null,
+            ...(isMultiplayer && { ready_player_ids: [user.id] }),
           } as DraftReadyCheck,
         };
       });
@@ -73,6 +89,15 @@ export function DraftActionButtons({
     onMutate: () => {
       utils.drafts.getById.setData({ id: draftId }, (old) => {
         if (!old) return old;
+        const remainingReady = getReadyPlayerIds(old.readyCheck).filter(
+          (id) => id !== user?.id
+        );
+        if (isMultiplayer && old.readyCheck && remainingReady.length > 0) {
+          return {
+            ...old,
+            readyCheck: { ...old.readyCheck, ready_player_ids: remainingReady },
+          };
+        }
         return { ...old, readyCheck: undefined };
       });
     },
@@ -107,9 +132,13 @@ export function DraftActionButtons({
   });
 
   const acceptResetMutation = api.draftResetRequests.acceptReset.useMutation({
-    onSuccess: () => {
-      toast.success(t("resetAccepted"));
-      setIsAccepted(true);
+    onSuccess: (result) => {
+      if ("waitingForOthers" in result && result.waitingForOthers) {
+        toast.info(t("resetApprovalRecorded"));
+      } else {
+        toast.success(t("resetAccepted"));
+        setIsAccepted(true);
+      }
       void utils.drafts.getById.invalidate({ id: draftId });
     },
     onError: (error) => {
@@ -117,16 +146,31 @@ export function DraftActionButtons({
     },
   });
 
+  const declineResetMutation = api.draftResetRequests.declineReset.useMutation({
+    onSuccess: () => {
+      toast.info(t("resetDeclined"));
+      void utils.drafts.getById.invalidate({ id: draftId });
+    },
+    onError: (error) => {
+      toast.error(error.message || t("errorDecliningReset"));
+    },
+  });
+
   const [isAccepted, setIsAccepted] = useState(false);
 
   const isResetPending = draftStatus === DRAFT_STATUS.RESET_REQUESTED;
   const isRequester = resetRequest?.requester_id === user?.id;
-  const isRecipient = isResetPending && !isRequester;
+  const isRecipient =
+    isResetPending &&
+    !isRequester &&
+    (!isMultiplayer ||
+      (!!resetRequest &&
+        !!user &&
+        getResetApproverIds(resetRequest).includes(user.id) &&
+        !hasApprovedReset(resetRequest, user.id)));
 
-  const isUserReady =
-    readyCheck !== undefined &&
-    (readyCheck.first_player_id === user?.id ||
-      readyCheck.second_player_id === user?.id);
+  const readyPlayerIds = getReadyPlayerIds(readyCheck);
+  const isUserReady = !!user && readyPlayerIds.includes(user.id);
 
   if (isAccepted) {
     return (
@@ -137,7 +181,13 @@ export function DraftActionButtons({
   }
 
   return (
-    <div className="flex flex-row gap-2 mt-4">
+    <div className="mt-4 space-y-2">
+      {isMultiplayer && !isPracticeDraft && readyPlayerIds.length > 0 && (
+        <p className="text-xs text-muted-foreground" data-testid="draft-ready-progress">
+          {t("draftReadyProgress", { ready: readyPlayerIds.length, total: playerCount })}
+        </p>
+      )}
+    <div className="flex flex-row gap-2">
       {/* Single ready toggle button */}
       <TooltipProvider>
         <Tooltip>
@@ -204,6 +254,22 @@ export function DraftActionButtons({
         </Button>
       )}
 
+      {isRecipient && isMultiplayer && (
+        <Button
+          onClick={() =>
+            declineResetMutation.mutate({ reset_request_id: resetRequest!.id })
+          }
+          variant="outline"
+          className="flex-1"
+          disabled={declineResetMutation.isPending}
+        >
+          {declineResetMutation.isPending && (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          )}
+          {t("declineReset")}
+        </Button>
+      )}
+
       {!isResetPending && !isPracticeDraft && (
         <Button
           onClick={() => requestResetMutation.mutate({ draft_id: draftId })}
@@ -217,6 +283,7 @@ export function DraftActionButtons({
           {t("requestReset")}
         </Button>
       )}
+    </div>
     </div>
   );
 }

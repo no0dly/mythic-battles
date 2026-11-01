@@ -7,7 +7,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { sortPicksByNumber, hasPicks } from "@/utils/drafts";
 import { DraftHistoryModal } from "./DraftHistoryModal";
-import { InitialRollDisplay, EmptyDraftState } from "./components";
+import { MultiplayerDraftHistoryModal } from "./MultiplayerDraftHistoryModal";
+import {
+  InitialRollDisplay,
+  EmptyDraftState,
+  MultiplayerInitialRollDisplay,
+  type NamedDraftSeat,
+} from "./components";
 import { ClipboardList } from "lucide-react";
 
 interface DraftInfoProps {
@@ -24,12 +30,15 @@ interface DraftInfoProps {
   } | null;
   player1Name: string;
   player2Name: string;
+  /** Multiplayer drafts: seats in pick order, replaces the player1/player2 layout */
+  seats?: NamedDraftSeat[];
 }
 
 export const DraftInfo = ({
   draft,
   player1Name,
   player2Name,
+  seats,
 }: DraftInfoProps) => {
   const { t } = useTranslation();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -66,7 +75,9 @@ export const DraftInfo = ({
         </Badge>
       </div>
 
-      {initialRoll && (
+      {seats ? (
+        <MultiplayerInitialRollDisplay seats={seats} />
+      ) : initialRoll && (
         <InitialRollDisplay
           player1Roll={initialRoll?.player1_roll ?? 0}
           player2Roll={initialRoll?.player2_roll ?? 0}
@@ -108,16 +119,27 @@ export const DraftInfo = ({
         </Button>
       </div>
 
-      <DraftHistoryModal
-        open={isModalOpen}
-        onOpenChange={setIsModalOpen}
-        draftHistory={draft.draft_history}
-        player1Id={draft.player1_id}
-        player2Id={draft.player2_id}
-        draftPool={draft.draft_pool ?? []}
-        mapId={draft.map_id}
-        mapSide={draft.map_side}
-      />
+      {seats ? (
+        <MultiplayerDraftHistoryModal
+          open={isModalOpen}
+          onOpenChange={setIsModalOpen}
+          draftHistory={draft.draft_history}
+          seats={seats}
+          mapId={draft.map_id}
+          mapSide={draft.map_side}
+        />
+      ) : (
+        <DraftHistoryModal
+          open={isModalOpen}
+          onOpenChange={setIsModalOpen}
+          draftHistory={draft.draft_history}
+          player1Id={draft.player1_id}
+          player2Id={draft.player2_id}
+          draftPool={draft.draft_pool ?? []}
+          mapId={draft.map_id}
+          mapSide={draft.map_side}
+        />
+      )}
     </div>
   );
 };

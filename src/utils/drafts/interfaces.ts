@@ -7,6 +7,8 @@ export type DraftState = ValueOf<typeof DRAFT_STATE>;
 export type DraftWithRelations = Draft & {
   game?: Game
   invitation?: GameInvitation
+  /** Latest invitation per invitee; multiplayer games have one per invited player */
+  invitations?: GameInvitation[]
   resetRequest?: DraftResetRequest
   readyCheck?: DraftReadyCheck
 }
@@ -27,4 +29,5 @@ export interface OptimisticDraftUpdateInput {
 export interface OptimisticDraftUpdateResult {
   draft_history: DraftHistory
   current_turn_user_id: string
+  turn_index?: number
 }

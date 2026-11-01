@@ -1,0 +1,1 @@
+export { MultiplayerSeatCard } from "./MultiplayerSeatCard";

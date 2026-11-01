@@ -27,7 +27,8 @@ type SingleResult<T> = { data: T | null; error: unknown };
 
 const createSelectChain = <T>(result: SingleResult<T>) => {
   const single = vi.fn(() => result);
-  const eq = vi.fn(() => ({ single }));
+  const pendingSiblings = vi.fn(() => ({ data: [], error: null }));
+  const eq = vi.fn(() => ({ single, eq: pendingSiblings }));
   const select = vi.fn(() => ({ eq }));
   return { select, eq, single };
 };

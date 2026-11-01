@@ -16,6 +16,10 @@ import DraftWaitingForOpponent from "../DraftWaitingForOpponent";
 import { DRAFT_STATE } from "@/utils/drafts/constants";
 import DraftFinished from "../DraftFinished";
 import { ResetRequestAlert } from "../ResetRequestAlert/ResetRequestAlert";
+import { MultiplayerDraftStatusPanel } from "../MultiplayerDraftStatusPanel";
+import { MultiplayerDraftFinished } from "../MultiplayerDraftFinished";
+import { DraftInviteeStatusList } from "../DraftInviteeStatusList";
+import { getDraftMode, isMultiplayerMode } from "@/utils/drafts/turnOrder";
 
 export default function DraftPageContent() {
   const { t } = useTranslation();
@@ -88,8 +92,14 @@ export default function DraftPageContent() {
     );
   }
 
+  const isMultiplayer = isMultiplayerMode(getDraftMode(draft));
+
   if (draftState === DRAFT_STATE.WAITING_FOR_OPPONENT) {
-    return <DraftWaitingForOpponent />;
+    return (
+      <DraftWaitingForOpponent
+        invitations={isMultiplayer ? draft.invitations : undefined}
+      />
+    );
   }
 
   if (draftState === DRAFT_STATE.INVITATION_PENDING) {
@@ -100,6 +110,9 @@ export default function DraftPageContent() {
           <p className="text-muted-foreground">
             {t("waitingForOpponentDescription")}
           </p>
+          {isMultiplayer && draft.invitations && (
+            <DraftInviteeStatusList invitations={draft.invitations} />
+          )}
         </div>
       </div>
     );
@@ -114,7 +127,11 @@ export default function DraftPageContent() {
 
         <div className="grid grid-cols-1 gap-6 lg:min-h-0 lg:flex-1 lg:grid-cols-3">
           <div className="lg:col-span-1 lg:h-full lg:overflow-y-auto lg:touch-scroll-y">
-            <DraftStatusPanel draft={draft} cards={cards} />
+            {isMultiplayer ? (
+              <MultiplayerDraftStatusPanel draft={draft} cards={cards} />
+            ) : (
+              <DraftStatusPanel draft={draft} cards={cards} />
+            )}
           </div>
 
           <div className="flex flex-col lg:col-span-2 lg:min-h-0 lg:overflow-hidden">
@@ -128,7 +145,11 @@ export default function DraftPageContent() {
   }
 
   if (draftState === DRAFT_STATE.FINISHED) {
-    return <DraftFinished draft={draft} cards={cards} />;
+    return isMultiplayer ? (
+      <MultiplayerDraftFinished draft={draft} cards={cards} />
+    ) : (
+      <DraftFinished draft={draft} cards={cards} />
+    );
   }
 
   return (

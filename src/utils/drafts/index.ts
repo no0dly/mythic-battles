@@ -5,8 +5,9 @@ export {
   hasPicks,
   getPlayerCards,
   computeNextTurnUserId,
-  sumPlayerSpentPoints,
 } from './helpers'
+
+export { sumPlayerSpentPoints } from './points'
 
 export {
   getOpponentPlayerId,

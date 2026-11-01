@@ -5,16 +5,20 @@ import { PlayerSection } from "@/app/draft/[draftId]/components/DraftFinished/Pl
 import { MapSection } from "@/app/draft/[draftId]/components/MapSection/MapSection";
 import { cardsInListedOrder } from "@/utils/shared-drafts/cardsInListedOrder";
 import { totalCardCost } from "@/utils/shared-drafts/totalCardCost";
+import { getPlayerAccent } from "@/utils/drafts/playerAccents";
+import { SEAT_LABELS } from "@/utils/drafts/turnOrder";
 import { EMPTY_COST_OVERRIDES } from "./constants";
 import type { SharedDraftPreviewProps } from "./types";
+
+const ONE_VS_ONE_ARMY_COUNT = 2;
+const ONE_VS_ONE_NAME_KEYS = ["player1", "player2"];
 
 export default function SharedDraftPreview({
   draft,
   onCardClick,
 }: SharedDraftPreviewProps) {
   const { t } = useTranslation();
-  const player1Cards = cardsInListedOrder(draft.player1_card_ids, draft.cards);
-  const player2Cards = cardsInListedOrder(draft.player2_card_ids, draft.cards);
+  const isOneVsOne = draft.armies.length <= ONE_VS_ONE_ARMY_COUNT;
 
   return (
     <section
@@ -22,22 +26,26 @@ export default function SharedDraftPreview({
       data-testid="shared-draft-preview"
     >
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <PlayerSection
-          name={t("player1")}
-          cards={player1Cards}
-          totalCost={totalCardCost(player1Cards)}
-          costOverrides={EMPTY_COST_OVERRIDES}
-          accent="blue"
-          onCardClick={onCardClick}
-        />
-        <PlayerSection
-          name={t("player2")}
-          cards={player2Cards}
-          totalCost={totalCardCost(player2Cards)}
-          costOverrides={EMPTY_COST_OVERRIDES}
-          accent="green"
-          onCardClick={onCardClick}
-        />
+        {draft.armies.map((army, index) => {
+          const cards = cardsInListedOrder(army.card_ids, draft.cards);
+          const team = army.team ?? null;
+          return (
+            <PlayerSection
+              key={SEAT_LABELS[index]}
+              name={
+                isOneVsOne
+                  ? t(ONE_VS_ONE_NAME_KEYS[index])
+                  : t("sharedDraftSeatName", { seat: SEAT_LABELS[index] })
+              }
+              subtitle={team !== null ? t("draftTeamLabel", { number: team }) : undefined}
+              cards={cards}
+              totalCost={totalCardCost(cards)}
+              costOverrides={EMPTY_COST_OVERRIDES}
+              accent={getPlayerAccent(index, team)}
+              onCardClick={onCardClick}
+            />
+          );
+        })}
       </div>
       <MapSection mapId={draft.map_id} mapSide={draft.map_side} />
     </section>

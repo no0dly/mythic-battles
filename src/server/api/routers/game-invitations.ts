@@ -2,8 +2,27 @@ import { z } from "zod";
 import { router, protectedProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
 import { zUuid } from "../schemas";
-import type { GameInvitation } from "@/types/database.types";
-import { GAME_STATUS, SESSION_STATUS } from "@/types/constants";
+import type { GameInvitation, Session } from "@/types/database.types";
+import { GAME_INVITATION_STATUS, GAME_STATUS, SESSION_STATUS } from "@/types/constants";
+import { getDraftPlayerIds, isDraftParticipant } from "@/utils/drafts/turnOrder";
+import type { TRPCContext } from "../trpc";
+
+type SessionParticipants = Pick<Session, "player1_id" | "player2_id" | "player_ids">;
+
+/** No-op for 1v1, where the game only ever has one pending invitation. */
+async function cancelPendingSiblings(
+  supabase: TRPCContext["supabase"],
+  gameId: string
+) {
+  await supabase
+    .from("game_invitations")
+    .update({
+      status: GAME_INVITATION_STATUS.CANCELLED,
+      responded_at: new Date().toISOString(),
+    } as never)
+    .eq("game_id", gameId)
+    .eq("status", GAME_INVITATION_STATUS.PENDING);
+}
 
 export const gameInvitationsRouter = router({
   // Создать приглашение
@@ -36,7 +55,7 @@ export const gameInvitationsRouter = router({
       // Проверка что session существует
       const { data: session, error: sessionError } = await ctx.supabase
         .from("sessions")
-        .select("player1_id, player2_id")
+        .select("*")
         .eq("id", input.session_id)
         .single();
 
@@ -48,8 +67,8 @@ export const gameInvitationsRouter = router({
       }
 
       // Проверка что текущий пользователь - участник сессии
-      const sessionData = session as { player1_id: string; player2_id: string };
-      if (sessionData.player1_id !== userId && sessionData.player2_id !== userId) {
+      const sessionData = session as SessionParticipants;
+      if (!isDraftParticipant(sessionData, userId)) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "You are not a participant in this session",
@@ -58,7 +77,7 @@ export const gameInvitationsRouter = router({
 
       // Проверка что invitee - второй участник сессии
       const inviteeId = input.invitee_id;
-      if (sessionData.player1_id !== inviteeId && sessionData.player2_id !== inviteeId) {
+      if (!isDraftParticipant(sessionData, inviteeId)) {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "Invitee must be a participant in this session",
@@ -109,6 +128,98 @@ export const gameInvitationsRouter = router({
         .eq("id", input.game_id);
 
       return invitation as GameInvitation;
+    }),
+
+  // Invite every other player of a multiplayer session (one row per invitee)
+  createMany: protectedProcedure
+    .input(
+      z.object({
+        game_id: zUuid,
+        session_id: zUuid,
+        message: z.string().optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+
+      const { data: session, error: sessionError } = await ctx.supabase
+        .from("sessions")
+        .select("*")
+        .eq("id", input.session_id)
+        .single();
+
+      if (sessionError || !session) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Session not found",
+        });
+      }
+
+      const sessionData = session as SessionParticipants;
+      if (!isDraftParticipant(sessionData, userId)) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You are not a participant in this session",
+        });
+      }
+
+      const { data: game, error: gameError } = await ctx.supabase
+        .from("games")
+        .select("id")
+        .eq("id", input.game_id)
+        .eq("session_id", input.session_id)
+        .single();
+
+      if (gameError || !game) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Game not found",
+        });
+      }
+
+      const { data: existing } = await ctx.supabase
+        .from("game_invitations")
+        .select("id")
+        .eq("game_id", input.game_id)
+        .eq("status", GAME_INVITATION_STATUS.PENDING);
+
+      if ((existing ?? []).length > 0) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Active invitation already exists for this game",
+        });
+      }
+
+      const inviteeIds = getDraftPlayerIds(sessionData).filter((id) => id !== userId);
+
+      const { data: invitations, error: createError } = await ctx.supabase
+        .from("game_invitations")
+        .insert(
+          inviteeIds.map((inviteeId) => ({
+            game_id: input.game_id,
+            session_id: input.session_id,
+            inviter_id: userId,
+            invitee_id: inviteeId,
+            status: GAME_INVITATION_STATUS.PENDING,
+            message: input.message,
+          })) as never
+        )
+        .select();
+
+      if (createError || !invitations) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to create invitations",
+          cause: createError,
+        });
+      }
+
+      await ctx.supabase
+        .from("games")
+        .update({ status: GAME_STATUS.INVITE_TO_DRAFT } as never)
+        .eq("id", input.game_id);
+
+      return invitations as GameInvitation[];
     }),
 
   // Принять приглашение
@@ -170,6 +281,17 @@ export const gameInvitationsRouter = router({
           message: "Failed to accept invitation",
           cause: updateError,
         });
+      }
+
+      // Multiplayer: the draft only starts once every invitee has accepted
+      const { data: stillPending } = await ctx.supabase
+        .from("game_invitations")
+        .select("id")
+        .eq("game_id", invitationData.game_id)
+        .eq("status", GAME_INVITATION_STATUS.PENDING);
+
+      if ((stillPending ?? []).length > 0) {
+        return updatedInvitation as GameInvitation;
       }
 
       // Обновить статус игры на DRAFT после принятия приглашения
@@ -264,6 +386,9 @@ export const gameInvitationsRouter = router({
         });
       }
 
+      // One rejection cancels the invitations of the other players too
+      await cancelPendingSiblings(ctx.supabase, invitationData.game_id);
+
       // Вернуть игру в доступное состояние
       await ctx.supabase
         .from("games")
@@ -333,6 +458,8 @@ export const gameInvitationsRouter = router({
           cause: updateError,
         });
       }
+
+      await cancelPendingSiblings(ctx.supabase, invitationData.game_id);
 
       return updatedInvitation as GameInvitation;
     }),
