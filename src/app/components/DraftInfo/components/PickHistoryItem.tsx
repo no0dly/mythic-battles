@@ -4,6 +4,7 @@ import { formatDisplayName } from "@/utils/users";
 import type { Card, UserSubset, DraftPick } from "@/types/database.types";
 import { PlayerAvatar } from "./PlayerAvatar";
 import { CardImage } from "./CardImage";
+import { PLAYER_ACCENT_STYLES, type PlayerAccent } from "@/utils/drafts/playerAccents";
 
 interface PickHistoryItemProps {
   pick: DraftPick;
@@ -11,6 +12,8 @@ interface PickHistoryItemProps {
   user: UserSubset | undefined;
   isPlayer1: boolean;
   onCardClick: () => void;
+  /** Overrides the player1/player2 colours, used by multiplayer drafts */
+  accent?: PlayerAccent;
 }
 
 export const PickHistoryItem = ({
@@ -19,8 +22,10 @@ export const PickHistoryItem = ({
   user,
   isPlayer1,
   onCardClick,
+  accent,
 }: PickHistoryItemProps) => {
   const { t } = useTranslation();
+  const accentStyles = PLAYER_ACCENT_STYLES[accent ?? (isPlayer1 ? "blue" : "green")];
 
   const displayName = user
     ? formatDisplayName(user.display_name, user.email)
@@ -30,16 +35,10 @@ export const PickHistoryItem = ({
 
   return (
     <div
-      className={`flex items-center gap-3 rounded-lg p-3 shadow-sm transition-all ${
-        isPlayer1
-          ? "border-2 border-blue-200 bg-gradient-to-r from-blue-50 to-blue-100"
-          : "border-2 border-green-200 bg-gradient-to-r from-green-50 to-green-100"
-      }`}
+      className={`flex items-center gap-3 rounded-lg p-3 shadow-sm transition-all ${accentStyles.historyRow}`}
     >
       <div
-        className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold text-white shadow-sm ${
-          isPlayer1 ? "bg-blue-600" : "bg-green-600"
-        }`}
+        className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold text-white shadow-sm ${accentStyles.historyBubble}`}
       >
         #{pick.pick_number}
       </div>
@@ -50,9 +49,7 @@ export const PickHistoryItem = ({
 
       <div className="min-w-0 flex-1">
         <div
-          className={`text-sm font-semibold ${
-            isPlayer1 ? "text-blue-900" : "text-green-900"
-          }`}
+          className={`text-sm font-semibold ${accentStyles.title}`}
         >
           {displayName}
         </div>

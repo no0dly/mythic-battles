@@ -1,6 +1,11 @@
 import { TRPCError } from "@trpc/server";
 import type { Session } from "@/types/database.types";
 import type { SessionWithPlayers, PlayerSubset } from "./types";
+import { getDraftPlayerIds } from "@/utils/drafts/turnOrder";
+
+export const collectSessionPlayerIds = (sessions: Session[]): string[] => [
+  ...new Set(sessions.flatMap((session) => getDraftPlayerIds(session))),
+];
 
 type SupabaseClient = Awaited<
   ReturnType<typeof import("../../trpc").createTRPCContext>
@@ -59,8 +64,22 @@ export function enrichSessionWithPlayers(
   emailMap: Map<string, string>,
   avatarMap: Map<string, string>
 ): SessionWithPlayers {
+  const legacyScores: Record<string, number> = {
+    [session.player1_id]: session.player1_session_score ?? 0,
+    [session.player2_id]: session.player2_session_score ?? 0,
+  };
+  const scores = session.player_scores ?? legacyScores;
+
   return {
     ...session,
+    players: getDraftPlayerIds(session).map((id) => ({
+      id,
+      name: nameMap.get(id) || "Unknown",
+      email: emailMap.get(id),
+      avatar_url: avatarMap.get(id),
+      team: session.player_teams?.[id] ?? null,
+      score: scores[id] ?? 0,
+    })),
     player1_name: nameMap.get(session.player1_id) || "Unknown",
     player2_name: nameMap.get(session.player2_id) || "Unknown",
     player1_email: emailMap.get(session.player1_id),

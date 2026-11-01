@@ -3,8 +3,8 @@ import { TRPCError } from "@trpc/server";
 import { router, publicProcedure } from "../trpc";
 import { zShareSlug } from "../schemas";
 import type { Card, SharedDraftRow } from "@/types/database.types";
-import { collectSharedDraftCardIds } from "@/utils/shared-drafts/collectSharedDraftCardIds";
-import { parseSharedDraftArmy } from "@/utils/shared-drafts/parseCardIds";
+import { collectArmiesCardIds } from "@/utils/shared-drafts/collectSharedDraftCardIds";
+import { parseSharedDraftArmies, parseSharedDraftArmy } from "@/utils/shared-drafts/parseCardIds";
 import type { SharedDraftWithCards } from "@/utils/shared-drafts/types";
 import {
   FAILED_TO_FETCH_CARDS,
@@ -37,7 +37,8 @@ export const sharedDraftsRouter = router({
         row.player1_card_ids,
         row.player2_card_ids,
       );
-      const cardIds = collectSharedDraftCardIds(army);
+      const armies = parseSharedDraftArmies(row.armies, army);
+      const cardIds = collectArmiesCardIds(armies);
 
       let cards: Card[] = [];
       if (cardIds.length > 0) {
@@ -61,6 +62,7 @@ export const sharedDraftsRouter = router({
         ...row,
         player1_card_ids: army.player1_card_ids,
         player2_card_ids: army.player2_card_ids,
+        armies,
         cards,
       };
     }),

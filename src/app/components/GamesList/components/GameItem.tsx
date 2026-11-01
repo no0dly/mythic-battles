@@ -16,6 +16,12 @@ import { DRAFT_STATUS, GAME_STATUS } from "@/types/constants";
 import { useUserProfile } from "@/hooks";
 import { SessionWithPlayers } from "@/server/api/routers/sessions/types";
 import { isPracticeSession } from "@/utils/sessions/helpers";
+import {
+  getGameWinnerIds,
+  getPlayerNamesByIds,
+  isMultiplayerSession,
+} from "@/utils/sessions/multiplayer";
+import { getDraftSeats } from "@/utils/drafts/seats";
 
 interface GameItemProps {
   game: GameWithDraft;
@@ -34,7 +40,20 @@ export const GameItem = ({ game, session, index }: GameItemProps) => {
   } = session;
 
   const practice = isPracticeSession(session);
-  const winnerName = game.winner_id === player1Id ? player1Name : player2Name;
+  const isMultiplayer = isMultiplayerSession(session);
+  const winnerIds = getGameWinnerIds(game);
+  const winnerName = isMultiplayer
+    ? getPlayerNamesByIds(session, winnerIds)
+    : game.winner_id === player1Id
+      ? player1Name
+      : player2Name;
+  const seats =
+    isMultiplayer && game.draft
+      ? getDraftSeats(game.draft).map((seat) => ({
+          ...seat,
+          name: getPlayerNamesByIds(session, [seat.userId]) || seat.seatLabel,
+        }))
+      : undefined;
 
   const handleGoToDraft = () => {
     if (game.draft_id) {
@@ -74,6 +93,7 @@ export const GameItem = ({ game, session, index }: GameItemProps) => {
               <GameResult
                 winnerId={game.winner_id}
                 currentPlayerId={user?.id ?? ""}
+                winnerIds={isMultiplayer ? winnerIds : undefined}
               />
             </div>
           )}
@@ -107,6 +127,7 @@ export const GameItem = ({ game, session, index }: GameItemProps) => {
             }
             player1Name={player1Name}
             player2Name={player2Name}
+            seats={seats}
           />
 
           <GameMetadata

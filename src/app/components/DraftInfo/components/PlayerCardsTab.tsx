@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatDisplayName } from "@/utils/users";
 import type { Card, UserSubset } from "@/types/database.types";
 import { PlayerAvatar } from "./PlayerAvatar";
+import type { PlayerAccent } from "@/utils/drafts/playerAccents";
 
 interface PlayerCardsTabProps {
   user: UserSubset | undefined;
@@ -11,7 +12,7 @@ interface PlayerCardsTabProps {
   totalCost: number;
   costOverrides: Map<string, number>;
   fallbackName: string;
-  borderColor: "blue" | "green";
+  borderColor: PlayerAccent;
   onCardClick: (card: Card) => void;
 }
 
@@ -34,9 +35,11 @@ export const PlayerCardsTab = ({
     ? formatDisplayName(user.display_name, user.email)
     : fallbackName;
 
-  const colorClasses = {
+  const colorClasses: Record<PlayerAccent, string> = {
     blue: "border-blue-200 bg-blue-50 text-blue-900",
     green: "border-green-200 bg-green-50 text-green-900",
+    amber: "border-amber-200 bg-amber-50 text-amber-900",
+    rose: "border-rose-200 bg-rose-50 text-rose-900",
   };
 
   return (

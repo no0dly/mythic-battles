@@ -11,7 +11,8 @@ import {
   getSessionGamesCount,
   isPracticeSession,
 } from "@/utils/sessions/helpers";
-
+import { getSessionScoreText, getSessionTitle } from "@/utils/sessions/multiplayer";
+import { SessionModeBadge } from "../SessionModeBadge";
 function SessionsCard() {
   const { t } = useTranslation();
   const [selectedSession, setSelectedSession] =
@@ -70,15 +71,13 @@ function SessionsCard() {
               onClick={onSelectSessionHandler(session)}
               className="group/session flex items-center justify-between p-2 rounded-lg hover:bg-gray-500/10 transition-colors duration-200 gap-2 sm:gap-4 cursor-pointer w-full min-w-0"
             >
-              <span className="text-xs font-semibold text-foreground group-hover/session:text-gray-600 transition-colors truncate min-w-0 flex-1">
-                {t("playedVSPlayer", {
-                  player1: session.player1_name,
-                  player2: session.player2_name,
-                })}
+              <SessionModeBadge session={session} />
+              <span className="text-xs font-semibold text-foreground group-hover/session:text-gray-600 transition-colors line-clamp-2 break-words min-w-0 flex-1">
+                {getSessionTitle(session, t)}
                 <span className="font-bold text-emerald-600 ml-1">
                   {practice
                     ? ` (${gamesCount})`
-                    : ` (${session.player1_session_score}-${session.player2_session_score})`}
+                    : ` (${getSessionScoreText(session)})`}
                 </span>
               </span>
               <Badge variant={status} className="flex-shrink-0">

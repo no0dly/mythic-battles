@@ -1,4 +1,13 @@
-import type { Session } from "@/types/database.types";
+import type { Session, Team } from "@/types/database.types";
+
+export type SessionPlayerInfo = {
+  id: string;
+  name: string;
+  email?: string;
+  avatar_url?: string;
+  team: Team | null;
+  score: number;
+};
 
 // Type for player subset when selecting only id, display_name, email, avatar_url
 export type PlayerSubset = {
@@ -16,6 +25,8 @@ export type SessionWithPlayers = Session & {
   player2_email?: string;
   player1_avatar_url?: string;
   player2_avatar_url?: string;
+  /** Every participant in session order (creator first) */
+  players?: SessionPlayerInfo[];
   /** Set for practice sessions: count of games with status finished */
   finished_games_count?: number;
 };

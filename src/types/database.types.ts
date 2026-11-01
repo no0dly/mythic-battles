@@ -1,4 +1,4 @@
-import { CARD_CLASS, CARD_ORIGIN, CARD_TYPES, GAME_STATUS, SESSION_STATUS, DRAFT_STATUS, GAME_INVITATION_STATUS, DRAFT_RESET_REQUEST_STATUS, DRAFT_READY_CHECK_STATUS, FRIENDSHIP_STATUS, WIN_CONDITION, MAP_TYPE, MAP_SIDE } from "./constants"
+import { CARD_CLASS, CARD_ORIGIN, CARD_TYPES, GAME_STATUS, SESSION_STATUS, DRAFT_STATUS, GAME_INVITATION_STATUS, DRAFT_RESET_REQUEST_STATUS, DRAFT_READY_CHECK_STATUS, FRIENDSHIP_STATUS, WIN_CONDITION, MAP_TYPE, MAP_SIDE, GAME_MODE, TEAM } from "./constants"
 import { ValueOf } from "./interfaces"
 
 export type Json =
@@ -26,6 +26,13 @@ export type UserProfile = {
   updated_at: string
   statistics: Statistics
 }
+
+export type GameMode = ValueOf<typeof GAME_MODE>
+export type Team = ValueOf<typeof TEAM>
+/** user id -> team, only set for team modes */
+export type PlayerTeams = Record<string, Team>
+/** user id -> session score, only set for multiplayer modes */
+export type PlayerScores = Record<string, number>
 
 export type FriendshipStatus = ValueOf<typeof FRIENDSHIP_STATUS>
 
@@ -60,7 +67,10 @@ export type DraftResetRequest = {
   draft_id: string
   game_id: string
   requester_id: string
-  opponent_id: string
+  /** Only set for 1v1; multiplayer uses required_approver_ids */
+  opponent_id: string | null
+  required_approver_ids?: string[]
+  approved_ids?: string[]
   status: DraftResetRequestStatus
   created_at: string
   updated_at: string
@@ -75,6 +85,7 @@ export type DraftReadyCheck = {
   game_id: string
   first_player_id: string
   second_player_id: string | null
+  ready_player_ids?: string[]
   status: DraftReadyCheckStatus
   created_at: string
   updated_at: string
@@ -128,6 +139,10 @@ export type Session = {
   status: SessionStatus
   error_message: string | null
   game_list: string[] | null
+  mode?: GameMode
+  player_ids?: string[]
+  player_teams?: PlayerTeams | null
+  player_scores?: PlayerScores | null
   created_at: string
   updated_at: string
   finished_at: string | null
@@ -154,6 +169,8 @@ export type Game = {
   game_number: number
   status: GameStatus
   winner_id: string | null
+  /** Set for multiplayer results; winner_id still holds the first winner */
+  winner_ids?: string[] | null
   draft_id: string | null
   created_by: string
   draft_settings: DraftSettings
@@ -183,6 +200,11 @@ export type DraftHistory = {
   }
 }
 
+export type SharedDraftArmyEntry = {
+  team?: Team | null
+  card_ids: string[]
+}
+
 export type InitialRoll = {
   userID: string
   roll: number
@@ -203,6 +225,9 @@ export type SharedDraft = {
   player2_card_ids: string[]
   map_id: string | null
   map_side: MapSide | null
+  mode?: GameMode
+  /** All armies in seat order; legacy columns hold the first two */
+  armies?: SharedDraftArmyEntry[] | null
   created_at: string
   updated_at: string
 }
@@ -223,6 +248,14 @@ export type Draft = {
   draft_pool: string[]
   map_id: string | null
   map_side: MapSide | null
+  mode?: GameMode
+  /** All participants; player1_id/player2_id stay populated for 1v1 compatibility */
+  player_ids?: string[]
+  player_teams?: PlayerTeams | null
+  /** Seats A..D. Only used by multiplayer modes */
+  turn_order?: string[] | null
+  /** Position in the pick sequence. Only used by multiplayer modes */
+  turn_index?: number
 }
 
 export type Database = {

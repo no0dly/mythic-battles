@@ -27,6 +27,8 @@ interface SelectWithLoadingProps<T extends FieldValues> {
   control: Control<T>;
   name: FieldPath<T>;
   labelKey?: string;
+  /** Already translated label; takes precedence over labelKey */
+  label?: string;
   options: readonly SelectOption[];
   isLoading?: boolean;
   placeholderKey?: string;
@@ -38,6 +40,7 @@ export const SelectWithLoading = <T extends FieldValues>({
   control,
   name,
   labelKey,
+  label,
   options,
   isLoading = false,
   placeholderKey,
@@ -46,12 +49,13 @@ export const SelectWithLoading = <T extends FieldValues>({
 }: SelectWithLoadingProps<T>) => {
   const { t } = useTranslation();
 
+  const resolvedLabel = label ?? (labelKey ? t(labelKey) : undefined);
+
   // Determine placeholder
   const getPlaceholder = () => {
     if (isLoading) return t("loading");
     if (placeholderKey) return t(placeholderKey);
-    if (labelKey) return t(labelKey);
-    return "";
+    return resolvedLabel ?? "";
   };
 
   return (
@@ -67,7 +71,7 @@ export const SelectWithLoading = <T extends FieldValues>({
 
         return (
           <FormItem>
-            {labelKey && <FormLabel>{t(labelKey)}</FormLabel>}
+            {resolvedLabel && <FormLabel>{resolvedLabel}</FormLabel>}
             <FormControl>
               <Select
                 value={stringValue}

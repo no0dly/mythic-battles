@@ -1,4 +1,8 @@
-import type { SharedDraftArmy } from "@/types/database.types";
+import type { SharedDraftArmy, SharedDraftArmyEntry } from "@/types/database.types";
+
+export const collectArmiesCardIds = (armies: SharedDraftArmyEntry[]): string[] => [
+  ...new Set(armies.flatMap((army) => army.card_ids)),
+];
 
 export const collectSharedDraftCardIds = (
   army: SharedDraftArmy,

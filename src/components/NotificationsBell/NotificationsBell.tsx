@@ -17,6 +17,7 @@ import { formatDisplayName } from "@/utils/users";
 import { createClient } from "@/lib/supabase/client";
 import type { GameInvitation, Draft, DraftResetRequest } from "@/types/database.types";
 import { toast } from "sonner";
+import { getDraftMode, getDraftPlayerIds, isMultiplayerMode } from "@/utils/drafts/turnOrder";
 
 interface NotificationItem {
   id: string;
@@ -49,8 +50,7 @@ export const NotificationsBell = () => {
     );
 
   // Получить информацию об игроках для драфтов
-  const draftPlayerIds =
-    activeDrafts?.flatMap((d) => [d.player1_id, d.player2_id]) || [];
+  const draftPlayerIds = activeDrafts?.flatMap((d) => getDraftPlayerIds(d)) || [];
   const { data: players } = api.users.getUsersByIds.useQuery(
     { userIds: [...new Set(draftPlayerIds)] },
     { enabled: draftPlayerIds.length > 0 }
@@ -209,6 +209,26 @@ export const NotificationsBell = () => {
           void refetchResetRequests();
         }
       )
+      // Multiplayer requests leave opponent_id null and list approvers in an array,
+      // which realtime filters can't match, so check the payload instead.
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "draft_reset_requests",
+        },
+        (payload) => {
+          const record = (payload.new ?? payload.old) as Partial<DraftResetRequest> | undefined;
+          if (record?.opponent_id !== null || !record.required_approver_ids?.includes(user.id)) {
+            return;
+          }
+          void refetchResetRequests();
+          if (payload.eventType === "INSERT") {
+            toast.info(t("opponentRequestedReset"));
+          }
+        }
+      )
       .subscribe();
 
     return () => {
@@ -284,12 +304,17 @@ export const NotificationsBell = () => {
     // Пропускаем драфты, для которых есть pending приглашение где текущий пользователь - получатель
     if (gamesWithPendingInvitations.has(draft.game_id)) return;
 
-    const opponentId =
-      draft.player1_id === user?.id ? draft.player2_id : draft.player1_id;
-    const opponent = players?.find((p) => p.id === opponentId);
-    const opponentName = opponent
-      ? formatDisplayName(opponent.display_name, opponent.email)
-      : t("unknownPlayer");
+    const opponentIds = isMultiplayerMode(getDraftMode(draft))
+      ? getDraftPlayerIds(draft).filter((id) => id !== user?.id)
+      : [draft.player1_id === user?.id ? draft.player2_id : draft.player1_id];
+    const opponentName = opponentIds
+      .map((opponentId) => {
+        const opponent = players?.find((p) => p.id === opponentId);
+        return opponent
+          ? formatDisplayName(opponent.display_name, opponent.email)
+          : t("unknownPlayer");
+      })
+      .join(", ");
 
     notifications.push({
       id: draft.id,

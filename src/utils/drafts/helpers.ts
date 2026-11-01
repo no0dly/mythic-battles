@@ -1,4 +1,11 @@
-import type { DraftHistory, DraftPick, Draft, Card, UserSubset } from '@/types/database.types'
+import type { DraftHistory, DraftPick, Draft, Card, UserSubset, InitialRoll } from '@/types/database.types'
+import { sumPlayerSpentPoints } from './points'
+import {
+  computeNextMultiplayerTurn,
+  getDraftMode,
+  getDraftPlayerIds,
+  isMultiplayerMode,
+} from './turnOrder'
 import { formatDisplayName } from '@/utils/users'
 import { DRAFT_STATUS, GAME_STATUS, GAME_INVITATION_STATUS } from '@/types/constants'
 import { DraftWithRelations, DraftState } from './interfaces'
@@ -186,6 +193,18 @@ export const getDraftState = (
       return DRAFT_STATE.DRAFT_IN_PROGRESS
     }
 
+    if (isMultiplayerMode(getDraftMode(draft)) && draft.invitations?.length) {
+      const pending = draft.invitations.filter(
+        (inv) => inv.status === GAME_INVITATION_STATUS.PENDING
+      )
+      if (pending.some((inv) => inv.invitee_id === userId)) {
+        return DRAFT_STATE.INVITATION_PENDING
+      }
+      if (pending.length > 0) {
+        return DRAFT_STATE.WAITING_FOR_OPPONENT
+      }
+    }
+
     // Проверяем наличие pending приглашения
     const hasPendingInvitation = invitation?.status === GAME_INVITATION_STATUS.PENDING
 
@@ -241,22 +260,6 @@ export const getDraftState = (
   return DRAFT_STATE.UNKNOWN
 }
 
-
-
-export const sumPlayerSpentPoints = (
-  picks: DraftPick[],
-  playerId: string,
-  cardCostById: Map<string, number>
-): number =>
-  picks
-    .filter((p) => p.player_id === playerId)
-    .reduce((sum, pick) => {
-      if (pick.cost_override !== undefined) {
-        return sum + pick.cost_override
-      }
-      return sum + (cardCostById.get(pick.card_id) ?? 0)
-    }, 0)
-
 /**
  * Matches server pickCard turn logic: alternate unless opponent has spent all allowed points.
  */
@@ -271,6 +274,37 @@ export const computeNextTurnUserId = (
   const opponentSpent = sumPlayerSpentPoints(picks, opponentId, cardCostById)
   const opponentHasReachedMax = opponentSpent >= playerAllowedPoints
   return opponentHasReachedMax ? pickingPlayerId : opponentId
+}
+
+type TurnDraft = Pick<Draft, 'player1_id' | 'player2_id' | 'current_turn_user_id'> &
+  Pick<Partial<Draft>, 'mode' | 'turn_order' | 'turn_index'>
+
+/**
+ * Next turn for any mode. 1v1 keeps the original alternating rule;
+ * multiplayer modes follow the A B C | C B A ... sequence.
+ */
+export const computeNextTurn = (
+  draft: TurnDraft,
+  picks: DraftPick[],
+  playerAllowedPoints: number,
+  cardCostById: Map<string, number>
+): { userId: string; turnIndex: number } => {
+  const turnIndex = draft.turn_index ?? 0
+
+  if (!isMultiplayerMode(getDraftMode(draft)) || !draft.turn_order?.length) {
+    return {
+      userId: computeNextTurnUserId(draft, picks, playerAllowedPoints, cardCostById),
+      turnIndex,
+    }
+  }
+
+  return computeNextMultiplayerTurn({
+    turnOrder: draft.turn_order,
+    turnIndex,
+    picks,
+    playerAllowedPoints,
+    cardCostById,
+  })
 }
 
 export const createOptimisticDraftUpdate = ({
@@ -322,15 +356,30 @@ export const createOptimisticDraftUpdate = ({
     ...(draftHistory?.initial_roll && { initial_roll: draftHistory.initial_roll }),
   }
 
-  const nextTurnUserId =
-    playerAllowedPoints !== undefined && cardCostById
-      ? computeNextTurnUserId(draft, updatedPicks, playerAllowedPoints, cardCostById)
-      : draft.current_turn_user_id === draft.player1_id
-        ? draft.player2_id
-        : draft.player1_id
+  if (playerAllowedPoints !== undefined && cardCostById) {
+    const nextTurn = computeNextTurn(draft, updatedPicks, playerAllowedPoints, cardCostById)
+    return {
+      draft_history: updatedHistory,
+      current_turn_user_id: nextTurn.userId,
+      turn_index: nextTurn.turnIndex,
+    }
+  }
 
   return {
     draft_history: updatedHistory,
-    current_turn_user_id: nextTurnUserId,
+    current_turn_user_id:
+      draft.current_turn_user_id === draft.player1_id
+        ? draft.player2_id
+        : draft.player1_id,
   }
+}
+
+/**
+ * Initial rolls for every participant in seat order (or player order for 1v1).
+ */
+export const getInitialRolls = (draft: Draft | null): InitialRoll[] => {
+  if (!draft?.initial_roll || !Array.isArray(draft.initial_roll)) return []
+  const order = draft.turn_order?.length ? draft.turn_order : getDraftPlayerIds(draft)
+  const rollByUser = new Map(draft.initial_roll.map((r) => [r.userID, r.roll]))
+  return order.map((userID) => ({ userID, roll: rollByUser.get(userID) ?? 0 }))
 }

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { TEAM } from "@/types/constants";
 import {
   SHARE_SLUG_MAX_LENGTH,
   SHARE_SLUG_MIN_LENGTH,
@@ -16,4 +17,11 @@ export const zShareSlug = z
 
 export const zCardIds = z.array(
   z.string().refine((value) => UUID_PATTERN.test(value)),
+);
+
+export const zSharedDraftArmies = z.array(
+  z.object({
+    team: z.union([z.literal(TEAM.FIRST), z.literal(TEAM.SECOND)]).nullish(),
+    card_ids: zCardIds,
+  }),
 );

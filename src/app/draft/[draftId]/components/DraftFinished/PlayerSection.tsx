@@ -3,32 +3,17 @@
 import type { Card } from "@/types/database.types";
 import { CardImage } from "@/app/components/DraftInfo/components";
 import { useTranslation } from "react-i18next";
-
-type PlayerSectionColor = "blue" | "green";
-
-const sectionAccentStyles: Record<
-  PlayerSectionColor,
-  { border: string; badge: string; title: string }
-> = {
-  blue: {
-    border: "border-blue-200 bg-blue-50/70",
-    badge: "bg-blue-100 text-blue-700",
-    title: "text-blue-900",
-  },
-  green: {
-    border: "border-green-200 bg-green-50/70",
-    badge: "bg-green-100 text-green-700",
-    title: "text-green-900",
-  },
-};
+import { PLAYER_ACCENT_STYLES, type PlayerAccent } from "@/utils/drafts/playerAccents";
 
 interface PlayerSectionProps {
   name: string;
   cards: Card[];
   totalCost: number;
   costOverrides: Map<string, number>;
-  accent: PlayerSectionColor;
+  accent: PlayerAccent;
   onCardClick: (card: Card) => void;
+  /** e.g. seat letter or team name shown above the player name */
+  subtitle?: string;
 }
 
 export const PlayerSection = ({
@@ -38,9 +23,10 @@ export const PlayerSection = ({
   costOverrides,
   accent,
   onCardClick,
+  subtitle,
 }: PlayerSectionProps) => {
   const { t } = useTranslation();
-  const accentStyles = sectionAccentStyles[accent];
+  const accentStyles = PLAYER_ACCENT_STYLES[accent];
 
   const totalStrategicValue = cards.reduce(
     (sum, card) => sum + (card.strategic_value || 0),
@@ -54,7 +40,7 @@ export const PlayerSection = ({
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-xs uppercase tracking-wide text-gray-500">
-            {t("pickedCards")}
+            {subtitle ? `${subtitle} · ${t("pickedCards")}` : t("pickedCards")}
           </p>
           <h3 className={`text-xl font-semibold ${accentStyles.title}`}>
             {name}

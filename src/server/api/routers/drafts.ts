@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { router, publicProcedure, protectedProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
-import type { Draft, Card, GameMap, DraftHistory, DraftPick, DraftSettings, CardOrigin, DraftResetRequest, DraftReadyCheck } from "@/types/database.types";
+import type { Draft, Card, GameMap, DraftHistory, DraftPick, DraftSettings, CardOrigin, DraftResetRequest, DraftReadyCheck, GameInvitation } from "@/types/database.types";
 import { zUuid } from "../schemas";
 import {
   DRAFT_STATUS,
@@ -21,8 +21,17 @@ import {
 } from "./drafts/index";
 import type { AppRouter } from "../root";
 import { DraftPoolConfig } from "@/types/draft-settings.types";
-import { computeNextTurnUserId } from "@/utils/drafts/helpers";
-import { SOLO_PRACTICE_PLAYER_ID } from "@/types/constants";
+import { computeNextTurn } from "@/utils/drafts/helpers";
+import {
+  getDraftMode,
+  getModePlayerCount,
+  isDraftParticipant,
+  isMultiplayerMode,
+} from "@/utils/drafts/turnOrder";
+import { SOLO_PRACTICE_PLAYER_ID, GAME_MODE } from "@/types/constants";
+import { zGameMode, zPlayerTeams } from "../schemas";
+import { participantFilter, withLegacyColumnFallback } from "../participants";
+import { createDraftSeating, multiplayerSeatingColumns } from "./drafts/seating";
 
 export const draftsRouter = router({
   // Generate draft pool (returns pool without creating draft record)
@@ -121,6 +130,9 @@ export const draftsRouter = router({
         draft_pool: z.array(z.string()),
         player1_id: zUuid,
         player2_id: zUuid,
+        mode: zGameMode.default(GAME_MODE.ONE_VS_ONE),
+        player_ids: z.array(zUuid).optional(),
+        player_teams: zPlayerTeams.nullish(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -143,31 +155,36 @@ export const draftsRouter = router({
       const player1Id = input.player1_id || userId;
       const player2Id = input.player2_id || player1Id;
 
-      // Generate random rolls for each player (1-100)
-      const player1Roll = Math.floor(Math.random() * 100) + 1;
-      const player2Roll = Math.floor(Math.random() * 100) + 1;
+      const isMultiplayer = isMultiplayerMode(input.mode);
+      const playerIds = isMultiplayer && input.player_ids
+        ? input.player_ids
+        : [player1Id, player2Id];
 
-      // Create initial_roll array with both players' rolls
-      const initialRoll = [
-        { userID: player1Id, roll: player1Roll },
-        { userID: player2Id, roll: player2Roll },
-      ];
+      if (isMultiplayer && playerIds.length !== getModePlayerCount(input.mode)) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Player count does not match the game mode",
+        });
+      }
 
-      // Determine who goes first based on highest roll
-      // If tie, player1 goes first
-      const firstTurnUserId =
-        player2Roll > player1Roll ? player2Id : player1Id;
+      const seating = createDraftSeating(playerIds, input.mode, input.player_teams);
 
       // Create draft record with generated pool
       const draftInsert = {
         game_id: input.game_id,
         player1_id: player1Id,
         player2_id: player2Id,
-        initial_roll: initialRoll,
+        initial_roll: seating.initial_roll,
         draft_status: DRAFT_STATUS.DRAFT,
         draft_pool: input.draft_pool,
         draft_history: [],
-        current_turn_user_id: firstTurnUserId,
+        current_turn_user_id: seating.current_turn_user_id,
+        ...(isMultiplayer && {
+          mode: input.mode,
+          player_ids: playerIds,
+          player_teams: input.player_teams ?? null,
+          ...multiplayerSeatingColumns(seating),
+        }),
       };
 
       const { data: draft, error: draftError } = await ctx.supabase
@@ -238,6 +255,9 @@ export const draftsRouter = router({
           .default(DEFAULT_DRAFT_SETTINGS.maps),
         player1_id: zUuid.optional(),
         player2_id: zUuid.optional(),
+        mode: zGameMode.default(GAME_MODE.ONE_VS_ONE),
+        player_ids: z.array(zUuid).optional(),
+        player_teams: zPlayerTeams.nullish(),
       })
     )
     .mutation(async ({ ctx, input }): Promise<Draft> => {
@@ -278,6 +298,9 @@ export const draftsRouter = router({
         draft_pool: allCardIds,
         player1_id: player1Id,
         player2_id: player2Id,
+        mode: input.mode,
+        player_ids: input.player_ids,
+        player_teams: input.player_teams,
       });
 
       // Step 3: Select a random map and attach it to the game
@@ -359,6 +382,23 @@ export const draftsRouter = router({
         invitation = latestInvitation;
       }
 
+      let invitations: GameInvitation[] | undefined;
+      if (isMultiplayerMode(getDraftMode(draftData))) {
+        const { data: allInvitations } = await ctx.supabase
+          .from("game_invitations")
+          .select("*")
+          .eq("game_id", draftData.game_id)
+          .order("updated_at", { ascending: false });
+
+        const latestByInvitee = new Map<string, GameInvitation>();
+        for (const inv of (allInvitations ?? []) as GameInvitation[]) {
+          if (!latestByInvitee.has(inv.invitee_id)) {
+            latestByInvitee.set(inv.invitee_id, inv);
+          }
+        }
+        invitations = [...latestByInvitee.values()];
+      }
+
       // Fetch pending reset request
       const { data: resetRequest } = await ctx.supabase
         .from("draft_reset_requests")
@@ -379,11 +419,13 @@ export const draftsRouter = router({
         ...draftData,
         game: game || undefined,
         invitation: invitation || undefined,
+        invitations,
         resetRequest: (resetRequest as unknown as DraftResetRequest) || undefined,
         readyCheck: (readyCheck as unknown as DraftReadyCheck) || undefined,
       } as Draft & {
         game?: import("@/types/database.types").Game;
-        invitation?: import("@/types/database.types").GameInvitation;
+        invitation?: GameInvitation;
+        invitations?: GameInvitation[];
         resetRequest?: DraftResetRequest;
         readyCheck?: DraftReadyCheck;
       };
@@ -431,7 +473,7 @@ export const draftsRouter = router({
       // Verify user has permission to update this draft
       const { data: draft, error: fetchError } = await ctx.supabase
         .from("drafts")
-        .select("player1_id, player2_id")
+        .select("*")
         .eq("id", id)
         .single();
 
@@ -442,9 +484,9 @@ export const draftsRouter = router({
         });
       }
 
-      const draftData = draft as { player1_id: string; player2_id: string };
+      const draftData = draft as Pick<Draft, "player1_id" | "player2_id" | "player_ids">;
       const userId = ctx.session.user.id;
-      if (draftData.player1_id !== userId && draftData.player2_id !== userId) {
+      if (!isDraftParticipant(draftData, userId)) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "You don't have permission to update this draft",
@@ -486,7 +528,7 @@ export const draftsRouter = router({
       // Verify draft exists and user is a participant
       const { data: draft, error: draftError } = await ctx.supabase
         .from("drafts")
-        .select("player1_id, player2_id, current_turn_user_id, draft_pool, draft_history, game_id")
+        .select("*")
         .eq("id", input.draft_id)
         .single();
 
@@ -523,17 +565,21 @@ export const draftsRouter = router({
         });
       }
 
-      const draftData = draft as {
-        player1_id: string;
-        player2_id: string;
-        current_turn_user_id: string;
-        draft_pool: string[];
-        draft_history: unknown;
-        game_id: string;
-      };
+      const draftData = draft as Pick<
+        Draft,
+        | "player1_id"
+        | "player2_id"
+        | "current_turn_user_id"
+        | "draft_pool"
+        | "game_id"
+        | "mode"
+        | "player_ids"
+        | "turn_order"
+        | "turn_index"
+      > & { draft_history: unknown };
 
       // Verify user is a participant
-      if (draftData.player1_id !== userId && draftData.player2_id !== userId) {
+      if (!isDraftParticipant(draftData, userId)) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "You are not a participant in this draft",
@@ -735,12 +781,13 @@ export const draftsRouter = router({
         }
       }
 
-      const nextTurnUserId = computeNextTurnUserId(
+      const nextTurn = computeNextTurn(
         draftData,
         updatedPicks,
         playerAllowedPoints,
         cardCostById
       );
+      const isMultiplayer = isMultiplayerMode(getDraftMode(draftData));
 
       // Ensure companion and bringsWith cards are in the draft pool
       let updatedPool = draftData.draft_pool;
@@ -756,8 +803,9 @@ export const draftsRouter = router({
         .from("drafts")
         .update({
           draft_history: updatedHistory,
-          current_turn_user_id: nextTurnUserId,
+          current_turn_user_id: nextTurn.userId,
           draft_pool: updatedPool,
+          ...(isMultiplayer && { turn_index: nextTurn.turnIndex }),
         } as never)
         .eq("id", input.draft_id)
         .select()
@@ -787,7 +835,7 @@ export const draftsRouter = router({
       // Verify draft exists and user is a participant
       const { data: draft, error: draftError } = await ctx.supabase
         .from("drafts")
-        .select("player1_id, player2_id, draft_status, game_id")
+        .select("*")
         .eq("id", input.draft_id)
         .single();
 
@@ -801,12 +849,13 @@ export const draftsRouter = router({
       const draftData = draft as {
         player1_id: string;
         player2_id: string;
+        player_ids?: string[];
         draft_status: string;
         game_id: string | null;
       };
 
       // Verify user is a participant
-      if (draftData.player1_id !== userId && draftData.player2_id !== userId) {
+      if (!isDraftParticipant(draftData, userId)) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "You are not a participant in this draft",
@@ -912,14 +961,16 @@ export const draftsRouter = router({
   getActiveDraft: protectedProcedure.query(async ({ ctx }) => {
     const userId = ctx.session.user.id;
 
-    const { data: draft, error } = await ctx.supabase
-      .from("drafts")
-      .select("*")
-      .or(`player1_id.eq.${userId},player2_id.eq.${userId}`)
-      .eq("draft_status", DRAFT_STATUS.DRAFT)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+    const { data: draft, error } = await withLegacyColumnFallback((legacy) =>
+      ctx.supabase
+        .from("drafts")
+        .select("*")
+        .or(participantFilter(userId, legacy))
+        .eq("draft_status", DRAFT_STATUS.DRAFT)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle()
+    );
 
     if (error) {
       throw new TRPCError({
@@ -937,12 +988,14 @@ export const draftsRouter = router({
   getActiveDrafts: protectedProcedure.query(async ({ ctx }) => {
     const userId = ctx.session.user.id;
 
-    const { data: drafts, error } = await ctx.supabase
-      .from("drafts")
-      .select("*")
-      .or(`player1_id.eq.${userId},player2_id.eq.${userId}`)
-      .eq("draft_status", DRAFT_STATUS.DRAFT)
-      .order("created_at", { ascending: false });
+    const { data: drafts, error } = await withLegacyColumnFallback((legacy) =>
+      ctx.supabase
+        .from("drafts")
+        .select("*")
+        .or(participantFilter(userId, legacy))
+        .eq("draft_status", DRAFT_STATUS.DRAFT)
+        .order("created_at", { ascending: false })
+    );
 
     if (error) {
       throw new TRPCError({

@@ -11,6 +11,13 @@ import {
   SESSION_STATUS,
 } from "@/types/constants";
 import { SOLO_PRACTICE_PLAYER_ID } from "@/types/constants";
+import {
+  getDraftMode,
+  getDraftPlayerIds,
+  isDraftParticipant,
+  isMultiplayerMode,
+} from "@/utils/drafts/turnOrder";
+import { getReadyPlayerIds } from "@/utils/drafts/readyChecks";
 
 export const draftReadyChecksRouter = router({
   // Get pending ready check for a draft
@@ -43,7 +50,7 @@ export const draftReadyChecksRouter = router({
 
       const { data: draft, error: draftError } = await ctx.supabase
         .from("drafts")
-        .select("player1_id, player2_id, draft_status, game_id")
+        .select("*")
         .eq("id", input.draft_id)
         .single();
 
@@ -51,14 +58,12 @@ export const draftReadyChecksRouter = router({
         throw new TRPCError({ code: "NOT_FOUND", message: "Draft not found" });
       }
 
-      const draftData = draft as {
-        player1_id: string;
-        player2_id: string;
+      const draftData = draft as Pick<Draft, "player1_id" | "player2_id" | "mode" | "player_ids"> & {
         draft_status: string;
         game_id: string | null;
       };
 
-      if (draftData.player1_id !== userId && draftData.player2_id !== userId) {
+      if (!isDraftParticipant(draftData, userId)) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "You are not a participant in this draft",
@@ -80,6 +85,7 @@ export const draftReadyChecksRouter = router({
       }
 
       const isPractice = draftData.player2_id === SOLO_PRACTICE_PLAYER_ID;
+      const isMultiplayer = isMultiplayerMode(getDraftMode(draftData));
 
       // Check for existing pending ready check
       const { data: existing, error: existingError } = await ctx.supabase
@@ -107,6 +113,7 @@ export const draftReadyChecksRouter = router({
             game_id: draftData.game_id,
             first_player_id: userId,
             status: DRAFT_READY_CHECK_STATUS.PENDING,
+            ...(isMultiplayer && { ready_player_ids: [userId] }),
           } as never)
           .select("id")
           .single();
@@ -128,11 +135,32 @@ export const draftReadyChecksRouter = router({
         const existingCheck = existing as DraftReadyCheck;
         readyCheckId = existingCheck.id;
 
-        if (existingCheck.first_player_id === userId) {
+        const readyIds = getReadyPlayerIds(existingCheck);
+
+        if (existingCheck.first_player_id === userId || readyIds.includes(userId)) {
           throw new TRPCError({
             code: "BAD_REQUEST",
             message: "You are already marked as ready",
           });
+        }
+
+        if (isMultiplayer) {
+          const nextReadyIds = [...readyIds, userId];
+          if (nextReadyIds.length < getDraftPlayerIds(draftData).length) {
+            const { error: readyUpdateError } = await ctx.supabase
+              .from("draft_ready_checks")
+              .update({ ready_player_ids: nextReadyIds } as never)
+              .eq("id", existingCheck.id);
+
+            if (readyUpdateError) {
+              throw new TRPCError({
+                code: "INTERNAL_SERVER_ERROR",
+                message: "Failed to mark as ready",
+                cause: readyUpdateError,
+              });
+            }
+            return { bothReady: false };
+          }
         }
       }
 
@@ -245,6 +273,29 @@ export const draftReadyChecksRouter = router({
       }
 
       const existingCheck = existing as DraftReadyCheck;
+      const readyIds = getReadyPlayerIds(existingCheck);
+      const remainingIds = readyIds.filter((id) => id !== userId);
+
+      // Multiplayer: a ready player withdraws while others stay ready
+      if (readyIds.includes(userId) && remainingIds.length > 0) {
+        const { error: withdrawError } = await ctx.supabase
+          .from("draft_ready_checks")
+          .update({
+            ready_player_ids: remainingIds,
+            first_player_id: remainingIds[0],
+          } as never)
+          .eq("id", existingCheck.id);
+
+        if (withdrawError) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to cancel ready check",
+            cause: withdrawError,
+          });
+        }
+
+        return { cancelled: true };
+      }
 
       if (existingCheck.first_player_id !== userId) {
         throw new TRPCError({

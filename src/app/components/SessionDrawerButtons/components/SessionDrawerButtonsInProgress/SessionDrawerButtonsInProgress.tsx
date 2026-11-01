@@ -33,7 +33,9 @@ import {
 import {
   createFinishGameFormSchema,
   getCurrentGameId,
+  isTeamSession,
   mapSessionPlayersToOptions,
+  parseWinnerSelection,
 } from "./utils";
 import type { FinishGameFormValues } from "./types";
 import { api } from "@/trpc/client";
@@ -61,9 +63,10 @@ export default function SessionDrawerButtonsInProgress({
   });
 
   const playerOptions = useMemo(
-    () => mapSessionPlayersToOptions(session),
-    [session]
+    () => mapSessionPlayersToOptions(session, t),
+    [session, t]
   );
+  const winnerLabel = isTeamSession(session) ? t("selectWinningTeam") : t("selectWinner");
 
   const handleOpenChange = (open: boolean) => {
     setIsModalOpen(open);
@@ -94,7 +97,7 @@ export default function SessionDrawerButtonsInProgress({
     finishGame({
       gameId: currentGame,
       sessionId: session.id,
-      winnerId: values.playerId,
+      ...parseWinnerSelection(values.playerId),
       winCondition: values.winCondition,
     });
   };
@@ -152,11 +155,11 @@ export default function SessionDrawerButtonsInProgress({
               name="playerId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t("selectWinner")}</FormLabel>
+                  <FormLabel>{winnerLabel}</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger className="w-full">
-                        <SelectValue placeholder={t("selectWinner")} />
+                        <SelectValue placeholder={winnerLabel} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>

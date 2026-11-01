@@ -7,6 +7,14 @@ import type { GameWithDraft, GameWithUserJoin } from "./games/types";
 import { parseDraftHistory } from "@/utils/drafts";
 import { SOLO_PRACTICE_PLAYER_ID, GAME_STATUS, SESSION_STATUS, DEFAULT_DRAFT_SETTINGS, CARD_ORIGIN, ALL_VALUE } from "@/types/constants";
 import type { AppRouter } from "../root";
+import { zTeam } from "../schemas";
+import {
+  getDraftMode,
+  getDraftPlayerIds,
+  isDraftParticipant,
+  isMultiplayerMode,
+} from "@/utils/drafts/turnOrder";
+import { finishMultiplayerGame } from "./games/finishMultiplayerGame";
 
 export const gamesRouter = router({
   // Get games by array of IDs
@@ -244,16 +252,18 @@ export const gamesRouter = router({
         gameId: zUuid,
         sessionId: zUuid,
         winnerId: zUuid.optional(),
+        /** 2v2 only: the winning team */
+        winnerTeam: zTeam.optional(),
         winCondition: z.string().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const { gameId, sessionId, winnerId, winCondition } = input;
+      const { gameId, sessionId, winnerId, winnerTeam, winCondition } = input;
 
       const { data: session, error: sessionFetchError } = await ctx.supabase
         .from("sessions")
         .select(
-          "player1_id, player2_id, player1_session_score, player2_session_score",
+          "*",
         )
         .eq("id", sessionId)
         .single();
@@ -271,10 +281,7 @@ export const gamesRouter = router({
       const sessionData = session as Session;
       const userId = ctx.session.user.id;
 
-      if (
-        sessionData.player1_id !== userId &&
-        sessionData.player2_id !== userId
-      ) {
+      if (!isDraftParticipant(sessionData, userId)) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "You are not authorized to finish this game",
@@ -282,6 +289,18 @@ export const gamesRouter = router({
       }
 
       const isPractice = sessionData.player2_id === SOLO_PRACTICE_PLAYER_ID;
+
+      if (isMultiplayerMode(getDraftMode(sessionData))) {
+        return finishMultiplayerGame(ctx.supabase, {
+          gameId,
+          sessionId,
+          session: sessionData,
+          isPractice,
+          winnerId,
+          winnerTeam,
+          winCondition,
+        });
+      }
 
       const { data: updatedGame, error: gameUpdateError } = await ctx.supabase
         .from("games")
@@ -407,7 +426,7 @@ export const gamesRouter = router({
         const isPractice = sessionData.player2_id === SOLO_PRACTICE_PLAYER_ID;
 
         // Verify user is part of the session
-        if (sessionData.player1_id !== userId && sessionData.player2_id !== userId) {
+        if (!isDraftParticipant(sessionData, userId)) {
           throw new TRPCError({
             code: "FORBIDDEN",
             message: "You are not authorized to create a game for this session",
@@ -482,6 +501,9 @@ export const gamesRouter = router({
           maps,
           player1_id: sessionData.player1_id,
           player2_id: sessionData.player2_id,
+          mode: getDraftMode(sessionData),
+          player_ids: getDraftPlayerIds(sessionData),
+          player_teams: sessionData.player_teams ?? null,
         });
 
         createdDraft = draft;
