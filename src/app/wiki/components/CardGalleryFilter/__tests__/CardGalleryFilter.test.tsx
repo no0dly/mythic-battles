@@ -19,12 +19,15 @@ const mockHook = {
     { value: "5", label: "5" },
   ],
   mapTypeOptions: [{ value: "ruins", label: "Ruins" }],
+  originOptions: [{ value: "ASG", label: "Asgard" }],
   multiSelectTypeValue: [] as string[],
   multiSelectCostValue: [] as string[],
   multiSelectMapTypeValue: [] as string[],
+  multiSelectOriginValue: [] as string[],
   handleTypeChange: vi.fn(),
   handleCostChange: vi.fn(),
   handleMapTypeChange: vi.fn(),
+  handleOriginChange: vi.fn(),
   clearFilters: vi.fn(),
 };
 
@@ -76,7 +79,7 @@ vi.mock("@/components/ui/multi-select", () => ({
 // Helpers
 // ---------------------------------------------------------------------------
 const renderFilter = (uniqueCosts: number[] = [3, 5]) =>
-  render(<CardGalleryFilter uniqueCosts={uniqueCosts} />);
+  render(<CardGalleryFilter uniqueCosts={uniqueCosts} uniqueOrigins={["ASG"]} />);
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -101,15 +104,20 @@ describe("CardGalleryFilter", () => {
       expect(screen.getByLabelText("searchByName")).toBeTruthy();
     });
 
-    it("renders two multi-selects when maps not selected", () => {
+    it("renders three multi-selects when maps not selected", () => {
       renderFilter();
-      expect(screen.getAllByTestId("multi-select")).toHaveLength(2);
+      expect(screen.getAllByTestId("multi-select")).toHaveLength(3);
     });
 
-    it("renders two multi-selects when maps is selected", () => {
+    it("renders three multi-selects when maps is selected", () => {
       mockHook.mapsSelected = true;
       renderFilter();
-      expect(screen.getAllByTestId("multi-select")).toHaveLength(2);
+      expect(screen.getAllByTestId("multi-select")).toHaveLength(3);
+    });
+
+    it("renders origin options", () => {
+      renderFilter();
+      expect(screen.getByTestId("option-ASG")).toBeTruthy();
     });
 
     it("renders cost options when maps not selected", () => {
@@ -172,6 +180,12 @@ describe("CardGalleryFilter", () => {
       renderFilter();
       fireEvent.click(screen.getByTestId("option-ruins"));
       expect(mockHook.handleMapTypeChange).toHaveBeenCalledWith(["ruins"]);
+    });
+
+    it("calls handleOriginChange when an origin option is clicked", () => {
+      renderFilter();
+      fireEvent.click(screen.getByTestId("option-ASG"));
+      expect(mockHook.handleOriginChange).toHaveBeenCalledWith(["ASG"]);
     });
   });
 });

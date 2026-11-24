@@ -6,28 +6,32 @@ import {
   useSelectedTypes,
   useSelectedCosts,
   useSelectedMapTypes,
+  useSelectedOrigins,
   useFilterActions,
   DEFAULT_FILTER,
 } from "@/stores/cardFilters";
 import { CARD_TYPES, MAP_TYPE, UNIT_TYPES, HELPER_TYPES } from "@/types/constants";
-import { MAPS_FILTER_VALUE } from "@/app/wiki/components/CardGallery/utils";
+import { MAPS_FILTER_VALUE, getOriginLabel } from "@/app/wiki/components/CardGallery/utils";
 import type { MultiSelectGroup } from "@/components/ui/multi-select";
+import type { CardOrigin } from "@/types/database.types";
 
 const ALL_FILTER_OPTIONS_COUNT = Object.values(CARD_TYPES).length + 1; // +1 for maps
 const ALL_MAP_TYPE_COUNT = Object.values(MAP_TYPE).length;
 
-export function useCardGalleryFilter(uniqueCosts: number[]) {
+export function useCardGalleryFilter(uniqueCosts: number[], uniqueOrigins: CardOrigin[]) {
   const { t } = useTranslation();
   const searchName = useSearchName();
   const selectedTypes = useSelectedTypes();
   const selectedCosts = useSelectedCosts();
   const selectedMapTypes = useSelectedMapTypes();
+  const selectedOrigins = useSelectedOrigins();
 
   const {
     setSearchName,
     setSelectedTypes,
     setSelectedCosts,
     setSelectedMapTypes,
+    setSelectedOrigins,
     clearFilters,
   } = useFilterActions();
 
@@ -37,7 +41,8 @@ export function useCardGalleryFilter(uniqueCosts: number[]) {
     !!searchName ||
     !selectedTypes.includes(DEFAULT_FILTER) ||
     !selectedCosts.includes(DEFAULT_FILTER) ||
-    !selectedMapTypes.includes(DEFAULT_FILTER);
+    !selectedMapTypes.includes(DEFAULT_FILTER) ||
+    !selectedOrigins.includes(DEFAULT_FILTER);
 
   const onInputChangeHandler = useMemo(
     () =>
@@ -75,9 +80,15 @@ export function useCardGalleryFilter(uniqueCosts: number[]) {
     [t],
   );
 
+  const originOptions = useMemo(
+    () => uniqueOrigins.map((origin) => ({ value: origin, label: getOriginLabel(origin) })),
+    [uniqueOrigins],
+  );
+
   const multiSelectTypeValue = selectedTypes.includes(DEFAULT_FILTER) ? [] : selectedTypes;
   const multiSelectCostValue = selectedCosts.includes(DEFAULT_FILTER) ? [] : selectedCosts;
   const multiSelectMapTypeValue = selectedMapTypes.includes(DEFAULT_FILTER) ? [] : selectedMapTypes;
+  const multiSelectOriginValue = selectedOrigins.includes(DEFAULT_FILTER) ? [] : selectedOrigins;
 
   const handleTypeChange = (values: string[]) => {
     const hasMaps = values.includes(MAPS_FILTER_VALUE);
@@ -114,6 +125,14 @@ export function useCardGalleryFilter(uniqueCosts: number[]) {
     }
   };
 
+  const handleOriginChange = (values: string[]) => {
+    if (values.length === 0 || values.length === uniqueOrigins.length) {
+      setSelectedOrigins([DEFAULT_FILTER]);
+    } else {
+      setSelectedOrigins(values);
+    }
+  };
+
   return {
     mapsSelected,
     hasActiveFilters,
@@ -121,12 +140,15 @@ export function useCardGalleryFilter(uniqueCosts: number[]) {
     typeOptions,
     costOptions,
     mapTypeOptions,
+    originOptions,
     multiSelectTypeValue,
     multiSelectCostValue,
     multiSelectMapTypeValue,
+    multiSelectOriginValue,
     handleTypeChange,
     handleCostChange,
     handleMapTypeChange,
+    handleOriginChange,
     clearFilters,
   };
 }

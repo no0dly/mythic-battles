@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect } from "vitest";
-import { getFilteredData, getFilteredMaps, getUniqueCosts, chunk } from "../utils";
+import { getFilteredData, getFilteredMaps, getUniqueCosts, getUniqueOrigins, chunk } from "../utils";
 import { DEFAULT_FILTER } from "@/stores/cardFilters";
 import type { Card, GameMap } from "@/types/database.types";
 import { CARD_CLASS, CARD_ORIGIN, CARD_TYPES, MAP_TYPE } from "@/types/constants";
@@ -199,6 +199,16 @@ describe("getFilteredData", () => {
     expect(result[0]?.unit_name).toBe("Spartan Shield");
   });
 
+  it("filters by origin and excludes cards without origin", () => {
+    const result = getFilteredData(mockCards, "", [DEFAULT_FILTER], [DEFAULT_FILTER], [CARD_ORIGIN.COR]);
+    expect(result).toHaveLength(4);
+    expect(result.find((c) => c.id === "5")).toBeUndefined();
+  });
+
+  it("returns no cards when origin filter matches nothing", () => {
+    expect(getFilteredData(mockCards, "", [DEFAULT_FILTER], [DEFAULT_FILTER], [CARD_ORIGIN.ASG])).toHaveLength(0);
+  });
+
   it("returns empty array for empty input", () => {
     expect(getFilteredData([], "", [DEFAULT_FILTER], [DEFAULT_FILTER])).toHaveLength(0);
   });
@@ -267,6 +277,18 @@ describe("getFilteredMaps", () => {
     expect(result.find((m) => m.id === "m3")).toBeTruthy();
   });
 
+  it("filters maps by origin", () => {
+    const result = getFilteredMaps(
+      mockMaps,
+      "",
+      [DEFAULT_FILTER],
+      [DEFAULT_FILTER],
+      [DEFAULT_FILTER],
+      [CARD_ORIGIN.ASG, CARD_ORIGIN.RAG],
+    );
+    expect(result.map((m) => m.id)).toEqual(["m2", "m3"]);
+  });
+
   it("returns empty array for empty input", () => {
     expect(getFilteredMaps([], "", [DEFAULT_FILTER], [DEFAULT_FILTER], [DEFAULT_FILTER])).toHaveLength(0);
   });
@@ -274,6 +296,23 @@ describe("getFilteredMaps", () => {
   it("handles null/undefined data", () => {
     expect(getFilteredMaps(null as any, "", [DEFAULT_FILTER], [DEFAULT_FILTER], [DEFAULT_FILTER])).toEqual([]);
     expect(getFilteredMaps(undefined as any, "", [DEFAULT_FILTER], [DEFAULT_FILTER], [DEFAULT_FILTER])).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// getUniqueOrigins
+// ---------------------------------------------------------------------------
+describe("getUniqueOrigins", () => {
+  it("collects distinct origins from cards and maps, skipping null, sorted by full name", () => {
+    expect(getUniqueOrigins(mockCards, mockMaps)).toEqual([
+      CARD_ORIGIN.ASG,
+      CARD_ORIGIN.COR,
+      CARD_ORIGIN.RAG,
+    ]);
+  });
+
+  it("returns empty array for empty input", () => {
+    expect(getUniqueOrigins([], [])).toEqual([]);
   });
 });
 

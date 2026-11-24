@@ -152,6 +152,7 @@ const translation = {
   cost: "Стоимость",
   allCosts: "Все стоимости",
   allMapTypes: "Все типы карт",
+  allOrigins: "Все дополнения",
   clearFilters: "Очистить",
   draftSettings: "Настройки драфта",
   gameSettings: "Настройки игры",

@@ -152,6 +152,7 @@ const translation = {
   cost: "Cost",
   allCosts: "All Costs",
   allMapTypes: "All Map Types",
+  allOrigins: "All Origins",
   clearFilters: "Clear",
   draftSettings: "Draft Settings",
   gameSettings: "Game settings",
