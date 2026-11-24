@@ -228,6 +228,11 @@ export type SharedDraft = {
   mode?: GameMode
   /** All armies in seat order; legacy columns hold the first two */
   armies?: SharedDraftArmyEntry[] | null
+  /** Draft the snapshot was published from. Never returned to share page visitors */
+  source_draft_id?: string | null
+  /** Picks with player_id replaced by seat labels (A..D) */
+  draft_history?: Json | null
+  draft_pool?: string[] | null
   created_at: string
   updated_at: string
 }

@@ -1,21 +1,25 @@
 "use client";
 
 import { useState } from "react";
-import { ClipboardList } from "lucide-react";
+import { ClipboardList, History } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { Card } from "@/types/database.types";
 import type { DraftWithRelations } from "@/utils/drafts/interfaces";
 import { api } from "@/trpc/client";
-import { sortPicksByNumber } from "@/utils/drafts";
+import { parseDraftHistory, sortPicksByNumber } from "@/utils/drafts";
 import { getDraftPlayerIds } from "@/utils/drafts/turnOrder";
+import { getDraftSeats } from "@/utils/drafts/seats";
 import { useMultiplayerDraftSeats, type DraftSeatInfo } from "@/hooks";
 import Loader from "@/components/Loader";
+import { Button } from "@/components/ui/button";
 import {
   CardPreviewDialog,
   PickHistoryItem,
 } from "@/app/components/DraftInfo/components";
+import { MultiplayerDraftHistoryModal } from "@/app/components/DraftInfo/MultiplayerDraftHistoryModal";
 import { PlayerSection } from "../DraftFinished/PlayerSection";
 import { MapSection } from "../MapSection/MapSection";
+import DraftShareControl from "../DraftShareControl";
 
 interface MultiplayerDraftFinishedProps {
   draft: DraftWithRelations;
@@ -28,6 +32,7 @@ const sortSeatsByTeam = (seats: DraftSeatInfo[]) =>
 export function MultiplayerDraftFinished({ draft, cards }: MultiplayerDraftFinishedProps) {
   const { t } = useTranslation();
   const [previewCard, setPreviewCard] = useState<Card | null>(null);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const playerIds = getDraftPlayerIds(draft);
 
   const { data: usersData, isLoading: usersLoading } = api.users.getUsersByIds.useQuery(
@@ -50,6 +55,10 @@ export function MultiplayerDraftFinished({ draft, cards }: MultiplayerDraftFinis
   );
   const seatByUserId = new Map(seats.map((seat) => [seat.userId, seat]));
   const usersMap = new Map((usersData ?? []).map((user) => [user.id, user]));
+  const namedSeats = getDraftSeats(draft).map((seat) => ({
+    ...seat,
+    name: seatByUserId.get(seat.userId)?.name ?? seat.seatLabel,
+  }));
   const loading = usersLoading || !cards;
 
   return (
@@ -63,6 +72,18 @@ export function MultiplayerDraftFinished({ draft, cards }: MultiplayerDraftFinis
           <h2 className="text-2xl font-semibold">{t("draftHistoryDetails")}</h2>
         </div>
         <p className="text-sm text-muted-foreground">{t("draftHistoryDescription")}</p>
+        <div className="flex flex-wrap items-center gap-2 pt-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsHistoryOpen(true)}
+            data-testid="draft-finished-view-history"
+          >
+            <History />
+            {t("viewDetailedHistory")}
+          </Button>
+          <DraftShareControl draftId={draft.id} finishedAt={draft.updated_at} />
+        </div>
       </div>
 
       {loading ? (
@@ -127,6 +148,15 @@ export function MultiplayerDraftFinished({ draft, cards }: MultiplayerDraftFinis
       )}
 
       <CardPreviewDialog card={previewCard} onClose={() => setPreviewCard(null)} />
+
+      <MultiplayerDraftHistoryModal
+        open={isHistoryOpen}
+        onOpenChange={setIsHistoryOpen}
+        draftHistory={parseDraftHistory(draft.draft_history)}
+        seats={namedSeats}
+        mapId={draft.map_id}
+        mapSide={draft.map_side}
+      />
     </div>
   );
 }

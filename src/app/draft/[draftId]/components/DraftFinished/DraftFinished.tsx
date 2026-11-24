@@ -1,19 +1,22 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { ClipboardList } from "lucide-react";
+import { ClipboardList, History } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { Card, Draft, UserProfile } from "@/types/database.types";
 import { api } from "@/trpc/client";
 import { parseDraftHistory, sortPicksByNumber } from "@/utils/drafts";
 import { formatDisplayName } from "@/utils/users";
 import Loader from "@/components/Loader";
+import { Button } from "@/components/ui/button";
 import {
   CardPreviewDialog,
   PickHistoryItem,
 } from "@/app/components/DraftInfo/components";
+import { DraftHistoryModal } from "@/app/components/DraftInfo/DraftHistoryModal";
 import { PlayerSection } from "./PlayerSection";
 import { MapSection } from "../MapSection/MapSection";
+import DraftShareControl from "../DraftShareControl";
 
 type UserData = Pick<
   UserProfile,
@@ -28,6 +31,7 @@ interface DraftFinishedProps {
 export default function DraftFinished({ draft, cards }: DraftFinishedProps) {
   const { t } = useTranslation();
   const [previewCard, setPreviewCard] = useState<Card | null>(null);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
   const draftHistory = useMemo(
     () => parseDraftHistory(draft.draft_history),
@@ -119,6 +123,18 @@ export default function DraftFinished({ draft, cards }: DraftFinishedProps) {
         <p className="text-sm text-muted-foreground">
           {t("draftHistoryDescription")}
         </p>
+        <div className="flex flex-wrap items-center gap-2 pt-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsHistoryOpen(true)}
+            data-testid="draft-finished-view-history"
+          >
+            <History />
+            {t("viewDetailedHistory")}
+          </Button>
+          <DraftShareControl draftId={draft.id} finishedAt={draft.updated_at} />
+        </div>
       </div>
 
       {loading ? (
@@ -189,6 +205,17 @@ export default function DraftFinished({ draft, cards }: DraftFinishedProps) {
       <CardPreviewDialog
         card={previewCard}
         onClose={() => handleSetPreviewCard(null)}
+      />
+
+      <DraftHistoryModal
+        open={isHistoryOpen}
+        onOpenChange={setIsHistoryOpen}
+        draftHistory={draftHistory}
+        player1Id={draft.player1_id}
+        player2Id={draft.player2_id}
+        draftPool={draft.draft_pool ?? []}
+        mapId={draft.map_id}
+        mapSide={draft.map_side}
       />
     </div>
   );

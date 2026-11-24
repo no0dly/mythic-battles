@@ -7,10 +7,10 @@ import { cardsInListedOrder } from "@/utils/shared-drafts/cardsInListedOrder";
 import { totalCardCost } from "@/utils/shared-drafts/totalCardCost";
 import { getPlayerAccent } from "@/utils/drafts/playerAccents";
 import { SEAT_LABELS } from "@/utils/drafts/turnOrder";
+import { ONE_VS_ONE_ARMY_COUNT } from "../../constants";
 import { EMPTY_COST_OVERRIDES } from "./constants";
 import type { SharedDraftPreviewProps } from "./types";
 
-const ONE_VS_ONE_ARMY_COUNT = 2;
 const ONE_VS_ONE_NAME_KEYS = ["player1", "player2"];
 
 export default function SharedDraftPreview({

@@ -14,6 +14,8 @@ interface PickHistoryItemProps {
   onCardClick: () => void;
   /** Overrides the player1/player2 colours, used by multiplayer drafts */
   accent?: PlayerAccent;
+  /** Shown when there is no user, e.g. seat names on anonymous shared drafts */
+  fallbackName?: string;
 }
 
 export const PickHistoryItem = ({
@@ -23,15 +25,14 @@ export const PickHistoryItem = ({
   isPlayer1,
   onCardClick,
   accent,
+  fallbackName,
 }: PickHistoryItemProps) => {
   const { t } = useTranslation();
   const accentStyles = PLAYER_ACCENT_STYLES[accent ?? (isPlayer1 ? "blue" : "green")];
 
   const displayName = user
     ? formatDisplayName(user.display_name, user.email)
-    : isPlayer1
-    ? t("player1")
-    : t("player2");
+    : fallbackName ?? (isPlayer1 ? t("player1") : t("player2"));
 
   return (
     <div
