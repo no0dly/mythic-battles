@@ -6,7 +6,10 @@ import type { Card, SharedDraftRow } from "@/types/database.types";
 import { MAP_SIDE } from "@/types/constants";
 import { makeCard } from "@/utils/shared-drafts/__tests__/makeCard";
 import {
+  PICK_TIMESTAMP,
+  POOL_ONLY_CARD_ID,
   SHARED_DRAFT_ID,
+  SOURCE_DRAFT_ID,
   SPARTANS_ID,
   TARTARUS_MAP_ID,
   TEST_SHARE_SLUG,
@@ -90,6 +93,45 @@ describe("sharedDraftsRouter", () => {
       expect(result.cards).toEqual([mockCard]);
       expect(ctx.supabase.from).toHaveBeenCalledWith("shared_drafts");
       expect(ctx.supabase.from).toHaveBeenCalledWith("cards");
+    });
+
+    it("returns picks and pool, loading pool-only cards, without the source draft", async () => {
+      const pick = {
+        card_id: ZEUS_ID,
+        player_id: "A",
+        pick_number: 1,
+        timestamp: PICK_TIMESTAMP,
+      };
+      const ctx = createMockContext({
+        sharedDraft: {
+          data: {
+            ...mockSharedDraftRow,
+            source_draft_id: SOURCE_DRAFT_ID,
+            draft_history: { picks: [pick] },
+            draft_pool: [ZEUS_ID, SPARTANS_ID, POOL_ONLY_CARD_ID],
+          },
+          error: null,
+        },
+      }) as any;
+      const caller = sharedDraftsRouter.createCaller(ctx);
+
+      const result = await caller.getBySlug({ slug: TEST_SHARE_SLUG });
+
+      expect(result.picks).toEqual([pick]);
+      expect(result.draft_pool).toEqual([ZEUS_ID, SPARTANS_ID, POOL_ONLY_CARD_ID]);
+      expect(result).not.toHaveProperty("source_draft_id");
+      const cardsQuery = ctx.supabase.from.mock.results[1].value.select.mock.results[0].value;
+      expect(cardsQuery.in).toHaveBeenCalledWith("id", [ZEUS_ID, SPARTANS_ID, POOL_ONLY_CARD_ID]);
+    });
+
+    it("returns empty picks and pool for older snapshots", async () => {
+      const ctx = createMockContext() as any;
+      const caller = sharedDraftsRouter.createCaller(ctx);
+
+      const result = await caller.getBySlug({ slug: TEST_SHARE_SLUG });
+
+      expect(result.picks).toEqual([]);
+      expect(result.draft_pool).toEqual([]);
     });
 
     it("throws NOT_FOUND when the slug does not exist", async () => {

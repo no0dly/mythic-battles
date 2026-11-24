@@ -1,5 +1,5 @@
-import type { SharedDraftArmy, SharedDraftArmyEntry } from "@/types/database.types";
-import { zCardIds, zSharedDraftArmies } from "./schemas";
+import type { DraftPick, SharedDraftArmy, SharedDraftArmyEntry } from "@/types/database.types";
+import { zCardIds, zSharedDraftArmies, zSharedDraftHistory } from "./schemas";
 
 export const parseCardIds = (value: unknown): string[] => {
   const parsed = zCardIds.safeParse(value);
@@ -25,4 +25,10 @@ export const parseSharedDraftArmies = (
     { card_ids: legacy.player1_card_ids },
     { card_ids: legacy.player2_card_ids },
   ];
+};
+
+/** Snapshots published before history was stored have no picks. */
+export const parseSharedDraftPicks = (history: unknown): DraftPick[] => {
+  const parsed = zSharedDraftHistory.safeParse(history);
+  return parsed.success ? parsed.data.picks : [];
 };

@@ -16,4 +16,4 @@ export const zTeam = z.union([z.literal(TEAM.FIRST), z.literal(TEAM.SECOND)]);
 
 export const zPlayerTeams = z.record(zUuid, zTeam);
 
-export { zShareSlug } from "@/utils/shared-drafts/schemas";
+export { zShareSlug, zShareTitle } from "@/utils/shared-drafts/schemas";

@@ -8,6 +8,7 @@ import type { Card } from "@/types/database.types";
 import SharedDraftHeader from "../SharedDraftHeader/SharedDraftHeader";
 import SharedDraftNotFound from "../SharedDraftNotFound/SharedDraftNotFound";
 import SharedDraftPreview from "../SharedDraftPreview/SharedDraftPreview";
+import SharedDraftHistory from "../SharedDraftHistory/SharedDraftHistory";
 import type { SharedDraftContentProps } from "./types";
 
 export default function SharedDraftContent({ slug }: SharedDraftContentProps) {
@@ -42,6 +43,7 @@ export default function SharedDraftContent({ slug }: SharedDraftContentProps) {
     <div className="flex flex-col gap-6">
       <SharedDraftHeader title={data.title} />
       <SharedDraftPreview draft={data} onCardClick={handleCardClick} />
+      <SharedDraftHistory draft={data} onCardClick={handleCardClick} />
       <CardPreviewDialog card={previewCard} onClose={handleClosePreview} />
     </div>
   );
