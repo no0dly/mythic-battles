@@ -12,9 +12,11 @@ import {
   useSelectedTypes,
   useSelectedCosts,
   useSelectedMapTypes,
+  useSelectedOrigins,
 } from "@/stores/cardFilters";
 import {
   getUniqueCosts,
+  getUniqueOrigins,
   getFilteredData,
   getFilteredMaps,
   chunk,
@@ -41,12 +43,14 @@ export default function CardGallery() {
   const selectedTypes = useSelectedTypes();
   const selectedCosts = useSelectedCosts();
   const selectedMapTypes = useSelectedMapTypes();
+  const selectedOrigins = useSelectedOrigins();
   const parentRef = useRef<HTMLDivElement>(null);
   const columns = useResponsiveColumns();
 
   const isLoading = cardsLoading || mapsLoading;
 
   const uniqueCosts = useMemo(() => getUniqueCosts(cards || []), [cards]);
+  const uniqueOrigins = useMemo(() => getUniqueOrigins(cards || [], maps || []), [cards, maps]);
 
   const filteredItems = useMemo<GalleryItem[]>(() => {
     const filteredCards = getFilteredData(
@@ -54,13 +58,21 @@ export default function CardGallery() {
       searchName,
       selectedTypes,
       selectedCosts,
+      selectedOrigins,
     );
-    const filteredMaps = getFilteredMaps(maps || [], searchName, selectedTypes, selectedCosts, selectedMapTypes);
+    const filteredMaps = getFilteredMaps(
+      maps || [],
+      searchName,
+      selectedTypes,
+      selectedCosts,
+      selectedMapTypes,
+      selectedOrigins,
+    );
     return [
       ...filteredCards.map((data) => ({ kind: GALLERY_KIND.CARD, data })),
       ...filteredMaps.map((data) => ({ kind: GALLERY_KIND.MAP, data })),
     ];
-  }, [cards, maps, searchName, selectedTypes, selectedCosts, selectedMapTypes]);
+  }, [cards, maps, searchName, selectedTypes, selectedCosts, selectedMapTypes, selectedOrigins]);
 
   const rows = useMemo(
     () => chunk(filteredItems, Math.max(columns, 1)),
@@ -103,7 +115,7 @@ export default function CardGallery() {
   return (
     <div className="h-full flex flex-col">
       <div className="sticky top-0 z-10 bg-background flex flex-col gap-2 mb-1">
-        <CardGalleryFilter uniqueCosts={uniqueCosts} />
+        <CardGalleryFilter uniqueCosts={uniqueCosts} uniqueOrigins={uniqueOrigins} />
 
         {filteredItems && (
           <p className="text-sm text-muted-foreground py-2">

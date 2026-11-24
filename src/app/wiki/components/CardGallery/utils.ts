@@ -1,5 +1,6 @@
-import type { Card, GameMap } from "@/types/database.types";
+import type { Card, CardOrigin, GameMap } from "@/types/database.types";
 import { DEFAULT_FILTER } from "@/stores/cardFilters";
+import { CARD_ORIGIN_FULL_NAME } from "@/types/constants";
 
 export const GALLERY_KIND = {
   CARD: "card",
@@ -12,11 +13,18 @@ export type GalleryItem =
   | { kind: typeof GALLERY_KIND.CARD; data: Card }
   | { kind: typeof GALLERY_KIND.MAP; data: GameMap };
 
+const isOriginFilterActive = (selectedOrigins: string[]): boolean =>
+  !selectedOrigins.includes(DEFAULT_FILTER) && selectedOrigins.length > 0;
+
+export const getOriginLabel = (origin: CardOrigin): string =>
+  CARD_ORIGIN_FULL_NAME[origin] ?? origin;
+
 export const getFilteredData = (
   data: Card[],
   searchName: string,
   selectedTypes: string[],
-  selectedCosts: string[]
+  selectedCosts: string[],
+  selectedOrigins: string[] = [DEFAULT_FILTER],
 ): Card[] => {
   if (!data || data.length === 0) {
     return [];
@@ -24,8 +32,9 @@ export const getFilteredData = (
 
   const hasTypeFilter = !selectedTypes.includes(DEFAULT_FILTER) && selectedTypes.length > 0;
   const hasCostFilter = !selectedCosts.includes(DEFAULT_FILTER) && selectedCosts.length > 0;
+  const hasOriginFilter = isOriginFilterActive(selectedOrigins);
 
-  const hasFilters = searchName || hasTypeFilter || hasCostFilter;
+  const hasFilters = searchName || hasTypeFilter || hasCostFilter || hasOriginFilter;
 
   if (!hasFilters) {
     return data;
@@ -54,6 +63,10 @@ export const getFilteredData = (
       return false;
     }
 
+    if (hasOriginFilter && (!card.origin || !selectedOrigins.includes(card.origin))) {
+      return false;
+    }
+
     return true;
   });
 };
@@ -64,6 +77,7 @@ export const getFilteredMaps = (
   selectedTypes: string[],
   selectedCosts: string[],
   selectedMapTypes: string[],
+  selectedOrigins: string[] = [DEFAULT_FILTER],
 ): GameMap[] => {
   if (!maps || maps.length === 0) {
     return [];
@@ -84,8 +98,11 @@ export const getFilteredMaps = (
   }
 
   const hasMapTypeFilter = !selectedMapTypes.includes(DEFAULT_FILTER) && selectedMapTypes.length > 0;
+  const hasOriginFilter = isOriginFilterActive(selectedOrigins);
 
   return maps.filter((map) => {
+    if (hasOriginFilter && !selectedOrigins.includes(map.origin)) return false;
+
     if (searchName) {
       const normalized = searchName.toLowerCase().trim();
       if (!map.name.toLowerCase().includes(normalized)) return false;
@@ -100,6 +117,19 @@ export const getFilteredMaps = (
   });
 };
 
+export const getUniqueOrigins = (cards: Card[], maps: GameMap[]): CardOrigin[] => {
+  const uniqueOrigins = new Set<CardOrigin>();
+  for (const card of cards ?? []) {
+    if (card.origin) uniqueOrigins.add(card.origin);
+  }
+  for (const map of maps ?? []) {
+    if (map.origin) uniqueOrigins.add(map.origin);
+  }
+
+  return Array.from(uniqueOrigins).sort((a, b) =>
+    getOriginLabel(a).localeCompare(getOriginLabel(b)),
+  );
+};
 export const getUniqueCosts = (data: Card[]): number[] => {
   if (!data || data.length === 0) {
     return [];

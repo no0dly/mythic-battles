@@ -92,6 +92,7 @@ vi.mock("@/stores/cardFilters", () => ({
   useSelectedTypes: () => [],
   useSelectedCosts: () => [],
   useSelectedMapTypes: () => [],
+  useSelectedOrigins: () => [],
   useFilterActions: () => ({
     setSearchName: vi.fn(),
     setSelectedTypes: vi.fn(),

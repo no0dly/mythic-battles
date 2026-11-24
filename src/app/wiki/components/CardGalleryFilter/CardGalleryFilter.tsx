@@ -6,12 +6,14 @@ import { Card as UICard } from "@/components/ui/card";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { useTranslation } from "react-i18next";
 import { useCardGalleryFilter } from "./hooks/useCardGalleryFilter";
+import type { CardOrigin } from "@/types/database.types";
 
 interface CardGalleryFilterProps {
   uniqueCosts: number[];
+  uniqueOrigins: CardOrigin[];
 }
 
-export default function CardGalleryFilter({ uniqueCosts }: CardGalleryFilterProps) {
+export default function CardGalleryFilter({ uniqueCosts, uniqueOrigins }: CardGalleryFilterProps) {
   const { t } = useTranslation();
   const {
     mapsSelected,
@@ -20,14 +22,17 @@ export default function CardGalleryFilter({ uniqueCosts }: CardGalleryFilterProp
     typeOptions,
     costOptions,
     mapTypeOptions,
+    originOptions,
     multiSelectTypeValue,
     multiSelectCostValue,
     multiSelectMapTypeValue,
+    multiSelectOriginValue,
     handleTypeChange,
     handleCostChange,
     handleMapTypeChange,
+    handleOriginChange,
     clearFilters,
-  } = useCardGalleryFilter(uniqueCosts);
+  } = useCardGalleryFilter(uniqueCosts, uniqueOrigins);
 
   return (
     <UICard className="p-4">
@@ -68,6 +73,16 @@ export default function CardGalleryFilter({ uniqueCosts }: CardGalleryFilterProp
             />
           </div>
         )}
+
+        <div className="w-full sm:w-72 space-y-2">
+          <Label>{t("origin")}</Label>
+          <MultiSelect
+            options={originOptions}
+            value={multiSelectOriginValue}
+            onValueChange={handleOriginChange}
+            placeholder={t("allOrigins")}
+          />
+        </div>
 
         {hasActiveFilters && (
           <Button

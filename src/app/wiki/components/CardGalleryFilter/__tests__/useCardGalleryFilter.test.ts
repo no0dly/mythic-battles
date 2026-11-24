@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { useCardGalleryFilter } from "../hooks/useCardGalleryFilter";
 import { DEFAULT_FILTER } from "@/stores/cardFilters";
-import { CARD_TYPES, MAP_TYPE } from "@/types/constants";
+import { CARD_ORIGIN, CARD_TYPES, MAP_TYPE } from "@/types/constants";
 import { MAPS_FILTER_VALUE } from "@/app/wiki/components/CardGallery/utils";
 
 // ---------------------------------------------------------------------------
@@ -13,10 +13,12 @@ const mockStore = {
   selectedTypes: [DEFAULT_FILTER] as string[],
   selectedCosts: [DEFAULT_FILTER] as string[],
   selectedMapTypes: [DEFAULT_FILTER] as string[],
+  selectedOrigins: [DEFAULT_FILTER] as string[],
   setSearchName: vi.fn(),
   setSelectedTypes: vi.fn(),
   setSelectedCosts: vi.fn(),
   setSelectedMapTypes: vi.fn(),
+  setSelectedOrigins: vi.fn(),
   clearFilters: vi.fn(),
 };
 
@@ -26,11 +28,13 @@ vi.mock("@/stores/cardFilters", () => ({
   useSelectedTypes: () => mockStore.selectedTypes,
   useSelectedCosts: () => mockStore.selectedCosts,
   useSelectedMapTypes: () => mockStore.selectedMapTypes,
+  useSelectedOrigins: () => mockStore.selectedOrigins,
   useFilterActions: () => ({
     setSearchName: mockStore.setSearchName,
     setSelectedTypes: mockStore.setSelectedTypes,
     setSelectedCosts: mockStore.setSelectedCosts,
     setSelectedMapTypes: mockStore.setSelectedMapTypes,
+    setSelectedOrigins: mockStore.setSelectedOrigins,
     clearFilters: mockStore.clearFilters,
   }),
 }));
@@ -44,8 +48,10 @@ vi.mock("debounce", () => ({ default: (fn: unknown) => fn }));
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+const UNIQUE_ORIGINS = [CARD_ORIGIN.ASG, CARD_ORIGIN.COR, CARD_ORIGIN.RAG];
+
 const renderHookWithCosts = (uniqueCosts: number[] = [3, 4, 5]) =>
-  renderHook(() => useCardGalleryFilter(uniqueCosts));
+  renderHook(() => useCardGalleryFilter(uniqueCosts, UNIQUE_ORIGINS));
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -53,6 +59,7 @@ beforeEach(() => {
   mockStore.selectedTypes = [DEFAULT_FILTER];
   mockStore.selectedCosts = [DEFAULT_FILTER];
   mockStore.selectedMapTypes = [DEFAULT_FILTER];
+  mockStore.selectedOrigins = [DEFAULT_FILTER];
 });
 
 // ---------------------------------------------------------------------------
@@ -96,6 +103,12 @@ describe("useCardGalleryFilter", () => {
 
     it("hasActiveFilters is true when map type filter is active", () => {
       mockStore.selectedMapTypes = ["ruins"];
+      const { result } = renderHookWithCosts();
+      expect(result.current.hasActiveFilters).toBe(true);
+    });
+
+    it("hasActiveFilters is true when origin filter is active", () => {
+      mockStore.selectedOrigins = [CARD_ORIGIN.ASG];
       const { result } = renderHookWithCosts();
       expect(result.current.hasActiveFilters).toBe(true);
     });
@@ -274,6 +287,36 @@ describe("useCardGalleryFilter", () => {
       const allMapTypes = Object.values(MAP_TYPE);
       act(() => result.current.handleMapTypeChange(allMapTypes));
       expect(mockStore.setSelectedMapTypes).toHaveBeenCalledWith([DEFAULT_FILTER]);
+    });
+  });
+
+  describe("origin filter", () => {
+    it("originOptions are labeled with origin full names", () => {
+      const { result } = renderHookWithCosts();
+      expect(result.current.originOptions).toEqual([
+        { value: CARD_ORIGIN.ASG, label: "Asgard" },
+        { value: CARD_ORIGIN.COR, label: "Core Box Pantheon" },
+        { value: CARD_ORIGIN.RAG, label: "Ragnar Saga" },
+      ]);
+    });
+
+    it("multiSelectOriginValue is [] when selectedOrigins is DEFAULT_FILTER", () => {
+      const { result } = renderHookWithCosts();
+      expect(result.current.multiSelectOriginValue).toEqual([]);
+    });
+
+    it("sets origins to selected values", () => {
+      const { result } = renderHookWithCosts();
+      act(() => result.current.handleOriginChange([CARD_ORIGIN.ASG]));
+      expect(mockStore.setSelectedOrigins).toHaveBeenCalledWith([CARD_ORIGIN.ASG]);
+    });
+
+    it("resets to DEFAULT_FILTER when empty or all origins are selected", () => {
+      const { result } = renderHookWithCosts();
+      act(() => result.current.handleOriginChange([]));
+      act(() => result.current.handleOriginChange(UNIQUE_ORIGINS));
+      expect(mockStore.setSelectedOrigins).toHaveBeenNthCalledWith(1, [DEFAULT_FILTER]);
+      expect(mockStore.setSelectedOrigins).toHaveBeenNthCalledWith(2, [DEFAULT_FILTER]);
     });
   });
 });
